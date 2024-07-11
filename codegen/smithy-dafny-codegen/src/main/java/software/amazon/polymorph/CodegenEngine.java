@@ -63,16 +63,20 @@ import software.amazon.smithy.utils.IoUtils;
 import software.amazon.smithy.utils.Pair;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CodegenEngine {
@@ -320,16 +324,18 @@ public class CodegenEngine {
     // to invoke polymorph in the first place.
     // Perhaps we can make a `smithy init` template for that instead?
 
+    LOGGER.info("Dafny project files generated in {}", libraryRoot);
+
     if (!generationAspects.isEmpty()) {
       Path srcDir = outputDir.resolve("../src");
       LOGGER.info("Formatting Dafny code in {}", srcDir);
       runCommand(
-        srcDir,
-        "dafny",
-        "format",
-        "--function-syntax:3",
-        "--unicode-char:false",
-        "."
+              srcDir,
+              "dafny",
+              "format",
+              "--function-syntax:3",
+              "--unicode-char:false",
+              "."
       );
     }
   }
@@ -464,6 +470,18 @@ public class CodegenEngine {
     final String gradleGroup = namespace;
     // TODO: This should be @title, but we have to actually add that to all services first
     final String gradleDescription = service;
+
+    final Path includeDafnyFile =
+            this.includeDafnyFile.orElseThrow(() ->
+                    new IllegalStateException(
+                            "includeDafnyFile required when generating .NET project files"
+                    )
+            );
+    // Assumes that includeDafnyFile is at StandardLibrary/src/Index.dfy
+    // TODO be smarter about finding the StandardLibrary path
+    final Path stdLibPath = libraryRoot.resolve("runtimes/net").relativize(
+            includeDafnyFile.resolve("../..")
+    );
 
     Map<String, String> parameters = new HashMap<>();
     parameters.put("dafnyVersion", dafnyVersion.unparse());

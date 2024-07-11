@@ -306,7 +306,14 @@ public class DafnyApiCodegen {
     final Optional<TokenTree> lengthConstraint = blobShape
       .getTrait(LengthTrait.class)
       .map(DafnyApiCodegen::generateLengthConstraint);
-    return generateSubsetType(blobShapeId, "seq<uint8>", lengthConstraint);
+    if (blobShape.hasTrait(StreamingTrait.class)) {
+      // TODO: need to handle @length too,
+      // something like `forall produced | a.CanProduce(produced) :: min <= |Enumerated(produced)| <= max
+      // (which should have a simpler helper predicate version, especially when allowing for reference types)
+      return generateTypeSynonym(blobShapeId, "Enumerator<bytes>");
+    } else {
+      return generateSubsetType(blobShapeId, "seq<uint8>", lengthConstraint);
+    }
   }
 
   public TokenTree generateBoolTypeDefinition(final ShapeId boolShapeId) {
@@ -494,7 +501,8 @@ public class DafnyApiCodegen {
   public TokenTree generateServiceTraitDefinition(ServiceShape serviceShape) {
     final TokenTree trait = TokenTree.of(
       "trait {:termination false}",
-      nameResolver.traitForServiceClient(serviceShape)
+      nameResolver.traitForServiceClient(serviceShape),
+      "extends object"
     );
     final TokenTree methods = TokenTree
       .of(
@@ -570,7 +578,8 @@ public class DafnyApiCodegen {
 
     final TokenTree trait = TokenTree.of(
       "trait {:termination false}",
-      nameResolver.baseTypeForShape(shapeWithReference)
+      nameResolver.baseTypeForShape(shapeWithReference),
+      "extends object"
     );
 
     final TokenTree methods = TokenTree
