@@ -5,26 +5,30 @@ include "../src/Index.dfy"
 
 module TestComAmazonawsS3 {
     import Com.Amazonaws.S3
+    import Std.Enumerators
     import opened StandardLibrary.UInt
     import opened Wrappers
 
     const testBucket := "smithy-dafny-s3-test-bucket"
-    const testObjectKey := "test-model-object-key-2"
+    const testObjectKey := "test-model-object-key-enumerator"
 
     method {:test} BasicRoundTripTests() {
+        var testInputSeq: seq<bytes> := [ [0x62], [0x73], [0x64], [0x66] ];
+        var testInput := new Enumerators.SeqEnumerator(testInputSeq);
         PutObjectTest(
             input := S3.Types.PutObjectRequest(
                 Bucket := testBucket,
                 Key := testObjectKey,
-                Body := Wrappers.Some([ 97, 115, 100, 102 ])
+                Body := Wrappers.Some(testInput)
             )
         );
+        var testOutput := new Enumerators.SeqEnumerator(testInputSeq);
         GetObjectTest(
             input := S3.Types.GetObjectRequest(
                 Bucket := testBucket,
                 Key := testObjectKey
             ),
-            expectedBody := ([ 97, 115, 100, 102 ])
+            expectedBody := testOutput
         );
     }
 
@@ -42,7 +46,7 @@ module TestComAmazonawsS3 {
         // we only care about the Body
         var MyBody := ret.value.Body;
         expect MyBody.Some?;
-        var byteString := MyBody.value[0];
+        var byteString := MyBody.value.Next();
         expect MyBody.value == expectedBody;
     }
 

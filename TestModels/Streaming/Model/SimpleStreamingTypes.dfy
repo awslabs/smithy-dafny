@@ -274,10 +274,8 @@ abstract module AbstractSimpleStreamingOperations {
   method CountBits ( config: InternalConfig , input: CountBitsInput )
     returns (output: Result<CountBitsOutput, Error>)
     requires
-      // TODO: smithy-dafny isn't yet generating the `input.bits.Valid()` part.
-      && ValidInternalConfig?(config) && input.bits.Valid()
-    // TODO: smithy-dafny isn't yet generating the `input.bits.Repr` part.
-    modifies ModifiesInternalConfig(config), input.bits.Repr
+      && ValidInternalConfig?(config)
+    modifies ModifiesInternalConfig(config)
     // Dafny will skip type parameters when generating a default decreases clause.
     decreases ModifiesInternalConfig(config)
     ensures
