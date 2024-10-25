@@ -13,8 +13,8 @@ structure DdbClientReference {}
 structure KmsClientReference {}
 
 @aws.polymorph#localService(
-  sdkId: "SimpleCallingAWSSDKFromLocalService",
-  config: SimpleCallingAWSSDKFromLocalServiceConfig,
+  sdkId: "SimpleCallingawssdkfromlocalservice",
+  config: SimpleCallingawssdkfromlocalserviceConfig,
   dependencies: [
     DynamoDB_20120810,
     TrentService
@@ -30,7 +30,7 @@ service SimpleCallingAWSSDKFromLocalService {
   errors: [ SimpleCallingAWSSDKFromLocalServiceException ],
 }
 
-structure SimpleCallingAWSSDKFromLocalServiceConfig {}
+structure SimpleCallingawssdkfromlocalserviceConfig {}
 
 operation CallDDBScan {
   input: CallDDBScanInput,

@@ -28,7 +28,7 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     TestCallDDBScan_Failure(client);
   }
 
-  method TestCallDDBScan_Success(client: ISimpleCallingawssdkfromlocalserviceClient)
+  method TestCallDDBScan_Success(client: ISimpleCallingAWSSDKFromLocalServiceClient)
     requires client.ValidState()
     modifies client.Modifies
     ensures client.ValidState()
@@ -40,7 +40,7 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     expect resSuccess.value.itemOutput != -1;
   }
 
-  method TestCallDDBScan_Failure(client: ISimpleCallingawssdkfromlocalserviceClient)
+  method TestCallDDBScan_Failure(client: ISimpleCallingAWSSDKFromLocalServiceClient)
     requires client.ValidState()
     modifies client.Modifies
     ensures client.ValidState()
@@ -57,7 +57,7 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     TestCallKMSEncrypt_Failure(client);
   }
 
-  method TestCallKMSEncrypt_Success(client: ISimpleCallingawssdkfromlocalserviceClient)
+  method TestCallKMSEncrypt_Success(client: ISimpleCallingAWSSDKFromLocalServiceClient)
     requires client.ValidState()
     modifies client.Modifies
     ensures client.ValidState()
@@ -69,7 +69,7 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     expect resSuccess.value.encryptOutput == KEY_ID_SUCCESS_CASE;
   }
 
-  method TestCallKMSEncrypt_Failure(client: ISimpleCallingawssdkfromlocalserviceClient)
+  method TestCallKMSEncrypt_Failure(client: ISimpleCallingAWSSDKFromLocalServiceClient)
     requires client.ValidState()
     modifies client.Modifies
     ensures client.ValidState()

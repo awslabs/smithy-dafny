@@ -3,7 +3,7 @@
 include "../Model/SimpleCallingawssdkfromlocalserviceTypes.dfy"
 include "SimpleCallingawssdkfromlocalserviceImpl.dfy"
 
-module SimpleCallingawssdkfromlocalservice refines AbstractSimpleCallingawssdkfromlocalserviceService {
+module {:extern "simple.callingawssdkfromlocalservice.internaldafny" } SimpleCallingawssdkfromlocalservice refines AbstractSimpleCallingawssdkfromlocalserviceService {
   import Operations = SimpleCallingawssdkfromlocalserviceImpl
 
   function method DefaultSimpleCallingawssdkfromlocalserviceConfig(): SimpleCallingawssdkfromlocalserviceConfig {
@@ -25,7 +25,7 @@ module SimpleCallingawssdkfromlocalservice refines AbstractSimpleCallingawssdkfr
     }
     constructor(config: Operations.InternalConfig) {
       this.config := config;
-      History := new ISimpleCallingawssdkfromlocalserviceClientCallHistory();
+      History := new ISimpleCallingAWSSDKFromLocalServiceClientCallHistory();
       Modifies := Operations.ModifiesInternalConfig(config) + {History};
     }
   }

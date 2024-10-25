@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 include "../Model/SimpleCallingawssdkfromlocalserviceTypesWrapped.dfy"
 
-module WrappedSimpleCallingawssdkfromlocalserviceService refines WrappedAbstractSimpleCallingawssdkfromlocalserviceService {
+module {:extern "simple.callingawssdkfromlocalservice.internaldafny.wrapped"} WrappedSimpleCallingawssdkfromlocalserviceService refines WrappedAbstractSimpleCallingawssdkfromlocalserviceService {
   import WrappedService = SimpleCallingawssdkfromlocalservice
   function method WrappedDefaultSimpleCallingawssdkfromlocalserviceConfig(): SimpleCallingawssdkfromlocalserviceConfig {
     SimpleCallingawssdkfromlocalserviceConfig
