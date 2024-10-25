@@ -243,16 +243,33 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 operationShape.getId().getName()
               );
         } else {
-          String dafnyType; 
-                if (inputShape.hasTrait(PositionalTrait.class)) {
-                    Shape inputForPositional = model.expectShape(inputShape.getAllMembers().values().stream().findFirst().get().getTarget());
-                    Symbol symbolForPositional = symbolProvider.toSymbol(inputForPositional);
-                    dafnyType = DafnyNameResolver.getDafnyType(inputForPositional, symbolForPositional);
-                    outputType = "interface{},";
-                }
-                else {
-                  dafnyType = DafnyNameResolver.getDafnyType(inputShape, symbolProvider.toSymbol(inputShape));
-                }
+          String dafnyType;
+          if (inputShape.hasTrait(PositionalTrait.class)) {
+            Shape inputForPositional = model.expectShape(
+              inputShape
+                .getAllMembers()
+                .values()
+                .stream()
+                .findFirst()
+                .get()
+                .getTarget()
+            );
+            Symbol symbolForPositional = symbolProvider.toSymbol(
+              inputForPositional
+            );
+            dafnyType =
+              DafnyNameResolver.getDafnyType(
+                inputForPositional,
+                symbolForPositional
+              );
+            outputType = "interface{},";
+          } else {
+            dafnyType =
+              DafnyNameResolver.getDafnyType(
+                inputShape,
+                symbolProvider.toSymbol(inputShape)
+              );
+          }
           baseClientCall =
             """
             var dafny_request %s = %s(params)
@@ -274,18 +291,28 @@ public class DafnyLocalServiceGenerator implements Runnable {
           returnError = "return";
         } else {
           if (inputShape.hasTrait(PositionalTrait.class)) {
-            returnResponse = """
-                    var native_response = dafny_response.Extract()
-                    return native_response, nil
-                """;
-        }
-        else {
-          returnResponse = """
-                  var native_response = %s(dafny_response.Extract().(%s))
-                  return &native_response, nil
-                  """.formatted(SmithyNameResolver.getFromDafnyMethodName(service, outputShape, ""),
-                              DafnyNameResolver.getDafnyType(outputShape, symbolProvider.toSymbol(outputShape)));
-      }
+            returnResponse =
+              """
+                  var native_response = dafny_response.Extract()
+                  return native_response, nil
+              """;
+          } else {
+            returnResponse =
+              """
+              var native_response = %s(dafny_response.Extract().(%s))
+              return &native_response, nil
+              """.formatted(
+                  SmithyNameResolver.getFromDafnyMethodName(
+                    service,
+                    outputShape,
+                    ""
+                  ),
+                  DafnyNameResolver.getDafnyType(
+                    outputShape,
+                    symbolProvider.toSymbol(outputShape)
+                  )
+                );
+          }
           returnError = "return nil,";
         }
 
@@ -404,8 +431,14 @@ public class DafnyLocalServiceGenerator implements Runnable {
               operationShape.getOutputShape()
             );
             // this is maybe because positional trait can change this
-            final var maybeInputType = inputShape.hasTrait(UnitTypeTrait.class) ? ""
-            : "input %s".formatted(DafnyNameResolver.getDafnyType(inputShape, symbolProvider.toSymbol(inputShape)));
+            final var maybeInputType = inputShape.hasTrait(UnitTypeTrait.class)
+              ? ""
+              : "input %s".formatted(
+                  DafnyNameResolver.getDafnyType(
+                    inputShape,
+                    symbolProvider.toSymbol(inputShape)
+                  )
+                );
             final String inputType;
             final var typeConversion = inputShape.hasTrait(UnitTypeTrait.class)
               ? ""
@@ -437,16 +470,31 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   );
             }
             if (inputShape.hasTrait(PositionalTrait.class)) {
-              writer.addImportFromModule("github.com/dafny-lang/DafnyRuntimeGo", "dafny");
-              Shape inputForPositional = model.expectShape(inputShape.getAllMembers().values().stream().findFirst().get().getTarget());
-              Symbol symbolForPositional = symbolProvider.toSymbol(inputForPositional);
-              String dafnyType = DafnyNameResolver.getDafnyType(inputForPositional, symbolForPositional);
+              writer.addImportFromModule(
+                "github.com/dafny-lang/DafnyRuntimeGo",
+                "dafny"
+              );
+              Shape inputForPositional = model.expectShape(
+                inputShape
+                  .getAllMembers()
+                  .values()
+                  .stream()
+                  .findFirst()
+                  .get()
+                  .getTarget()
+              );
+              Symbol symbolForPositional = symbolProvider.toSymbol(
+                inputForPositional
+              );
+              String dafnyType = DafnyNameResolver.getDafnyType(
+                inputForPositional,
+                symbolForPositional
+              );
               inputType = "input %s".formatted(dafnyType);
               returnResponse = "(native_response)";
-          }
-          else {
-              inputType = maybeInputType;   
-          }
+            } else {
+              inputType = maybeInputType;
+            }
 
             writer.write(
               """

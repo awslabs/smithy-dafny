@@ -26,9 +26,9 @@ import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.ResourceShape;
 import software.amazon.smithy.model.shapes.ServiceShape;
+import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.shapes.ShapeId;
 import software.amazon.smithy.model.shapes.StructureShape;
-import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.UnitTypeTrait;
 
@@ -80,12 +80,26 @@ public class DafnyLocalServiceTypeConversionProtocol
             final var inputSymbol = symbolProvider.toSymbol(input);
             final String outputType;
             if (input.hasTrait(PositionalTrait.class)) {
-                // Output type in To Dafny should be unwrapped
-                Shape inputForPositional = model.expectShape(input.getAllMembers().values().stream().findFirst().get().getTarget());
-                Symbol symbolForPositional = symbolProvider.toSymbol(inputForPositional);
-                outputType = DafnyNameResolver.getDafnyType(inputForPositional, symbolForPositional);
+              // Output type in To Dafny should be unwrapped
+              Shape inputForPositional = model.expectShape(
+                input
+                  .getAllMembers()
+                  .values()
+                  .stream()
+                  .findFirst()
+                  .get()
+                  .getTarget()
+              );
+              Symbol symbolForPositional = symbolProvider.toSymbol(
+                inputForPositional
+              );
+              outputType =
+                DafnyNameResolver.getDafnyType(
+                  inputForPositional,
+                  symbolForPositional
+                );
             } else {
-                outputType = DafnyNameResolver.getDafnyType(input, inputSymbol);
+              outputType = DafnyNameResolver.getDafnyType(input, inputSymbol);
             }
             writerDelegator.useFileWriter(
               "%s/%s".formatted(
@@ -122,7 +136,10 @@ public class DafnyLocalServiceTypeConversionProtocol
         }
 
         final var output = model.expectShape(operation.getOutputShape());
-        if (!alreadyVisited.contains(output.toShapeId()) && !output.hasTrait(PositionalTrait.class)) {
+        if (
+          !alreadyVisited.contains(output.toShapeId()) &&
+          !output.hasTrait(PositionalTrait.class)
+        ) {
           alreadyVisited.add(output.toShapeId());
           if (
             !output.hasTrait(UnitTypeTrait.class) &&
@@ -381,13 +398,28 @@ public class DafnyLocalServiceTypeConversionProtocol
             final var inputSymbol = context.symbolProvider().toSymbol(input);
             final String inputType;
             if (input.hasTrait(PositionalTrait.class)) {
-                // Input type in To native should be unwrapped
-                Shape inputForPositional = context.model().expectShape(input.getAllMembers().values().stream().findFirst().get().getTarget());
-                Symbol symbolForPositional = context.symbolProvider().toSymbol(inputForPositional);
-                inputType = DafnyNameResolver.getDafnyType(inputForPositional, symbolForPositional);
-            }
-            else {
-                inputType = DafnyNameResolver.getDafnyType(input, inputSymbol);
+              // Input type in To native should be unwrapped
+              Shape inputForPositional = context
+                .model()
+                .expectShape(
+                  input
+                    .getAllMembers()
+                    .values()
+                    .stream()
+                    .findFirst()
+                    .get()
+                    .getTarget()
+                );
+              Symbol symbolForPositional = context
+                .symbolProvider()
+                .toSymbol(inputForPositional);
+              inputType =
+                DafnyNameResolver.getDafnyType(
+                  inputForPositional,
+                  symbolForPositional
+                );
+            } else {
+              inputType = DafnyNameResolver.getDafnyType(input, inputSymbol);
             }
             delegator.useFileWriter(
               "%s/%s".formatted(
@@ -427,7 +459,10 @@ public class DafnyLocalServiceTypeConversionProtocol
         final var output = context
           .model()
           .expectShape(operation.getOutputShape());
-        if (!alreadyVisited.contains(output.toShapeId()) && !output.hasTrait(PositionalTrait.class)) {
+        if (
+          !alreadyVisited.contains(output.toShapeId()) &&
+          !output.hasTrait(PositionalTrait.class)
+        ) {
           alreadyVisited.add(output.toShapeId());
           if (
             !output.hasTrait(UnitTypeTrait.class) &&

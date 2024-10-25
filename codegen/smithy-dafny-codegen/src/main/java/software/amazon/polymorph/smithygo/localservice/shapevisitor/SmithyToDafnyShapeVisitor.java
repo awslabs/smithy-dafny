@@ -248,20 +248,21 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     }
     final String goCodeBlock;
     final String fieldSeparator;
-    if (!shape.hasTrait(PositionalTrait.class)){
-        builder.append("%1$s(".formatted(companionStruct));
-        goCodeBlock = """
-            func () %s {
-                %s
-                return %s
-            }()""";
-        fieldSeparator = ",";
-    }
-    else {
-        // Positional trait can only have one variable.
-        fieldSeparator = "";
-        // Don't unwrap position trait shape
-        goCodeBlock = """
+    if (!shape.hasTrait(PositionalTrait.class)) {
+      builder.append("%1$s(".formatted(companionStruct));
+      goCodeBlock =
+        """
+        func () %s {
+            %s
+            return %s
+        }()""";
+      fieldSeparator = ",";
+    } else {
+      // Positional trait can only have one variable.
+      fieldSeparator = "";
+      // Don't unwrap position trait shape
+      goCodeBlock =
+        """
                 %s
         """;
     }
@@ -287,8 +288,8 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
           )
       );
     }
-    if (shape.hasTrait(PositionalTrait.class)){
-            return goCodeBlock.formatted(builder.toString());
+    if (shape.hasTrait(PositionalTrait.class)) {
+      return goCodeBlock.formatted(builder.toString());
     }
     return goCodeBlock.formatted(
       returnType,

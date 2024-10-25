@@ -238,12 +238,12 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       final var targetShape = context
         .model()
         .expectShape(memberShape.getTarget());
-      final String DtorConversion; 
+      final String DtorConversion;
       if (!shape.hasTrait(PositionalTrait.class)) {
-          DtorConversion = ".Dtor_%s()".formatted(memberName);
+        DtorConversion = ".Dtor_%s()".formatted(memberName);
       } else {
-          // Shapes with PositionalTrait already gets input unwrapped so no conversion needed.
-          DtorConversion = "";
+        // Shapes with PositionalTrait already gets input unwrapped so no conversion needed.
+        DtorConversion = "";
       }
       //TODO: Is it ever possible for structure to be nil?
       String maybeAssertion = "";
