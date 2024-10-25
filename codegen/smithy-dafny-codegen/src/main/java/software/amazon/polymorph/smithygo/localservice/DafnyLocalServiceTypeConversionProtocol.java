@@ -9,6 +9,7 @@ import java.util.Set;
 import software.amazon.polymorph.smithygo.codegen.ApplicationProtocol;
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoDelegator;
+import software.amazon.polymorph.smithygo.codegen.SmithyGoDependency;
 import software.amazon.polymorph.smithygo.codegen.integration.ProtocolGenerator;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
@@ -992,12 +993,19 @@ public class DafnyLocalServiceTypeConversionProtocol
                   final var depShape = context.model().expectShape(dep);
                   if (depShape.hasTrait(ServiceTrait.class)) {
                     if (sdkDepShape == null) {
+                      writer.addImport(SmithyGoDependency.SMITHY_SOURCE_PATH);
                       sdkErrHandler.append(
                         """
                         case smithy.APIError:
                         """
                       );
                     }
+                    writer.addImportFromModule(
+                      SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+                        depShape.getId().getNamespace()
+                      ),
+                      SmithyNameResolver.shapeNamespace(depShape)
+                    );
                     sdkDepShape = depShape;
                     final var sdkDepErrorVar = depShape
                       .expectTrait(ServiceTrait.class)
