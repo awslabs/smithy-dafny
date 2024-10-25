@@ -34,10 +34,7 @@ class GoTestModels extends TestModelTest {
     //TODO: We should ne able to support below models.
     DISABLED_TESTS.add("MultipleModels");
     DISABLED_TESTS.add("LocalService");
-
-    //TODO: Pending PR Merge
-    DISABLED_TESTS.add("Positional");
-
+    
     //TODO: Fix this before main merge
     DISABLED_TESTS.add("Dependencies");
 
