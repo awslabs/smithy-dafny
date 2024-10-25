@@ -2,13 +2,14 @@ package software.amazon.polymorph.smithygo.localservice;
 
 import static software.amazon.polymorph.smithygo.codegen.SymbolUtils.POINTABLE;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
-
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import software.amazon.polymorph.smithygo.codegen.ApplicationProtocol;
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoDelegator;
+import software.amazon.polymorph.smithygo.codegen.GoWriter;
 import software.amazon.polymorph.smithygo.codegen.SmithyGoDependency;
 import software.amazon.polymorph.smithygo.codegen.integration.ProtocolGenerator;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
@@ -987,20 +988,33 @@ public class DafnyLocalServiceTypeConversionProtocol
                   .getDependencies()
                 : new LinkedList<ShapeId>();
               if (dependencies != null) {
-                var sdkErrHandler = new StringBuilder();
+                handleDepErrorSerializer(context, w, dependencies);
+              }
+            }),
+            SmithyNameResolver.smithyTypesNamespace(serviceShape),
+            SmithyNameResolver.smithyTypesNamespace(serviceShape),
+            SmithyNameResolver.smithyTypesNamespace(serviceShape)
+          );
+        }
+      );
+  }
+
+  private void handleDepErrorSerializer(final GenerationContext context, final GoWriter w, final Collection<ShapeId> dependencies) {
+    final var sdkErrHandler = new StringBuilder();
+    final var serviceShape = context.settings().getService(context.model());
                 Shape sdkDepShape = null;
                 for (final var dep : dependencies) {
                   final var depShape = context.model().expectShape(dep);
                   if (depShape.hasTrait(ServiceTrait.class)) {
                     if (sdkDepShape == null) {
-                      writer.addImport(SmithyGoDependency.SMITHY_SOURCE_PATH);
+                      w.addImport(SmithyGoDependency.SMITHY_SOURCE_PATH);
                       sdkErrHandler.append(
                         """
                         case smithy.APIError:
                         """
                       );
                     }
-                    writer.addImportFromModule(
+                    w.addImportFromModule(
                       SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                         depShape.getId().getNamespace()
                       ),
@@ -1057,14 +1071,6 @@ public class DafnyLocalServiceTypeConversionProtocol
                   );
                   w.write(sdkErrHandler.toString());
                 }
-              }
-            }),
-            SmithyNameResolver.smithyTypesNamespace(serviceShape),
-            SmithyNameResolver.smithyTypesNamespace(serviceShape),
-            SmithyNameResolver.smithyTypesNamespace(serviceShape)
-          );
-        }
-      );
   }
 
   private void generateConfigDeserializer(final GenerationContext context) {
