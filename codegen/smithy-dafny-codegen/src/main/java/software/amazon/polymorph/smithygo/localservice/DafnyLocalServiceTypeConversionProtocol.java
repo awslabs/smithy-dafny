@@ -992,13 +992,17 @@ public class DafnyLocalServiceTypeConversionProtocol
                   final var depShape = context.model().expectShape(dep);
                   if (depShape.hasTrait(ServiceTrait.class)) {
                     if (sdkDepShape == null) {
-                      sdkErrHandler.append("""
-                          case smithy.APIError:
-                          """);
+                      sdkErrHandler.append(
+                        """
+                        case smithy.APIError:
+                        """
+                      );
                     }
                     sdkDepShape = depShape;
                     final var sdkDepErrorVar = depShape
-                      .expectTrait(ServiceTrait.class).getSdkId().concat("Error");
+                      .expectTrait(ServiceTrait.class)
+                      .getSdkId()
+                      .concat("Error");
                     sdkErrHandler.append(
                       """
                       %s := %s.Error_ToDafny(err)
@@ -1006,13 +1010,16 @@ public class DafnyLocalServiceTypeConversionProtocol
                         return %s.Create_%s_(%s)
                       }
                       """.formatted(
-                      sdkDepErrorVar,
-                      SmithyNameResolver.shapeNamespace(depShape),
-                      sdkDepErrorVar,
-                      DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
-                      DafnyNameResolver.dafnyNamespace(depShape),
-                      sdkDepErrorVar
-                    ));
+                          sdkDepErrorVar,
+                          SmithyNameResolver.shapeNamespace(depShape),
+                          sdkDepErrorVar,
+                          DafnyNameResolver.getDafnyErrorCompanion(
+                            serviceShape
+                          ),
+                          DafnyNameResolver.dafnyNamespace(depShape),
+                          sdkDepErrorVar
+                        )
+                    );
                   } else {
                     w.write(
                       """
@@ -1028,14 +1035,18 @@ public class DafnyLocalServiceTypeConversionProtocol
                   }
                 }
                 if (sdkDepShape != null) {
-                  sdkErrHandler.append("""
-                      return %s.Create_%s_(%s)
-                      """.formatted(
+                  sdkErrHandler.append(
+                    """
+                    return %s.Create_%s_(%s)
+                    """.formatted(
                         DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
                         DafnyNameResolver.dafnyNamespace(sdkDepShape),
                         sdkDepShape
-                      .expectTrait(ServiceTrait.class).getSdkId().concat("Error")
-                      ));
+                          .expectTrait(ServiceTrait.class)
+                          .getSdkId()
+                          .concat("Error")
+                      )
+                  );
                   w.write(sdkErrHandler.toString());
                 }
               }
