@@ -19,7 +19,7 @@ Dafny itself has a `string` type
 that you might assume can map
 to the obvious string type in each translated language.
 
-However a native `string` may be UTF8, UTF16/USC2, or UTF32 
+However a native `string` may be UTF8, UTF16/USC2, or UTF32
 depending on the language.
 Numbers are similarly complicated.
 Some languages have different sized numbers,
@@ -50,35 +50,35 @@ generate interfaces that can be used like this:
 ## Definitions
 
 - Runtime or native runtime:
-    A Dafny translation target language,
-    e.g Java or C#.
-    This also may include additional context
-    like language version or other versions/features.
+  A Dafny translation target language,
+  e.g Java or C#.
+  This also may include additional context
+  like language version or other versions/features.
 - Native type or native interface:
-    A type/interface in a runtime,
-    e.g. Java `String`
+  A type/interface in a runtime,
+  e.g. Java `String`
 - Smithy-runtime:
-    The project used to generate native types
-    for Smithy shapes.
+  The project used to generate native types
+  for Smithy shapes.
 - Polymorph or polymorph-runtime:
-    The transformation layer between Dafny types
-    and native types,
-    e.g. polymorph-java.
+  The transformation layer between Dafny types
+  and native types,
+  e.g. polymorph-java.
 - Shim:
-    The object that exports the native interface
-    and connects to the internal Dafny implementation.
+  The object that exports the native interface
+  and connects to the internal Dafny implementation.
 - Type converters, ToDafny, ToNative:
-    The dual functions that convert between
-    Dafny and native types.
-    e.g. `D == ToDafny(ToNative(D))`,
-    `N == ToNative(ToDafny(N))`
+  The dual functions that convert between
+  Dafny and native types.
+  e.g. `D == ToDafny(ToNative(D))`,
+  `N == ToNative(ToDafny(N))`
 - `abstract module`:
-    A Dafny feature that lets you define
-    an interface for an whole module,
-    not just a `trait` or some other single object.
+  A Dafny feature that lets you define
+  an interface for an whole module,
+  not just a `trait` or some other single object.
 - `extern`:
-    A Dafny feature for defining and specifying
-    native code that will be called by Dafny.
+  A Dafny feature for defining and specifying
+  native code that will be called by Dafny.
 
 ### Conventions used in this document
 
@@ -343,6 +343,7 @@ but may not be exactly the same reference object.
 We can refer to this as `SemanticallyEqual`.
 
 The spirit of this can be expressed
+
 ```dafny
 lemma ConversionsCorrectlyInvert<D, N>(ToDafny<D,N>, ToNative<N, D>, SemanticallyEqual)
   ensures forall d, n ::
@@ -374,9 +375,10 @@ do not produce rational input in the middle.
 This is an edge case, but it is easy enough to verify.
 
 Each simple type has smithy operations that:
-* returns back what is given.
-* only succeed if passed a specific value.
-* will only return a constant value
+
+- returns back what is given.
+- only succeed if passed a specific value.
+- will only return a constant value
 
 We have one last subtlety to consider.
 Since the tests and implementation are both in Dafny
@@ -417,10 +419,10 @@ However the native project needs to bind the following things together
 1. Translated Dafny implementation code
 1. Translated Dafny test code
 1. Native `smithy-dafny` dependencies
-    - Dafny runtime
-    - Dafny conversion libraries
-    - Dafny project dependencies
-    - Native dependencies
+   - Dafny runtime
+   - Dafny conversion libraries
+   - Dafny project dependencies
+   - Native dependencies
 
 In the TestModels directory there is a SharedMakefile
 that can be used to provide useful targets for Dafny projects.
@@ -458,10 +460,10 @@ Given the above directory structure,
 the dependency flow looks like this.
 By dependency flow we mean
 
-* code generated from smithy shapes
-* Dafny `import` directives
-* Dafny translated code
-* dependent Dafny projects
+- code generated from smithy shapes
+- Dafny `import` directives
+- Dafny translated code
+- dependent Dafny projects
 
 ```mermaid
 graph LR

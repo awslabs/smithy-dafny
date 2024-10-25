@@ -1,4 +1,3 @@
-
 # Detailed design diagrams
 
 These are detailed design diagrams
@@ -156,14 +155,12 @@ Dafny ---> Net
 Dafny ---> Js
 ```
 
-
 ## Smithy Dafny
 
 ### Library Development
 
 Here is a example of the various components
 of smithy dafny fit together to translate a library.
-
 
 ```mermaid
 ---
