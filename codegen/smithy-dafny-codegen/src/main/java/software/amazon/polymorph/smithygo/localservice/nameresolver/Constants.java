@@ -4,6 +4,5 @@ public class Constants {
 
   public static final String DOT = ".";
   public static final String BLANK = "";
-  public static final String UNDERSCORE = "_";
   public static final String DAFNY_TYPES = "Types";
 }

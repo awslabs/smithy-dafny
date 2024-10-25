@@ -15,9 +15,6 @@
 
 package software.amazon.polymorph.smithygo.codegen;
 
-import static software.amazon.polymorph.smithygo.localservice.nameresolver.Constants.DOT;
-import static software.amazon.polymorph.smithygo.localservice.nameresolver.Constants.UNDERSCORE;
-
 import java.util.HashSet;
 import java.util.Set;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
@@ -31,7 +28,6 @@ import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.StructureShape;
 import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.StreamingTrait;
-import software.amazon.smithy.utils.CaseUtils;
 import software.amazon.smithy.utils.SetUtils;
 
 /**
