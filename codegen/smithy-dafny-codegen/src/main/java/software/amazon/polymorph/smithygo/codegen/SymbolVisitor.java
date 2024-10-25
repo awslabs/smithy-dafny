@@ -582,7 +582,7 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
       var referredShape = model.expectShape(
         shape.expectTrait(ReferenceTrait.class).getReferentId()
       );
-      var isResource = shape.expectTrait(ReferenceTrait.class).isResource();
+      var isResource = !shape.expectTrait(ReferenceTrait.class).isService();
       if (isResource || referredShape.hasTrait(ServiceTrait.class)) {
         builder.putProperty(
           "Referred",
