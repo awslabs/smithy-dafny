@@ -112,17 +112,19 @@ and takes care of type conversion back and forth.
 ---
 title: Smithy Dafny Library
 ---
-flowchart RL
+flowchart TD
 subgraph Library[Native Library]
     direction RL
-    Interface[Public Interface] --> ToDafny[Convert input \nto Dafny]
-    ToDafny --> DafnyImplementation[Dafny implementation]
-    DafnyImplementation --> ToNative[Convert output \nto native]
-    ToNative --> Interface
+    Interface[Public Interface]
+        --> ToDafny[Convert input<p>to Dafny]
+        --> DafnyImplementation[Dafny implementation]
+        --> ToNative[Convert output<p>to native]
+        --> Interface
 end
 
-UserCode[User Code] --> Interface
-Interface --> UserCode
+UserCode[User Code]
+    --> Interface
+    --> UserCode
 ```
 
 The goal is for native developers
@@ -224,8 +226,11 @@ see the [polymorph development](#polymorph-development) section blow.
 
 `smithy-dafny` dogfoods this feature on itself
 in the TestModels.
-This features is used by the Encryption SDK
-in the test vector runners
+This features is also used by the
+[AWS Encryption SDK](https://github.com/aws/aws-encryption-sdk-dafny),
+[AWS Cryptographic Materials](https://github.com/aws/aws-cryptographic-material-providers-library),
+and [AWS Database Encryption SDK](https://github.com/aws/aws-database-encryption-sdk-dynamodb)
+in test vector runners
 to test interoperability between native runtimes.
 
 In this mode `smithy-dafny` will not produce Dafny types and interfaces.
@@ -386,14 +391,14 @@ If the conversion was to simply change the encoding to USC2
 then all our tests would pass.
 But looking at the native string it would be drastically different.
 
-This is a degenerate example but should illustrate the point.
-At this time we do not have any such degenerate tests written.
+This is an overly simplified example but should illustrate the point.
+At this time we do not have any such tests written.
 This is because maintaining such coverage across multiple runtime
 is exceedingly difficult.
-It might be that a specification of such tests in conjunction with duvet
+It might be that a specification of such tests in conjunction with [duvet](https://github.com/awslabs/duvet/)
 might be a possible solution.
 
-## Project Management
+## Project Structure
 
 Neither Dafny nor `smithy-dafny` provide project management features.
 They are not terribly opinionated
@@ -412,10 +417,10 @@ However the native project needs to bind the following things together
 1. Translated Dafny implementation code
 1. Translated Dafny test code
 1. Native `smithy-dafny` dependencies
-    * Dafny runtime
-    * Dafny conversion libraries
-    * Dafny project dependencies
-    * Native dependencies - 
+    - Dafny runtime
+    - Dafny conversion libraries
+    - Dafny project dependencies
+    - Native dependencies
 
 In the TestModels directory there is a SharedMakefile
 that can be used to provide useful targets for Dafny projects.
