@@ -1063,9 +1063,7 @@ public class DafnyLocalServiceTypeConversionProtocol
       sdkErrHandler.append(
         """
         return %s.Companion_Error_.Create_Opaque_(err, dafny.SeqOfChars([]dafny.Char(err.Error())...))
-        """.formatted(
-          DafnyNameResolver.dafnyTypesNamespace(serviceShape)
-        )
+        """.formatted(DafnyNameResolver.dafnyTypesNamespace(serviceShape))
       );
       w.write(sdkErrHandler.toString());
     }
