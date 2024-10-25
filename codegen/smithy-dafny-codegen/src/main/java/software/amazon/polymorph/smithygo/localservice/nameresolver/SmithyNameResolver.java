@@ -2,7 +2,6 @@ package software.amazon.polymorph.smithygo.localservice.nameresolver;
 
 import static software.amazon.polymorph.smithygo.localservice.nameresolver.Constants.BLANK;
 import static software.amazon.polymorph.smithygo.localservice.nameresolver.Constants.DOT;
-import static software.amazon.polymorph.smithygo.localservice.nameresolver.Constants.UNDERSCORE;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -11,7 +10,6 @@ import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.model.shapes.ServiceShape;
 import software.amazon.smithy.model.shapes.Shape;
-import software.amazon.smithy.utils.CaseUtils;
 
 public class SmithyNameResolver {
 
