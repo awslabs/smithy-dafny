@@ -9,10 +9,6 @@ repositories {
     mavenCentral()
 }
 
-smithy {
-    
-}
-
 dependencies {
     implementation("software.amazon.smithy:smithy-model:1.52.0")
     implementation("software.amazon.smithy:smithy-aws-traits:1.52.0")

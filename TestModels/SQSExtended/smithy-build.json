@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "sources": ["model"],
+  "sources": ["Model"],
   "maven": {
       "dependencies": [
         "software.amazon.smithy.dafny:smithy-dafny-codegen:0.1.0",
