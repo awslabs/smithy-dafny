@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 include "../Model/SimpleCallingawssdkfromlocalserviceTypes.dfy"
 
-module SimpleCallingAWSSDKFromLocalServiceImpl refines AbstractSimpleCallingawssdkfromlocalserviceOperations  {
+module SimpleCallingawssdkfromlocalserviceImpl refines AbstractSimpleCallingawssdkfromlocalserviceOperations  {
   import ComAmazonawsKmsTypes
   import Com.Amazonaws.Kms
   import Com.Amazonaws.Dynamodb
 
   datatype Config = Config
   type InternalConfig = Config
-  
+
   predicate ValidInternalConfig?(config: InternalConfig)
   {true}
 
@@ -36,7 +36,7 @@ module SimpleCallingAWSSDKFromLocalServiceImpl refines AbstractSimpleCallingawss
       return Failure(ComAmazonawsDynamodb(retScan.error));
     }
   }
-  
+
   method CallKMSEncrypt ( config: InternalConfig,  input: CallKMSEncryptInput )
     returns (output: Result<CallKMSEncryptOutput, Error>) {
     var encryptInput := Kms.Types.EncryptRequest(

@@ -8,7 +8,7 @@ ENABLE_EXTERN_PROCESSING=1
 include ../SharedMakefile.mk
 
 PROJECT_SERVICES := \
-	SimpleCallingAWSSDKFromLocalService
+	SimpleCallingawssdkfromlocalservice
 
 PROJECT_DEPENDENCIES := \
 	aws-sdks/kmsv2 \
@@ -18,9 +18,9 @@ PROJECT_INDEX := \
 	aws-sdks/kmsv2/src/Index.dfy \
 	aws-sdks/ddbv2/src/Index.dfy
 
-SERVICE_NAMESPACE_SimpleCallingAWSSDKFromLocalService=simple.callingawssdkfromlocalservice
+SERVICE_NAMESPACE_SimpleCallingawssdkfromlocalservice=simple.callingawssdkfromlocalservice
 
-SERVICE_DEPS_SimpleCallingAWSSDKFromLocalService := \
+SERVICE_DEPS_SimpleCallingawssdkfromlocalservice := \
 	aws-sdks/kmsv2 \
 	aws-sdks/ddbv2
 
@@ -33,12 +33,12 @@ TYPES_FILE_WITH_EXTERN_STRING="module {:extern \"simple.callingawssdkfromlocalse
 TYPES_FILE_WITHOUT_EXTERN_STRING="module SimpleCallingawssdkfromlocalserviceTypes"
 
 INDEX_FILE_PATH=src/Index.dfy
-INDEX_FILE_WITH_EXTERN_STRING="module {:extern \"simple.callingawssdkfromlocalservice.internaldafny\" } SimpleCallingAWSSDKFromLocalService refines AbstractSimpleCallingawssdkfromlocalserviceService {"
-INDEX_FILE_WITHOUT_EXTERN_STRING="module SimpleCallingAWSSDKFromLocalService refines AbstractSimpleCallingawssdkfromlocalserviceService {"
+INDEX_FILE_WITH_EXTERN_STRING="module {:extern \"simple.callingawssdkfromlocalservice.internaldafny\" } SimpleCallingawssdkfromlocalservice refines AbstractSimpleCallingawssdkfromlocalserviceService {"
+INDEX_FILE_WITHOUT_EXTERN_STRING="module SimpleCallingawssdkfromlocalservice refines AbstractSimpleCallingawssdkfromlocalserviceService {"
 
-WRAPPED_INDEX_FILE_PATH=src/WrappedSimpleCallingAWSSDKFromLocalServiceImpl.dfy
-WRAPPED_INDEX_FILE_WITH_EXTERN_STRING="module {:extern \"simple.callingawssdkfromlocalservice.internaldafny.wrapped\"} WrappedSimpleCallingAWSSDKFromLocalServiceService refines WrappedAbstractSimpleCallingawssdkfromlocalserviceService {"
-WRAPPED_INDEX_FILE_WITHOUT_EXTERN_STRING="module WrappedSimpleCallingAWSSDKFromLocalServiceService refines WrappedAbstractSimpleCallingawssdkfromlocalserviceService {"
+WRAPPED_INDEX_FILE_PATH=src/WrappedSimpleCallingawssdkfromlocalserviceImpl.dfy
+WRAPPED_INDEX_FILE_WITH_EXTERN_STRING="module {:extern \"simple.callingawssdkfromlocalservice.internaldafny.wrapped\"} WrappedSimpleCallingawssdkfromlocalserviceService refines WrappedAbstractSimpleCallingawssdkfromlocalserviceService {"
+WRAPPED_INDEX_FILE_WITHOUT_EXTERN_STRING="module WrappedSimpleCallingawssdkfromlocalserviceService refines WrappedAbstractSimpleCallingawssdkfromlocalserviceService {"
 
 # Go
 

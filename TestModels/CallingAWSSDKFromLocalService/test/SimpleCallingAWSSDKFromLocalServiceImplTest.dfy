@@ -1,12 +1,12 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 include "../src/Index.dfy"
-include "../src/WrappedSimpleCallingAWSSDKFromLocalServiceImpl.dfy"
+include "../src/WrappedSimpleCallingawssdkfromlocalserviceImpl.dfy"
 
-module SimpleCallingAWSSDKFromLocalServiceImplTest {
+module SimpleCallingawssdkfromlocalserviceImplTest {
   import Com.Amazonaws.Dynamodb
   import Com.Amazonaws.Kms
-  import SimpleCallingAWSSDKFromLocalService
+  import SimpleCallingawssdkfromlocalservice
 
   // For call to DDB
   const TABLE_ARN_SUCCESS_CASE := "arn:aws:dynamodb:us-west-2:370957321024:table/TestTable"
@@ -23,53 +23,53 @@ module SimpleCallingAWSSDKFromLocalServiceImplTest {
   import opened SimpleCallingawssdkfromlocalserviceTypes
   import opened Wrappers
   method{:test} CallDDBScan(){
-    var client :- expect SimpleCallingAWSSDKFromLocalService.SimpleCallingAWSSDKFromLocalService();
+    var client :- expect SimpleCallingawssdkfromlocalservice.SimpleCallingawssdkfromlocalservice();
     TestCallDDBScan_Success(client);
     TestCallDDBScan_Failure(client);
   }
 
-  method TestCallDDBScan_Success(client: ISimpleCallingAWSSDKFromLocalServiceClient)
-      requires client.ValidState()
-      modifies client.Modifies
-      ensures client.ValidState()
+  method TestCallDDBScan_Success(client: ISimpleCallingawssdkfromlocalserviceClient)
+    requires client.ValidState()
+    modifies client.Modifies
+    ensures client.ValidState()
   {
     var ddbClient :- expect Dynamodb.DynamoDBClient();
-    var resSuccess := client.CallDDBScan(SimpleCallingAWSSDKFromLocalService.Types.CallDDBScanInput(ddbClient := ddbClient, tableArn := TABLE_ARN_SUCCESS_CASE));
+    var resSuccess := client.CallDDBScan(SimpleCallingawssdkfromlocalservice.Types.CallDDBScanInput(ddbClient := ddbClient, tableArn := TABLE_ARN_SUCCESS_CASE));
 
     expect resSuccess.Success?;
     expect resSuccess.value.itemOutput != -1;
   }
 
-  method TestCallDDBScan_Failure(client: ISimpleCallingAWSSDKFromLocalServiceClient)
+  method TestCallDDBScan_Failure(client: ISimpleCallingawssdkfromlocalserviceClient)
     requires client.ValidState()
     modifies client.Modifies
     ensures client.ValidState()
   {
     var ddbClient :- expect Dynamodb.DynamoDBClient();
-    var resFailure := client.CallDDBScan(SimpleCallingAWSSDKFromLocalService.Types.CallDDBScanInput(ddbClient := ddbClient, tableArn := TABLE_ARN_FAILURE_CASE));
+    var resFailure := client.CallDDBScan(SimpleCallingawssdkfromlocalservice.Types.CallDDBScanInput(ddbClient := ddbClient, tableArn := TABLE_ARN_FAILURE_CASE));
 
     expect resFailure.Failure?;
   }
 
   method{:test} CallKMSEncrypt(){
-    var client :- expect SimpleCallingAWSSDKFromLocalService.SimpleCallingAWSSDKFromLocalService();
+    var client :- expect SimpleCallingawssdkfromlocalservice.SimpleCallingawssdkfromlocalservice();
     TestCallKMSEncrypt_Success(client);
     TestCallKMSEncrypt_Failure(client);
   }
 
-  method TestCallKMSEncrypt_Success(client: ISimpleCallingAWSSDKFromLocalServiceClient)
+  method TestCallKMSEncrypt_Success(client: ISimpleCallingawssdkfromlocalserviceClient)
     requires client.ValidState()
     modifies client.Modifies
     ensures client.ValidState()
   {
     var kmsClient :- expect Kms.KMSClient();
-    var resSuccess := client.CallKMSEncrypt(SimpleCallingAWSSDKFromLocalService.Types.CallKMSEncryptInput(kmsClient := kmsClient, keyId := KEY_ID_SUCCESS_CASE, plaintext := PLAIN_TEXT));
-    
+    var resSuccess := client.CallKMSEncrypt(SimpleCallingawssdkfromlocalservice.Types.CallKMSEncryptInput(kmsClient := kmsClient, keyId := KEY_ID_SUCCESS_CASE, plaintext := PLAIN_TEXT));
+
     expect resSuccess.Success?;
     expect resSuccess.value.encryptOutput == KEY_ID_SUCCESS_CASE;
   }
 
-  method TestCallKMSEncrypt_Failure(client: ISimpleCallingAWSSDKFromLocalServiceClient)
+  method TestCallKMSEncrypt_Failure(client: ISimpleCallingawssdkfromlocalserviceClient)
     requires client.ValidState()
     modifies client.Modifies
     ensures client.ValidState()
@@ -83,8 +83,8 @@ module SimpleCallingAWSSDKFromLocalServiceImplTest {
       GrantTokens := Wrappers.None,
       EncryptionAlgorithm := Wrappers.None
     );
-    var resFailure_NonExistent := client.CallKMSEncrypt(SimpleCallingAWSSDKFromLocalService.Types.CallKMSEncryptInput(kmsClient := kmsClient, keyId := NONEXISTENT_KEY_ID, plaintext := PLAIN_TEXT));
-    
+    var resFailure_NonExistent := client.CallKMSEncrypt(SimpleCallingawssdkfromlocalservice.Types.CallKMSEncryptInput(kmsClient := kmsClient, keyId := NONEXISTENT_KEY_ID, plaintext := PLAIN_TEXT));
+
     expect resFailure_NonExistent.Failure?;
     expect resFailure_NonExistent.error.ComAmazonawsKms?;
     expect resFailure_NonExistent.error.ComAmazonawsKms.NotFoundException?;
