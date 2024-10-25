@@ -2,6 +2,7 @@ package software.amazon.polymorph.smithygo.localservice;
 
 import static software.amazon.polymorph.smithygo.codegen.SymbolUtils.POINTABLE;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -999,78 +1000,80 @@ public class DafnyLocalServiceTypeConversionProtocol
       );
   }
 
-  private void handleDepErrorSerializer(final GenerationContext context, final GoWriter w, final Collection<ShapeId> dependencies) {
+  private void handleDepErrorSerializer(
+    final GenerationContext context,
+    final GoWriter w,
+    final Collection<ShapeId> dependencies
+  ) {
     final var sdkErrHandler = new StringBuilder();
     final var serviceShape = context.settings().getService(context.model());
-                Shape sdkDepShape = null;
-                for (final var dep : dependencies) {
-                  final var depShape = context.model().expectShape(dep);
-                  if (depShape.hasTrait(ServiceTrait.class)) {
-                    if (sdkDepShape == null) {
-                      w.addImport(SmithyGoDependency.SMITHY_SOURCE_PATH);
-                      sdkErrHandler.append(
-                        """
-                        case smithy.APIError:
-                        """
-                      );
-                    }
-                    w.addImportFromModule(
-                      SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-                        depShape.getId().getNamespace()
-                      ),
-                      SmithyNameResolver.shapeNamespace(depShape)
-                    );
-                    sdkDepShape = depShape;
-                    final var sdkDepErrorVar = depShape
-                      .expectTrait(ServiceTrait.class)
-                      .getSdkId()
-                      .concat("Error");
-                    sdkErrHandler.append(
-                      """
-                      %s := %s.Error_ToDafny(err)
-                      if(!%s.Is_Opaque()) {
-                        return %s.Create_%s_(%s)
-                      }
-                      """.formatted(
-                          sdkDepErrorVar,
-                          SmithyNameResolver.shapeNamespace(depShape),
-                          sdkDepErrorVar,
-                          DafnyNameResolver.getDafnyErrorCompanion(
-                            serviceShape
-                          ),
-                          DafnyNameResolver.dafnyNamespace(depShape),
-                          sdkDepErrorVar
-                        )
-                    );
-                  } else {
-                    w.write(
-                      """
-                      case $L.$LBaseException:
-                          return $L.Create_$L_($L.Error_ToDafny(err))
-                      """,
-                      SmithyNameResolver.smithyTypesNamespace(depShape),
-                      dep.getName(),
-                      DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
-                      dep.getName(),
-                      SmithyNameResolver.shapeNamespace(depShape)
-                    );
-                  }
-                }
-                if (sdkDepShape != null) {
-                  sdkErrHandler.append(
-                    """
-                    return %s.Create_%s_(%s)
-                    """.formatted(
-                        DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
-                        DafnyNameResolver.dafnyNamespace(sdkDepShape),
-                        sdkDepShape
-                          .expectTrait(ServiceTrait.class)
-                          .getSdkId()
-                          .concat("Error")
-                      )
-                  );
-                  w.write(sdkErrHandler.toString());
-                }
+    Shape sdkDepShape = null;
+    for (final var dep : dependencies) {
+      final var depShape = context.model().expectShape(dep);
+      if (depShape.hasTrait(ServiceTrait.class)) {
+        if (sdkDepShape == null) {
+          w.addImport(SmithyGoDependency.SMITHY_SOURCE_PATH);
+          sdkErrHandler.append(
+            """
+            case smithy.APIError:
+            """
+          );
+        }
+        w.addImportFromModule(
+          SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+            depShape.getId().getNamespace()
+          ),
+          SmithyNameResolver.shapeNamespace(depShape)
+        );
+        sdkDepShape = depShape;
+        final var sdkDepErrorVar = depShape
+          .expectTrait(ServiceTrait.class)
+          .getSdkId()
+          .concat("Error");
+        sdkErrHandler.append(
+          """
+          %s := %s.Error_ToDafny(err)
+          if(!%s.Is_Opaque()) {
+            return %s.Create_%s_(%s)
+          }
+          """.formatted(
+              sdkDepErrorVar,
+              SmithyNameResolver.shapeNamespace(depShape),
+              sdkDepErrorVar,
+              DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
+              DafnyNameResolver.dafnyNamespace(depShape),
+              sdkDepErrorVar
+            )
+        );
+      } else {
+        w.write(
+          """
+          case $L.$LBaseException:
+              return $L.Create_$L_($L.Error_ToDafny(err))
+          """,
+          SmithyNameResolver.smithyTypesNamespace(depShape),
+          dep.getName(),
+          DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
+          dep.getName(),
+          SmithyNameResolver.shapeNamespace(depShape)
+        );
+      }
+    }
+    if (sdkDepShape != null) {
+      sdkErrHandler.append(
+        """
+        return %s.Create_%s_(%s)
+        """.formatted(
+            DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
+            DafnyNameResolver.dafnyNamespace(sdkDepShape),
+            sdkDepShape
+              .expectTrait(ServiceTrait.class)
+              .getSdkId()
+              .concat("Error")
+          )
+      );
+      w.write(sdkErrHandler.toString());
+    }
   }
 
   private void generateConfigDeserializer(final GenerationContext context) {
