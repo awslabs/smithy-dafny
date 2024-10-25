@@ -1322,13 +1322,9 @@ public class DafnyLocalServiceTypeConversionProtocol
                 final var depService = context
                   .model()
                   .expectShape(dep, ServiceShape.class);
-                final String sdkId;
-                if (depService.hasTrait(LocalServiceTrait.class)) {
-                  sdkId =
-                    depService.expectTrait(LocalServiceTrait.class).getSdkId();
-                } else {
-                  sdkId = DafnyNameResolver.dafnyNamespace(depService);
-                }
+                final var sdkId = depService.hasTrait(LocalServiceTrait.class)
+                  ? depService.expectTrait(LocalServiceTrait.class).getSdkId()
+                  : DafnyNameResolver.dafnyNamespace(depService);
                 w.write(
                   """
                   if err.Is_$L() {
