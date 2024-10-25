@@ -49,7 +49,7 @@ Resources:
       Description: "Allow Read, Write, and Delete of Items in Test Table"
       ManagedPolicyName: !Sub "${ProjectName}-DDB-ReadWriteDelete-${AWS::Region}"
       PolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Action:
@@ -71,7 +71,7 @@ Resources:
     Properties:
       ManagedPolicyName: !Sub "${ProjectName}-KMS-${AWS::Region}"
       PolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Action:
@@ -87,7 +87,7 @@ Resources:
     Properties:
       ManagedPolicyName: !Sub "${ProjectName}-SQS-${AWS::Region}"
       PolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Action:
@@ -95,8 +95,43 @@ Resources:
             Resource:
               - !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*"
 
+  S3DafnyTestBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: s3-dafny-test-bucket
+      LifecycleConfiguration:
+        Rules:
+          - Id: Expire in 14 days
+            Status: Enabled
+            ExpirationInDays: 14
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+  S3DafnyTestBucketUsage:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      ManagedPolicyName: S3-Dafny-Test-Bucket-Policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - "s3:ListBucket"
+            Resource:
+              - !GetAtt S3DafnyTestBucket.Arn
+          - Effect: Allow
+            Action:
+              - "s3:PutObject"
+              - "s3:GetObject"
+              - "s3:DeleteObject"
+            Resource:
+              - !Join ["", [!GetAtt S3DafnyTestBucket.Arn, "/*"]]
+
   GitHubCIRole:
-    Type: 'AWS::IAM::Role'
+    Type: "AWS::IAM::Role"
     Properties:
       RoleName: !Sub "GitHub-CI-${ProjectName}-Role-${AWS::Region}"
       Description: "Access DDB, KMS, & CA Resources for CI from GitHub"
@@ -105,6 +140,7 @@ Resources:
         - !Ref KMSUsage
         - !Ref DDBDafnyTestTableUsage
         - !Ref SQSUsage
+        - !Ref S3DafnyTestBucketUsage
       AssumeRolePolicyDocument: !Sub |
         {
           "Version": "2012-10-17",   

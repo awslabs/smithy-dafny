@@ -4,9 +4,7 @@
 include "../Model/SimpleExtendableResourcesTypes.dfy"
 include "./SimpleExtendableResourcesOperations.dfy"
 
-module
-  {:extern "simple.extendable.resources.internaldafny"}
-  SimpleExtendableResources refines AbstractSimpleExtendableResourcesService
+module {:extern "simple.extendable.resources.internaldafny"} SimpleExtendableResources refines AbstractSimpleExtendableResourcesService
 {
   import Operations = SimpleExtendableResourcesOperations
   
@@ -20,7 +18,7 @@ module
     // so the implementation MUST have it.
     config: SimpleExtendableResourcesConfig
   ) returns (
-    res: Result<ISimpleExtendableResourcesClient, Error>
+    res: Result<SimpleExtendableResourcesClient, Error>
   )
   {
     var internalConfig := Operations.Config();

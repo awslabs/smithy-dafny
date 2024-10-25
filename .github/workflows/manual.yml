@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       dafny:
-        description: 'The Dafny version to use'
+        description: "The Dafny version to use"
         required: true
         type: string
 
@@ -22,5 +22,13 @@ jobs:
       dafny: ${{ inputs.dafny }}
   manual-ci-net:
     uses: ./.github/workflows/test_models_net_tests.yml
+    with:
+      dafny: ${{ inputs.dafny }}
+  manual-ci-rust:
+    uses: ./.github/workflows/test_models_rust_tests.yml
+    with:
+      dafny: ${{ inputs.dafny }}
+  manual-ci-python:
+    uses: ./.github/workflows/test_models_python_tests.yml
     with:
       dafny: ${{ inputs.dafny }}

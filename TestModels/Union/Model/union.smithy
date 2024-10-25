@@ -8,7 +8,7 @@ namespace simple.union
 )
 service SimpleUnion {
   version: "2021-11-01",
-  operations: [ GetUnion, GetSingleValueUnion ]
+  operations: [ GetUnion, GetKnownValueUnion ]
 }
 
 structure SimpleUnionConfig {}
@@ -31,19 +31,58 @@ union MyUnion {
     StringValue: String
 }
 
-operation GetSingleValueUnion {
-  input: GetSingleValueUnionInput,
-  output: GetSingleValueUnionOutput
+operation GetKnownValueUnion {
+  input: GetKnownValueUnionInput,
+  output: GetKnownValueUnionOutput
 }
 
-structure GetSingleValueUnionInput {
-    union: SingleValueUnion
+structure GetKnownValueUnionInput {
+    union: KnownValueUnion
 }
 
-structure GetSingleValueUnionOutput {
-    union: SingleValueUnion
+structure GetKnownValueUnionOutput {
+    union: KnownValueUnion
 }
 
-union SingleValueUnion {
+union KnownValueUnion {
     Value: Integer
 }
+
+// Resources are reference types
+// This means that Dafny needs a little help
+// to reason about their possible state.
+union WithReferenceType {
+  Ref: SimpleResourceReference,
+  // A non-reference type is added to the union
+  // because not all unions may have
+  // all elements be a reference
+  NotRef: Integer,
+}
+
+@aws.polymorph#reference(resource: SimpleResource)
+structure SimpleResourceReference {}
+
+resource SimpleResource {
+  operations: [ GetResourceData ]
+}
+
+operation GetResourceData {
+  input: GetResourceDataInput,
+  output: GetResourceDataOutput,
+}
+
+structure GetResourceDataInput {
+  @required
+  requiredUnion: WithReferenceType,
+
+  optionUnion: WithReferenceType,
+}
+
+structure GetResourceDataOutput {
+  @required
+  requiredUnion: WithReferenceType,
+
+  optionUnion: WithReferenceType,
+}
+
+

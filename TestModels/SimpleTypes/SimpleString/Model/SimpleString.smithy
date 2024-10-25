@@ -9,7 +9,7 @@ namespace simple.types.smithyString
 service SimpleTypesString {
   version: "2021-11-01",
   resources: [],
-  operations: [ GetString, GetStringSingleValue, GetStringUTF8 ],
+  operations: [ GetString, GetStringKnownValue, GetStringUTF8, GetStringUTF8KnownValue ],
   errors: [],
 }
 
@@ -20,14 +20,19 @@ operation GetString {
   output: GetStringOutput,
 }
 
-operation GetStringSingleValue {
+operation GetStringKnownValue {
   input: GetStringInput,
   output: GetStringOutput,
 }
 
 operation GetStringUTF8 {
-  input: GetStringInput,
-  output: GetStringOutput,
+  input: GetStringUTF8Input,
+  output: GetStringUTF8Output,
+}
+
+operation GetStringUTF8KnownValue {
+  input: GetStringUTF8Input,
+  output: GetStringUTF8Output,
 }
 
 structure GetStringInput {
@@ -36,4 +41,15 @@ structure GetStringInput {
 
 structure GetStringOutput {
   value: String
+}
+
+@aws.polymorph#dafnyUtf8Bytes
+string UTF8Bytes
+
+structure GetStringUTF8Input {
+  value: UTF8Bytes
+}
+
+structure GetStringUTF8Output {
+  value: UTF8Bytes
 }

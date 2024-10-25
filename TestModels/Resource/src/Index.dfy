@@ -4,9 +4,7 @@
 include "../Model/SimpleResourcesTypes.dfy"
 include "./SimpleResourcesOperations.dfy"
 
-module
-  {:extern "simple.resources.internaldafny"}
-  SimpleResources refines AbstractSimpleResourcesService
+module {:extern "simple.resources.internaldafny"} SimpleResources refines AbstractSimpleResourcesService
 {
   import Operations = SimpleResourcesOperations
 
@@ -20,7 +18,7 @@ module
   method SimpleResources(
     config: SimpleResourcesConfig
   ) returns (
-    res: Result<ISimpleResourcesClient, Error>
+    res: Result<SimpleResourcesClient, Error>
   )
   {
     var internalConfig: Operations.InternalConfig := Operations.Config(

@@ -85,7 +85,7 @@ module SimpleDependenciesImpl refines AbstractSimpleDependenciesOperations {
 
     var simpleResourcesConfig := config.simpleResourcesConfig;
 
-    var client: SimpleResourcesTypes.ISimpleResourcesClient :- expect SimpleResources.SimpleResources(
+    var client: SimpleResources.SimpleResourcesClient :- expect SimpleResources.SimpleResources(
       simpleResourcesConfig
     );
 
@@ -160,7 +160,7 @@ module SimpleDependenciesImpl refines AbstractSimpleDependenciesOperations {
     returns (output: Result<SimpleExtendableResourcesTypes.GetExtendableResourceErrorsOutput, Error>)
   {
     var obj: object := new ExtendableResource.OpaqueMessage();
-    var extendableResourceError := SimpleExtendableResourcesTypes.Opaque(obj);
+    var extendableResourceError := SimpleExtendableResourcesTypes.Opaque(obj, "alt text for the message");
     var dependenciesError := Error.SimpleExtendableResources(extendableResourceError);
     return Failure(dependenciesError);
   }

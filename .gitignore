@@ -2,8 +2,17 @@
 /.idea
 /.history
 /.smithy.lsp.log
+*.pyc
 
 */**/.idea
 /codegen/smithy-dafny-codegen/bin
 /codegen/smithy-dafny-codegen-cli/bin
 /smithy-dafny-conversion/bin
+
+.project
+.classpath
+.settings
+.class
+
+# Added by formatting tooling
+node_modules
