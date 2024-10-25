@@ -1,4 +1,4 @@
-## Overview
+# Overview
 
 Smithy is an interface definition language.
 It lets you abstract your interface
@@ -9,9 +9,8 @@ that can safely evolve
 maintaining both forward and backwards compatibility.
 
 Dafny is a programming language with formal verification features.
-Dafny code is translated to higher-level languages
-to provide interoperability for your verified code
-like Java or C#.
+Dafny code is translated to higher-level languages like Java or C#
+to provide interoperability with your verified code.
 These native representations are then executable.
 This means that a single Dafny program
 can be translated into multiple equivalent programs.
@@ -33,7 +32,7 @@ In this project Dafny and Smithy are combined
 to generate concrete interfaces in Dafny
 and supported Dafny translation targets.
 These generated interfaces all use the same translated Dafny implementation
-and expose native interfaces and types for each language.
+this allows a single implementation in Dafny to generate native interfaces in other languages.
 
 The Smithy shapes are the common denominator
 between all these different types/conversions.
@@ -41,6 +40,7 @@ between all these different types/conversions.
 Concretely our traditional greeting program:
 `() => "Hello World!"`
 generate interfaces that can be used like this:
+
 1. Dafny -> `var hello: seq<char> :- greet();`
 1. Java -> `String hello = greet();`
 1. C# -> `string hello = greet();`
@@ -72,13 +72,20 @@ generate interfaces that can be used like this:
     Dafny and native types.
     e.g. `D == ToDafny(ToNative(D))`,
     `N == ToNative(ToDafny(N))`
+- `abstract module`:
+    A Dafny feature that lets you define
+    an interface for an whole module,
+    not just a `trait` or some other single object.
+- `extern`:
+    A Dafny feature for defining and specifying
+    native code that will be called by Dafny.
 
 ### Conventions used in this document
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL"
 in this document are to be interpreted as described in [RFC 2119](https://tools.ietf.org/html/rfc2119).
 
-## Smithy-Dafny modes
+## Smithy-Dafny use cases
 
 ### Library
 
@@ -87,13 +94,15 @@ This is where the implementation is locally executing code,
 rather than a remote service like most AWS Service Smithy models.
 
 In this mode `smithy-dafny` will produce Dafny types and interfaces
-for a Smithy model in Dafny.
-This creates an `abstract module` in Dafny you can refine
+from a Smithy model that can have an implementation in Dafny.
+This creates an `abstract module` in Dafny you refine
 with a concrete implementation.
+An `abstract module` in Dafny is much like an interface,
+but for a whole module not just a single object.
 
 `smithy-dafny` also generates polymorph code
-that will expose native types and interfaces
-for your Smithy model.
+that will expose idiomatic types and interfaces
+for your Smithy model for non-Dafny runtimes.
 This creates a shim with native interfaces.
 These native interfaces are connected
 to the Dafny interface
@@ -126,11 +135,13 @@ by wrapping existing native client implementations.
 
 The problem we are trying to solve here is:
 I am writing code in Dafny
+and there is no native Dafny AWS SDK
 and I want to call an AWS service,
 how do I do that?
 
 In this mode `smithy-dafny` will produce Dafny types and interfaces
 so that Dafny code can call the native implementation.
+Then for each native runtime the native SDK is wrapped in a thin Dafny shim.
 
 `smithy-dafny` also generates polymorph code
 so that these Dafny types and interfaces
@@ -178,12 +189,14 @@ to call native AWS SDKs.
 `smithy-dafny` can wrap an existing `smithy-dafny` library.
 This is useful for integration testing.
 
-When you consider the first two use cases
+When you consider `smithy-dafny` uses cases
+like local services and wrapped AWS services
 it is clear that you need tests
 to verify that these features are correct.
 
-The first thought is be to write tests in each runtime.
-But this is very expensive.
+Your first thought might be to write tests in each runtime,
+but this is very expensive.
+This is because you need to write the same test for each runtime.
 Also keeping track of all these tests across different runtimes is difficult.
 You don't want to have tests only in some runtimes but not others.
 
@@ -192,21 +205,24 @@ But if you natively write these tests in Dafny
 when you execute them
 they will only test the Dafny code.
 Because they will not exercise the type conversions.
+The generated idiomatic APIs all have custom, language-specific logic
+for converting from their unidiomatic, Dafny-specific counterparts,
+tests written in native Dafny would not be sufficient at making assertions about the idiomatic APIs.
 
-So we want to write the tests in Dafny so that they are interoperable
+So we want to write the tests in Dafny so that they are standardized
 but we need to exercise the native code.
 By wrapping the whole project
-we force an additional type  conversion.
+we force an additional type conversion.
 
-Writing tests in Dafny means that
-your testing is now also interoperable.
-A Dafny tests can check multiple runtimes.
-But a simple test would only check the Dafny interfaces.
+This means we have written a single test
+that can be across runtimes
+to verify both the type conversions
+and the behavior of a specific Dafny library.
 
 For more details on how this works
 see the [polymorph development](#polymorph-development) section blow.
 
-This feature is used to test `smithy-dafny` on itself
+`smithy-dafny` dogfoods this feature on itself
 in the TestModels.
 This features is used by the Encryption SDK
 in the test vector runners
