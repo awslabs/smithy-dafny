@@ -1327,18 +1327,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                   sdkId =
                     depService.expectTrait(LocalServiceTrait.class).getSdkId();
                 } else {
-                  final var tempSdkId = depService
-                    .expectTrait(ServiceTrait.class)
-                    .getSdkId()
-                    .toLowerCase();
-                  sdkId =
-                    switch (tempSdkId) {
-                      case "kms" -> "ComAmazonawsKms";
-                      case "dynamodb" -> "ComAmazonawsDynamodb";
-                      default -> throw new IllegalArgumentException(
-                        "Go polymorph only supports KMS and DDB"
-                      );
-                    };
+                  sdkId = DafnyNameResolver.dafnyNamespace(depService);
                 }
                 w.write(
                   """
