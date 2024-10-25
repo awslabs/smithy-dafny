@@ -1007,11 +1007,11 @@ public class DafnyLocalServiceTypeConversionProtocol
   ) {
     final var sdkErrHandler = new StringBuilder();
     final var serviceShape = context.settings().getService(context.model());
-    Shape sdkDepShape = null;
+    Boolean sdkDepFound = false;
     for (final var dep : dependencies) {
       final var depShape = context.model().expectShape(dep);
       if (depShape.hasTrait(ServiceTrait.class)) {
-        if (sdkDepShape == null) {
+        if (sdkDepFound == false) {
           w.addImport(SmithyGoDependency.SMITHY_SOURCE_PATH);
           sdkErrHandler.append(
             """
@@ -1025,7 +1025,7 @@ public class DafnyLocalServiceTypeConversionProtocol
           ),
           SmithyNameResolver.shapeNamespace(depShape)
         );
-        sdkDepShape = depShape;
+        sdkDepFound = true;
         final var sdkDepErrorVar = depShape
           .expectTrait(ServiceTrait.class)
           .getSdkId()
@@ -1059,18 +1059,13 @@ public class DafnyLocalServiceTypeConversionProtocol
         );
       }
     }
-    if (sdkDepShape != null) {
+    if (sdkDepFound) {
       sdkErrHandler.append(
         """
-        return %s.Create_%s_(%s)
+        return %s.Companion_Error_.Create_Opaque_(err, dafny.SeqOfChars([]dafny.Char(err.Error())...))
         """.formatted(
-            DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
-            DafnyNameResolver.dafnyNamespace(sdkDepShape),
-            sdkDepShape
-              .expectTrait(ServiceTrait.class)
-              .getSdkId()
-              .concat("Error")
-          )
+          DafnyNameResolver.dafnyTypesNamespace(serviceShape)
+        )
       );
       w.write(sdkErrHandler.toString());
     }
