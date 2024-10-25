@@ -3,16 +3,12 @@ package software.amazon.polymorph.smithygo.localservice;
 import static software.amazon.polymorph.smithygo.codegen.SymbolUtils.POINTABLE;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Optional;
 import java.util.Set;
 import software.amazon.polymorph.smithygo.codegen.ApplicationProtocol;
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoDelegator;
-import software.amazon.polymorph.smithygo.codegen.GoWriter;
-import software.amazon.polymorph.smithygo.codegen.SmithyGoDependency;
 import software.amazon.polymorph.smithygo.codegen.integration.ProtocolGenerator;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
@@ -28,6 +24,7 @@ import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.ResourceShape;
 import software.amazon.smithy.model.shapes.ServiceShape;
+import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.shapes.ShapeId;
 import software.amazon.smithy.model.shapes.StructureShape;
 import software.amazon.smithy.model.traits.ErrorTrait;
@@ -989,19 +986,33 @@ public class DafnyLocalServiceTypeConversionProtocol
                   .getDependencies()
                 : new LinkedList<ShapeId>();
               if (dependencies != null) {
-                handleServiceError(w, dependencies, context);
+                var sdkErrHandler = new StringBuilder();
+                Shape sdkDepShape = null;
                 for (final var dep : dependencies) {
                   final var depShape = context.model().expectShape(dep);
-                  // Service error is already handled with call to handleServiceError function
-                  // Service error handled outside the for loop because we don't want writer to print two duplicate block case smithy.APIError twice
-                  // For example: if we have DDB and KMS in a model then writer will handle dependency twice and case smithy.APIError will be written twice
-                  if (
-                    context
-                      .model()
-                      .expectShape(dep)
-                      .hasTrait(ServiceTrait.class)
-                  ) {
-                    continue;
+                  if (depShape.hasTrait(ServiceTrait.class)) {
+                    if (sdkDepShape == null) {
+                      sdkErrHandler.append("""
+                          case smithy.APIError:
+                          """);
+                    }
+                    sdkDepShape = depShape;
+                    final var sdkDepErrorVar = depShape
+                      .expectTrait(ServiceTrait.class).getSdkId().concat("Error");
+                    sdkErrHandler.append(
+                      """
+                      %s := %s.Error_ToDafny(err)
+                      if(!%s.Is_Opaque()) {
+                        return %s.Create_%s_(%s)
+                      }
+                      """.formatted(
+                      sdkDepErrorVar,
+                      SmithyNameResolver.shapeNamespace(depShape),
+                      sdkDepErrorVar,
+                      DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
+                      DafnyNameResolver.dafnyNamespace(depShape),
+                      sdkDepErrorVar
+                    ));
                   } else {
                     w.write(
                       """
@@ -1016,6 +1027,17 @@ public class DafnyLocalServiceTypeConversionProtocol
                     );
                   }
                 }
+                if (sdkDepShape != null) {
+                  sdkErrHandler.append("""
+                      return %s.Create_%s_(%s)
+                      """.formatted(
+                        DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
+                        DafnyNameResolver.dafnyNamespace(sdkDepShape),
+                        sdkDepShape
+                      .expectTrait(ServiceTrait.class).getSdkId().concat("Error")
+                      ));
+                  w.write(sdkErrHandler.toString());
+                }
               }
             }),
             SmithyNameResolver.smithyTypesNamespace(serviceShape),
@@ -1024,91 +1046,6 @@ public class DafnyLocalServiceTypeConversionProtocol
           );
         }
       );
-  }
-
-  private void handleServiceError(
-    final GoWriter writer,
-    final Collection<ShapeId> dependencies,
-    final GenerationContext context
-  ) {
-    final var serviceShape = context.settings().getService(context.model());
-    Optional<ShapeId> kmsShapeId = dependencies
-      .stream()
-      .filter(shapeId -> "TrentService".equals(shapeId.getName()))
-      .findFirst();
-    Optional<ShapeId> ddbShapeId = dependencies
-      .stream()
-      .filter(shapeId -> "DynamoDB_20120810".equals(shapeId.getName()))
-      .findFirst();
-    // 1. Check if we have both KMS and DDB dependencies
-    //    - If KMS is opaque, it is going to delegate to DDB. And return a DDB error (opaque or non opaque)
-    //    - If KMS is not opaque, it returns ComAmazonawsKms error.
-    // 2. If we have only one KMS or DDB dependencies, delegate to that and return error
-    if (kmsShapeId.isPresent() && ddbShapeId.isPresent()) {
-      writer.addImport(SmithyGoDependency.SMITHY_SOURCE_PATH);
-      final var kmsShape = context.model().expectShape(kmsShapeId.get());
-      final var ddbShape = context.model().expectShape(ddbShapeId.get());
-      writer.addImportFromModule(
-        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-          ddbShape.getId().getNamespace()
-        ),
-        SmithyNameResolver.shapeNamespace(ddbShape)
-      );
-      writer.addImportFromModule(
-        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-          kmsShape.getId().getNamespace()
-        ),
-        SmithyNameResolver.shapeNamespace(kmsShape)
-      );
-      final String kmsShapeNamespace = SmithyNameResolver.shapeNamespace(
-        kmsShape
-      );
-      final String ddbShapeNamespace = SmithyNameResolver.shapeNamespace(
-        ddbShape
-      );
-      writer.write(
-        """
-        case smithy.APIError:
-          kmsError := $L.Error_ToDafny(err)
-          ddbError := $L.Error_ToDafny(err)
-          // There is no generic way to know if the error is a kms or a ddb error. So, we check for Opaque error.
-          if(!kmsError.Is_Opaque()) {
-            return $L.Create_$L_(kmsError)
-          } else {
-            return $L.Create_$L_(ddbError)
-          }
-        """,
-        kmsShapeNamespace,
-        ddbShapeNamespace,
-        DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
-        DafnyNameResolver.dafnyNamespace(kmsShape),
-        DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
-        DafnyNameResolver.dafnyNamespace(ddbShape)
-      );
-    } else if (kmsShapeId.isPresent() || ddbShapeId.isPresent()) {
-      writer.addImport(SmithyGoDependency.SMITHY_SOURCE_PATH);
-      final var depShape = context
-        .model()
-        .expectShape(
-          kmsShapeId.isPresent() ? kmsShapeId.get() : ddbShapeId.get()
-        );
-      writer.addImportFromModule(
-        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-          depShape.getId().getNamespace()
-        ),
-        SmithyNameResolver.shapeNamespace(depShape)
-      );
-      writer.write(
-        """
-        case smithy.APIError:
-          e := $L.Error_ToDafny(err)
-          return $L.Create_$L_(e)
-        """,
-        SmithyNameResolver.shapeNamespace(depShape),
-        DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
-        DafnyNameResolver.dafnyNamespace(depShape)
-      );
-    }
   }
 
   private void generateConfigDeserializer(final GenerationContext context) {
