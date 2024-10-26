@@ -92,6 +92,9 @@ Resources:
           - Effect: Allow
             Action:
               - sqs:ListQueues
+              - sqs:CreateQueue
+              - sqs:SendMessage
+              - sqs:ReceiveMessage
             Resource:
               - !Sub "arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*"
 
