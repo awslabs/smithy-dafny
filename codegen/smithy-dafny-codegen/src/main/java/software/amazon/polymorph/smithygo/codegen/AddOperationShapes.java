@@ -100,7 +100,6 @@ public final class AddOperationShapes {
     return modelBuilder.build();
   }
 
-
   private static StructureShape cloneOperationShape(
     ServiceShape service,
     ShapeId operationShapeId,
