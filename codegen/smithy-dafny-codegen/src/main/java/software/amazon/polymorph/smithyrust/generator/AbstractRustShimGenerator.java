@@ -115,7 +115,8 @@ public abstract class AbstractRustShimGenerator {
       .getStructureShapes()
       .stream()
       .filter(s -> s.hasTrait(ErrorTrait.class))
-      .filter(o -> ModelUtils.isInServiceNamespace(o, service));
+      .filter(o -> ModelUtils.isInServiceNamespace(o, service))
+      .sorted();
   }
 
   protected final boolean isInputOrOutputStructure(
