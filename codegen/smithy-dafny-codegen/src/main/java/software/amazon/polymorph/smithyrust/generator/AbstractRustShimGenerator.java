@@ -107,6 +107,7 @@ public abstract class AbstractRustShimGenerator {
       .getAllBindingShapes()
       .stream()
       .filter(s -> ModelUtils.isInServiceNamespace(s, service))
+      .sorted()
       .flatMap(s -> operationBindingIndex.getOperations(s).stream());
   }
 
