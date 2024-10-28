@@ -634,7 +634,7 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
     return symbolBuilderFor(
       shape,
       name,
-      SmithyNameResolver.smithyTypesNamespace(settings.getService(model))
+      SmithyNameResolver.smithyTypesNamespace(shape)
     )
       .definitionFile("./types/types.go")
       .build();
