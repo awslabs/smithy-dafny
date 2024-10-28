@@ -34,23 +34,25 @@ module AmazonSQSExtendedImpl refines AbstractPolymorphTutorialSqsextendedOperati
 
     for i := 0 to |messages| {
       var message := messages[i];
-      // TODO: Handle error better
+      // TODO: Propogate error instead of terminating
       var receiptHandle :- expect message.ReceiptHandle;
 
       var messageResult := input.handler.HandleMessage(HandleMessageInput(message := message));
 
       if messageResult.Success? {
-        var deleteResult := config.sqsClient.DeleteMessage(ComAmazonawsSqsTypes.DeleteMessageRequest(
-                                                             QueueUrl := queueUrl,
-                                                             ReceiptHandle := receiptHandle
-                                                           ));
+        var deleteResult := config.sqsClient.DeleteMessage(
+          ComAmazonawsSqsTypes.DeleteMessageRequest(
+            QueueUrl := queueUrl,
+            ReceiptHandle := receiptHandle
+          ));
       } else {
         // TODO: Handle retryable errors
-        var deleteResult := config.sqsClient.ChangeMessageVisibility(ComAmazonawsSqsTypes.ChangeMessageVisibilityRequest(
-                                                                       QueueUrl := queueUrl,
-                                                                       ReceiptHandle := receiptHandle,
-                                                                       VisibilityTimeout := 0
-                                                                     ));
+        var deleteResult := config.sqsClient.ChangeMessageVisibility(
+          ComAmazonawsSqsTypes.ChangeMessageVisibilityRequest(
+            QueueUrl := queueUrl,
+            ReceiptHandle := receiptHandle,
+            VisibilityTimeout := 0
+          ));
       }
     }
 

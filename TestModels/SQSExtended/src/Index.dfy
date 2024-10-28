@@ -7,9 +7,9 @@ module {:extern "polymorph.tutorial.sqsextended.internaldafny" } SQSExtended ref
 
   method SQSExtended(config: SQSExtendedClientConfig)
     returns (res: Result<SQSExtendedClient, Error>)
-    ensures res.Success? ==> 
-      && res.value.ValidState()
-      && fresh(res.value.History)
+    ensures res.Success? ==>
+              && res.value.ValidState()
+              && fresh(res.value.History)
   {
     var client := new SQSExtendedClient(Operations.Config(
                                         sqsClient := config.sqsClient
