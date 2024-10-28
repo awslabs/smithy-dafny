@@ -26,6 +26,13 @@ public class SmithyNameResolver {
     )
   );
 
+  public static Boolean isShapeFromAWSSDK (
+    final Shape shape
+  ) {
+    // Is there a better way to do this?
+    // I did not figure out any other then hardcoding.
+    return shape.toShapeId().getNamespace().startsWith("com.amazonaws.");
+  }
   public static void setSmithyNamespaceToGoModuleNameMap(
     Map<String, String> smithyNamespaceToGoModuleNameMap
   ) {
@@ -54,10 +61,13 @@ public class SmithyNameResolver {
       .concat("smithygenerated");
   }
 
-  public static String smithyTypesNamespace(final Shape shape) {
-    return shape
-      .toShapeId()
-      .getNamespace()
+  public static String smithyTypesNamespace(final Shape shape) { 
+    final String shapeNameSpace = shape.toShapeId().getNamespace();
+    if(isShapeFromAWSSDK(shape)) {
+      final String sdkName = shapeNameSpace.substring(shapeNameSpace.lastIndexOf(".") + 1).toLowerCase();
+      return sdkName.concat("types");
+    }
+    return shapeNameSpace
       .replace(DOT, BLANK)
       .toLowerCase()
       .concat("smithygeneratedtypes");
@@ -207,4 +217,4 @@ public class SmithyNameResolver {
       .concat(DOT)
       .concat("Client");
   }
-}
+
