@@ -93,6 +93,7 @@ Resources:
             Action:
               - sqs:ListQueues
               - sqs:CreateQueue
+              - sqs:DeleteQueue
               - sqs:SendMessage
               - sqs:ReceiveMessage
             Resource:
