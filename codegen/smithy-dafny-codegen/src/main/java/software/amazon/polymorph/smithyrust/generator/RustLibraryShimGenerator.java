@@ -367,6 +367,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
 
     final String resourceModules = streamResourcesToGenerateTraitsFor()
       .filter(o -> o.getId().getNamespace().equals(namespace))
+      .sorted()
       .map(resourceShape ->
         evalTemplate(
           """
@@ -381,6 +382,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
 
     final String structureModules = streamStructuresToGenerateStructsFor()
       .filter(o -> o.getId().getNamespace().equals(namespace))
+      .sorted()
       .map(structureShape ->
         evalTemplate(
           """
@@ -396,6 +398,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
     final String enumModules = ModelUtils
       .streamEnumShapes(model, service.getId().getNamespace())
       .filter(o -> o.getId().getNamespace().equals(namespace))
+      .sorted()
       .map(enumShape ->
         evalTemplate(
           """
@@ -413,6 +416,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       .stream()
       .filter(this::shouldGenerateEnumForUnion)
       .filter(o -> o.getId().getNamespace().equals(namespace))
+      .sorted()
       .map(unionShape ->
         evalTemplate(
           """
@@ -695,6 +699,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         ModelUtils.isInServiceNamespace(bindingShape, service)
       )
       .flatMap(this::operationModuleDeclarationForBindingShape)
+      .sorted()
       .collect(Collectors.joining("\n\n"));
     return new RustFile(
       rootPathForShape(service).resolve("operation.rs"),
