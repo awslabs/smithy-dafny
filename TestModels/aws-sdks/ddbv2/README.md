@@ -5,6 +5,13 @@ This project tests the [AWS DynamoDB](https://aws.amazon.com/dynamodb/) Operatio
 NOTE: The `model.json` in this project comes from [private-aws-encryption-sdk-dafny-staging/ComAmazonawsDynamodb/Model/dynamodb](https://github.com/aws/private-aws-encryption-sdk-dafny-staging/tree/v4-seperate-modules/ComAmazonawsDynamodb/Model/dynamodb), and is different from the standard model at https://github.com/aws/aws-models/ddb/
 This v2 version uses the smithy 2.0 model and should be compatible with the latest/v2 sdk of a runtime.
 
+It also has modified `DisableKinesisStreamingDestination` and `EnableKinesisStreamingDestination` inputs and outputs.
+These operations use handwritten `structure`s to follow the smithy guidelines of not reusing Input and Output shapes.
+Most of the smithy-codegen do this while reading the model, but smithy-dafny .NET and Java don't do this transformation
+and end up generating code which is not compatible with the corresponding sdks. Hence this model is modified to make it work with
+smithy-dafny .NET and Java. All other codegens (and sdks) should work as expected - since their transformation would behave as
+an Indentity transformation for this modified model.
+
 ## Build
 
 ### Python

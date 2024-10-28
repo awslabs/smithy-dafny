@@ -29,6 +29,7 @@ dependencies {
     implementation("software.amazon.smithy:smithy-waiters:$smithyVersion")
     implementation("software.amazon.smithy:smithy-smoke-test-traits:$smithyVersion")
     implementation("software.amazon.smithy:smithy-aws-endpoints:$smithyVersion")
+    implementation("software.amazon.smithy:smithy-aws-traits:$smithyVersion")
 
     implementation("org.commonmark:commonmark:0.22.0")
 
