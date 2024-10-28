@@ -694,8 +694,8 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       .filter(bindingShape ->
         ModelUtils.isInServiceNamespace(bindingShape, service)
       )
-      .sorted()
       .flatMap(this::operationModuleDeclarationForBindingShape)
+      .sorted()
       .collect(Collectors.joining("\n\n"));
     return new RustFile(
       rootPathForShape(service).resolve("operation.rs"),
