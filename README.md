@@ -76,7 +76,7 @@ However, it also means that future service changes that should be backwards-comp
 
 ### Runtime libraries
 
-Like other Smithy-based code generators, these tools will emit references to 
+Like other Smithy-based code generators, these tools will emit references to
 [common runtime library code](https://smithy.io/2.0/guides/building-codegen/overview-and-concepts.html#runtime-libraries).
 However, at the time of writing this the Dafny ecosystem does not yet have mature package management features
 to support distributing and maintaining such libraries.

@@ -1,4 +1,5 @@
 # Streaming
+
 This project will implement the smithy trait [streaming](https://smithy.io/2.0/spec/streaming.html#smithy-api-streaming-trait) and the associated operations in `dafny`.
 
 ## Status
