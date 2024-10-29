@@ -152,7 +152,7 @@ public class ToNativeConstants {
          }
          return new IllegalStateException(String.format(%s, dafnyValue));
        }
-       
+
        public static RuntimeException Error(Error dafnyValue) {
          if (dafnyValue.is_DependencyTimeoutException()) {
            return ToNative.Error((Error_DependencyTimeoutException) dafnyValue);
