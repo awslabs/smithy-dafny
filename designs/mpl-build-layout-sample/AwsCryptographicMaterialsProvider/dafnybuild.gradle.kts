@@ -15,10 +15,6 @@ dafny {
     // The Dafny Gradle plugin will be updated to generate a dfyconfig.toml,
     // so to do local development you'll just want to build once first.
     // This is common for Brazil development especially.
-
-    // The Dafny project can make use of replaceable modules.
-    // The polymorph plugin will take those into account as input,
-    // copying as necessary into the right places in build/polymorph/<lang>/...
 }
 
 polymorph {
