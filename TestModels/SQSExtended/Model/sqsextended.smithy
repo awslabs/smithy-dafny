@@ -33,6 +33,7 @@ structure SQSExtendedError {
 @aws.polymorph#reference(service: com.amazonaws.sqs#AmazonSQS)
 structure SQSClientReference {}
 
+@aws.polymorph#extendable
 resource MessageHandler {
   operations: [
     HandleMessage,
