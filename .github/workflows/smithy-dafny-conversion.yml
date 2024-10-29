@@ -1,20 +1,22 @@
 name: smithy-dafny-conversion workflows
 
-on: 
+on:
   pull_request:
   push:
     branches:
       - main-1.x
 
 jobs:
-  gradle-build:
+  gradle-build-smithy-dafny-conversion:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
       - uses: actions/setup-java@v3
         with:
-          distribution: 'corretto'
-          java-version: '8'
+          distribution: "corretto"
+          java-version: "8"
 
       - name: Setup Dafny
         uses: dafny-lang/setup-dafny-action@v1.6.1

@@ -1,3 +1,5 @@
+// Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 include "../Model/SimpleErrorsTypes.dfy"
 
 module SimpleErrorsImpl refines AbstractSimpleErrorsOperations  {
@@ -52,7 +54,7 @@ module SimpleErrorsImpl refines AbstractSimpleErrorsOperations  {
       // TODO: Rewrite this as an actual extern.
       var opaqueObject := new SomeOpaqueGeneratedTypeForTesting();
 
-      var res := Error.Opaque( obj := opaqueObject );
+      var res := Error.Opaque( obj := opaqueObject, alt_text := "Some Generated Test" );
 
       return Failure(res);
   }

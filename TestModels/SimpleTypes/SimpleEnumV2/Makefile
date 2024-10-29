@@ -2,97 +2,46 @@
 # SPDX-License-Identifier: Apache-2.0
 
 CORES=2
-DAFNY_ROOT := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
-# Note: This build target fails. This project does not support code generation for Smithy 2.0 models.
-polymorph_dafny :
-	cd ../../../codegen/smithy-dafny-codegen-cli;\
-	./gradlew run --args="\
-	--output-dafny \
-	--include-dafny $(DAFNY_ROOT)/../../dafny-dependencies/StandardLibrary/src/Index.dfy \
-	--model $(DAFNY_ROOT)/Model \
-	--dependent-model $(DAFNY_ROOT)/../../dafny-dependencies/Model \
-	--namespace simple.types.enumv2"; \
-	./gradlew run --args="\
-	--output-dafny \
-	--output-local-service-test $(DAFNY_ROOT)/Model \
-	--include-dafny $(DAFNY_ROOT)/../../dafny-dependencies/StandardLibrary/src/Index.dfy \
-	--model $(DAFNY_ROOT)/Model \
-	--dependent-model $(DAFNY_ROOT)/../../dafny-dependencies/Model \
-	--namespace simple.types.enumv2"; \
+TRANSPILE_TESTS_IN_RUST=1
 
-# Note: This build target fails. This project does not support code generation for Smithy 2.0 models.
-polymorph_net :
-	cd ../../../codegen/smithy-dafny-codegen-cli;\
-	./gradlew run --args="\
-	--output-dafny \
-	--include-dafny $(DAFNY_ROOT)/../../dafny-dependencies/StandardLibrary/src/Index.dfy \
-	--output-dotnet $(DAFNY_ROOT)/runtimes/net/Generated/ \
-	--model $(DAFNY_ROOT)/Model \
-	--dependent-model $(DAFNY_ROOT)/../../dafny-dependencies/Model \
-	--namespace simple.types.enumv2"; \
-	./gradlew run --args="\
-	--output-dafny \
-	--output-local-service-test $(DAFNY_ROOT)/Model \
-	--include-dafny $(DAFNY_ROOT)/../../dafny-dependencies/StandardLibrary/src/Index.dfy \
-	--output-dotnet $(DAFNY_ROOT)/runtimes/net/Generated/Wrapped \
-	--model $(DAFNY_ROOT)/Model \
-	--dependent-model $(DAFNY_ROOT)/../../dafny-dependencies/Model \
-	--namespace simple.types.enumv2"; \
+ENABLE_EXTERN_PROCESSING=1
 
-# Note: Any build targets below this line have not been tested; they depend on the first two targets, which fail.
-verify:
-	dafny \
-		-vcsCores:$(CORES) \
-		-compile:0 \
-		-definiteAssignment:3 \
-		-verificationLogger:csv \
-		-timeLimit:300 \
-		-trace \
-		`find . -name '*.dfy'`
+include ../../SharedMakefile.mk
 
-dafny-reportgenerator:
-	dafny-reportgenerator \
-		summarize-csv-results \
-		--max-resource-count 10000000 \
-		TestResults/*.csv
+NAMESPACE=simple.types.enumV2
 
-transpile_net: | transpile_implementation_net transpile_test_net transpile_net_dependencies
+PROJECT_SERVICES := \
+        SimpleTypesEnumV2
 
-transpile_implementation_net:
-	dafny \
-		-vcsCores:$(CORES) \
-		-compileTarget:cs \
-		-spillTargetCode:3 \
-		-runAllTests:1 \
-		-compile:0 \
-		-optimizeErasableDatatypeWrapper:0 \
-		-useRuntimeLib \
-		-out runtimes/net/ImplementationFromDafny \
-		./src/Index.dfy \
-		-library:../../dafny-dependencies/StandardLibrary/src/Index.dfy \
+MAIN_SERVICE_FOR_RUST := SimpleTypesEnumV2
 
+SERVICE_NAMESPACE_SimpleTypesEnumV2=simple.types.enumV2
 
-transpile_test_net:
-	dafny \
-		-vcsCores:$(CORES) \
-		-compileTarget:cs \
-		-spillTargetCode:3 \
-		-runAllTests:1 \
-		-compile:0 \
-		-optimizeErasableDatatypeWrapper:0 \
-		-useRuntimeLib \
-		-out runtimes/net/tests/TestsFromDafny \
-		`find ./test -name '*.dfy'` \
-		-library:src/Index.dfy
+SERVICE_DEPS_SimpleTypesEnumV2 :=
 
-	$(MAKE) -C ../../dafny-dependencies/StandardLibrary transpile_implementation_net \
+SMITHY_DEPS=dafny-dependencies/Model/traits.smithy
 
-test_net:
-	dotnet run \
-		--project runtimes/net/tests/ \
-		--framework net6.0
+# This project has no dependencies
+# DEPENDENT-MODELS:=
 
-setup_net:
-	dotnet restore runtimes/net/
-	
+# Python
+
+PYTHON_MODULE_NAME=simple_types_smithyenumv2
+
+TRANSLATION_RECORD_PYTHON := \
+    --translation-record ../../dafny-dependencies/StandardLibrary/runtimes/python/src/smithy_dafny_standard_library/internaldafny/generated/dafny_src-py.dtr
+
+# Constants for languages that drop extern names (Python, Go)
+
+TYPES_FILE_PATH=Model/SimpleTypesEnumV2Types.dfy
+TYPES_FILE_WITH_EXTERN_STRING="module {:extern \"simple.types.enumv2.internaldafny.types\" } SimpleTypesEnumV2Types"
+TYPES_FILE_WITHOUT_EXTERN_STRING="module SimpleTypesEnumV2Types"
+
+INDEX_FILE_PATH=src/Index.dfy
+INDEX_FILE_WITH_EXTERN_STRING="module {:extern \"simple.types.enumv2.internaldafny\" } SimpleEnumV2 refines AbstractSimpleTypesEnumV2Service {"
+INDEX_FILE_WITHOUT_EXTERN_STRING="module SimpleEnumV2 refines AbstractSimpleTypesEnumV2Service {"
+
+WRAPPED_INDEX_FILE_PATH=src/WrappedSimpleEnumImpl.dfy
+WRAPPED_INDEX_FILE_WITH_EXTERN_STRING="module {:extern \"simple.types.enumv2.internaldafny.wrapped\"} WrappedSimpleTypesEnumV2Service refines WrappedAbstractSimpleTypesEnumV2Service {"
+WRAPPED_INDEX_FILE_WITHOUT_EXTERN_STRING="module WrappedSimpleTypesEnumV2Service refines WrappedAbstractSimpleTypesEnumV2Service {"

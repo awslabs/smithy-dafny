@@ -1,3 +1,5 @@
+// Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 include "../Model/SimpleDependenciesTypes.dfy"
 
 module SimpleDependenciesImpl refines AbstractSimpleDependenciesOperations {
@@ -158,7 +160,7 @@ module SimpleDependenciesImpl refines AbstractSimpleDependenciesOperations {
     returns (output: Result<SimpleExtendableResourcesTypes.GetExtendableResourceErrorsOutput, Error>)
   {
     var obj: object := new ExtendableResource.OpaqueMessage();
-    var extendableResourceError := SimpleExtendableResourcesTypes.Opaque(obj);
+    var extendableResourceError := SimpleExtendableResourcesTypes.Opaque(obj, "alt text for the message");
     var dependenciesError := Error.SimpleExtendableResources(extendableResourceError);
     return Failure(dependenciesError);
   }

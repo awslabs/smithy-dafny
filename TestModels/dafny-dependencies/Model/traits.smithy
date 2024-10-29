@@ -1,3 +1,5 @@
+// Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 namespace aws.polymorph
 
 // Smithy doesn't allow passing resources or services as members of structures, 
@@ -22,6 +24,7 @@ list ServiceList {
 // A trait for explicitly modeling the configuration options that should be
 // available in the generated methods for creating clients.
 @trait(selector: "service")
+@protocolDefinition
 structure localService {
   @required
   sdkId: String,
@@ -71,6 +74,6 @@ structure mutableLocalState {}
 
 // This is a workaround that should be removed when
 // Smithy-Dafny properly supports @documentation
-// https://github.com/awslabs/smithy-dafny/issues/247
+// https://github.com/smithy-lang/smithy-dafny/issues/247
 @trait(selector: "*")
 string javadoc

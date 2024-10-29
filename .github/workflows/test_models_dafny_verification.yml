@@ -2,67 +2,39 @@
 name: Library Dafny verification
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main-1.x
-  workflow_dispatch:
-    # Manual trigger for this workflow, either the normal version
-    # or the nightly build that uses the latest Dafny prerelease
-    # (accordingly to the "nightly" parameter).
+  workflow_call:
     inputs:
-      nightly:
-        description: 'Run the nightly build'
+      dafny:
+        description: "The Dafny version to run"
+        required: true
+        type: string
+      num_shards:
         required: false
-        type: boolean
-  schedule:
-    # Nightly build against Dafny's nightly prereleases,
-    # for early warning of verification issues or regressions.
-    # Timing chosen to be adequately after Dafny's own nightly build,
-    # but this might need to be tweaked:
-    # https://github.com/dafny-lang/dafny/blob/master/.github/workflows/deep-tests.yml#L16
-    - cron: "30 16 * * *"
+        type: number
+        default: 10
 
 jobs:
+  populate-matrix-dimensions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Populate shard list
+        id: populate-shard-list
+        run: echo "shard-list=[`seq -s , 1 ${{ inputs.num_shards }}`]" >> $GITHUB_OUTPUT
+    outputs:
+      shard-list: ${{ steps.populate-shard-list.outputs.shard-list }}
   verification:
-    # Don't run the nightly build on forks
-    if: github.event_name != 'schedule' || github.repository_owner == 'awslabs'
+    needs: populate-matrix-dimensions
     strategy:
+      fail-fast: false
       matrix:
-        library: [
-          TestModels/dafny-dependencies/StandardLibrary, # This stores current Polymorph dependencies that all TestModels depend on
-          TestModels/Aggregate,
-          TestModels/AggregateReferences,
-          TestModels/Constraints,
-          TestModels/Constructor,
-          TestModels/Dependencies,
-          TestModels/Errors,
-          TestModels/Extendable,
-          TestModels/Extern,
-          TestModels/LocalService,
-          TestModels/Refinement,
-          TestModels/Resource,
-          # TestModels/SimpleTypes/BigDecimal,
-          # TestModels/SimpleTypes/BigInteger,
-          TestModels/SimpleTypes/SimpleBlob,
-          TestModels/SimpleTypes/SimpleBoolean,
-          # TestModels/SimpleTypes/SimpleByte,
-          TestModels/SimpleTypes/SimpleDouble,          
-          TestModels/SimpleTypes/SimpleEnum,
-          # TestModels/SimpleTypes/SimpleEnumV2,
-          # TestModels/SimpleTypes/SimpleFloat,
-          TestModels/SimpleTypes/SimpleInteger,
-          TestModels/SimpleTypes/SimpleLong,
-          # TestModels/SimpleTypes/SimpleShort,
-          TestModels/SimpleTypes/SimpleString,
-          # TestModels/SimpleTypes/SimpleTimestamp,
-          TestModels/Union,
-          TestModels/aws-sdks/ddb,
-          TestModels/aws-sdks/kms,
-          TestModels/aws-sdks/sqs-via-cli,
-        ]
-        os: [ ubuntu-latest ]
+        dafny-version:
+          - ${{ inputs.dafny }}
+        shard: ${{ fromJson(needs.populate-matrix-dimensions.outputs.shard-list) }}
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     env:
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
       DOTNET_NOLOGO: 1
@@ -72,29 +44,34 @@ jobs:
           git config --global core.longpaths true
 
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name: Setup Dafny
-        uses: dafny-lang/setup-dafny-action@v1.6.1
+        uses: dafny-lang/setup-dafny-action@v1.7.0
         with:
-          # A && B || C is the closest thing to an if .. then ... else ... or ?: expression the GitHub Actions syntax supports.
-          dafny-version: ${{ (github.event_name == 'schedule' || inputs.nightly) && 'nightly-latest' || '4.1.0' }}
+          dafny-version: ${{ matrix.dafny-version }}
 
-      - name: Generate Polymorph Wrapper Dafny code
-        shell: bash
-        working-directory: ./${{ matrix.library }}
-        run: |
-          make polymorph_dafny
+      - name: Setup Java 17 for codegen
+        uses: actions/setup-java@v3
+        with:
+          distribution: "corretto"
+          java-version: "17"
 
-      - name: Verify ${{ matrix.library }} Dafny code
-        shell: bash
-        working-directory: ./${{ matrix.library }}
-        run: |
-          # This works because `node` is installed by default on GHA runners
-          CORES=$(node -e 'console.log(os.cpus().length)')
-          make verify CORES=$CORES
+      - name: Install Smithy-Dafny codegen dependencies
+        uses: ./.github/actions/install_smithy_dafny_codegen_dependencies
 
-      - name: Check solver resource use
-        shell: bash
-        working-directory: ./${{ matrix.library }}
-        run: |
-          make dafny-reportgenerator
+      - name: Install smithy-dafny-codegen locally
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: :smithy-dafny-codegen:pTML
+          build-root-directory: codegen
+
+      - name: Execute smithy-dafny-codegen-test tests
+        uses: gradle/gradle-build-action@v2
+        env:
+          JUNIT_SHARD: ${{ matrix.shard }}
+          JUNIT_SHARD_COUNT: ${{ inputs.num_shards }}
+        with:
+          arguments: :smithy-dafny-codegen-test:test --tests '*smithydafny*' --info
+          build-root-directory: codegen

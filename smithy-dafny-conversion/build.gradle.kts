@@ -1,3 +1,5 @@
+// Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 import java.net.URI
 import javax.annotation.Nullable
 
@@ -10,7 +12,7 @@ plugins {
 description = "Convert Native Java Types to Dafny Runtime Types and vice versa"
 group = "software.amazon.smithy.dafny"
 var artifactId = "conversion"
-version = "0.1"
+version = "0.1.1"
 
 var moduleName = "%s.%s".format(group, artifactId)
 var displayName = "Smithy :: Dafny :: Conversion"
@@ -75,7 +77,7 @@ publishing {
                 pom {
                     name.set("Smithy :: Dafny :: Conversion")
                     description.set("Convert Native Java Types to Dafny Runtime Types and vice versa")
-                    url.set("https://github.com/awslabs/smithy")
+                    url.set("https://github.com/smithy-lang/smithy")
                     licenses {
                         license {
                             name.set("Apache License 2.0")
@@ -93,7 +95,7 @@ publishing {
                         }
                     }
                     scm {
-                        url.set("https://github.com/awslabs/smithy.git")
+                        url.set("https://github.com/smithy-lang/smithy.git")
                     }
                 }
             }
@@ -114,6 +116,25 @@ fun maybeCodeArtifact(buildGradle: Build_gradle, repositoryHandler: RepositoryHa
                 username = "aws"
                 password = buildGradle.caPassword!!
             }
+        }
+    }
+}
+
+signing {
+    // Signing is required if building a release version and if we're going to publish it.
+    // Otherwise, signing will only occur if signatory credentials are configured.
+    setRequired({
+         gradle.getTaskGraph().hasTask("publish") 
+    })
+
+    sign(publishing.publications["mavenJava"])
+}
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri("https://aws.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://aws.oss.sonatype.org/content/repositories/snapshots/"))
         }
     }
 }

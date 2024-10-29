@@ -1,3 +1,5 @@
+// Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 using System;
 using Dafny;
 using simple.dafnyextern.internaldafny.types;
@@ -25,7 +27,7 @@ namespace SimpleExternImpl_Compile
             var exception = new Exception(
                 TypeConversion
                     .FromDafny_N6_simple__N11_dafnyExtern__S20_ExternMustErrorInput__M5_value(input.dtor_value));
-            return Result<_IExternMustErrorOutput, _IError>.create_Failure(Error.create_Opaque(exception));
+            return Result<_IExternMustErrorOutput, _IError>.create_Failure(Error.create_Opaque(exception, Dafny.Sequence<char>.FromString(exception.ToString())));
         }
     }
 }
@@ -56,7 +58,7 @@ namespace ExternConstructor
             }
             catch (Exception ex)
             {
-                return Result<ExternConstructorClass, _IError>.create_Failure(Error.create_Opaque(ex));
+                return Result<ExternConstructorClass, _IError>.create_Failure(Error.create_Opaque(ex, Dafny.Sequence<char>.FromString(ex.ToString())));
             }
         }
 
