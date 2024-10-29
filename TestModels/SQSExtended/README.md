@@ -9,12 +9,12 @@ in multiple other common programming languages,
 such as Java, Rust and Python.
 This transformation is known as "polymorphing".
 
-The language-agnostic API of the library is 
+The language-agnostic API of the library is
 [defined in Smithy here](Model/sqsextended.smithy).
 This looks very similar to a remote service definition,
 with a few extra traits used to specify that this is a "local service".
 
-In this case we're making it easier to implement a very common pattern 
+In this case we're making it easier to implement a very common pattern
 when using SQS.
 The core operations in SQS are `SendMessage` and `ReceiveMessage`.
 But receiving and processing messages is actually more non-trivial than you might think at first.

@@ -99,8 +99,11 @@ public class LocalServiceTrait
           .collect(Collectors.toCollection(LinkedHashSet::new));
         builder.dependencies(dependencies);
       }
-      objectNode.getMember(CONFIG_REQUIRED).map(configRequired ->
-        builder.configRequired(configRequired.expectBooleanNode().getValue()));
+      objectNode
+        .getMember(CONFIG_REQUIRED)
+        .map(configRequired ->
+          builder.configRequired(configRequired.expectBooleanNode().getValue())
+        );
 
       return builder.sdkId(sdkId).configId(configId).build();
     }

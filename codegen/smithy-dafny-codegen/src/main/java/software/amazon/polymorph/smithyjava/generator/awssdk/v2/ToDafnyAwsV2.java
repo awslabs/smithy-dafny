@@ -385,7 +385,9 @@ public class ToDafnyAwsV2 extends ToDafny {
     //     of a type that Polymorph does not know about. So this is a special case and warrants
     //     its own generation logic.
     if (targetShape.isListShape()) {
-      final Shape listMemberTarget = subject.model.expectShape(targetShape.asListShape().get().getMember().getTarget());
+      final Shape listMemberTarget = subject.model.expectShape(
+        targetShape.asListShape().get().getMember().getTarget()
+      );
       if (listMemberTarget.isBlobShape()) {
         return returnCodeBlockBuilder
           .add(

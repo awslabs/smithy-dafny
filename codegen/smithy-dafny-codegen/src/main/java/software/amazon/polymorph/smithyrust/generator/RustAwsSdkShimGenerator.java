@@ -587,15 +587,14 @@ public class RustAwsSdkShimGenerator extends AbstractRustShimGenerator {
       "fluentMemberSetters",
       fluentMemberSettersForStructure(outputShape).toString()
     );
-    final boolean needsUnwrap =
-      outputShape.members().stream().anyMatch(memberShape ->
-        memberShape.hasTrait(RequiredTrait.class) && !model.expectShape(memberShape.getTarget()).isStructureShape());
-    variables.put(
-      "unwrapIfNecessary",
-     needsUnwrap
-        ? ".unwrap()"
-        : ""
-    );
+    final boolean needsUnwrap = outputShape
+      .members()
+      .stream()
+      .anyMatch(memberShape ->
+        memberShape.hasTrait(RequiredTrait.class) &&
+        !model.expectShape(memberShape.getTarget()).isStructureShape()
+      );
+    variables.put("unwrapIfNecessary", needsUnwrap ? ".unwrap()" : "");
 
     return TokenTree.of(
       evalTemplate(
@@ -946,9 +945,7 @@ public class RustAwsSdkShimGenerator extends AbstractRustShimGenerator {
           }
         } else {
           if (isRustOption) {
-            yield TokenTree.of("%s.unwrap()".formatted(
-              rustValue
-            ));
+            yield TokenTree.of("%s.unwrap()".formatted(rustValue));
           } else {
             yield TokenTree.of(rustValue);
           }

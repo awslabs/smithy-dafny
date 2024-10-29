@@ -105,6 +105,7 @@ public class ToNativeConstants {
      import software.amazon.awssdk.services.kms.model.DoSomethingRequest;
      import software.amazon.awssdk.services.kms.model.DoSomethingResponse;
      import software.amazon.awssdk.services.kms.model.KmsException;
+     import software.amazon.cryptography.services.kms.internaldafny.types.Error;
      import software.amazon.cryptography.services.kms.internaldafny.types.Error_DependencyTimeoutException;
      import software.amazon.cryptography.services.kms.internaldafny.types.Error_Opaque;
      import software.amazon.cryptography.services.kms.internaldafny.types.IKeyManagementServiceClient;
@@ -150,6 +151,19 @@ public class ToNativeConstants {
            return (RuntimeException) dafnyValue.dtor_obj();
          }
          return new IllegalStateException(String.format(%s, dafnyValue));
+       }
+       
+       public static RuntimeException Error(Error dafnyValue) {
+         if (dafnyValue.is_DependencyTimeoutException()) {
+           return ToNative.Error((Error_DependencyTimeoutException) dafnyValue);
+         }
+         if (dafnyValue.is_Opaque()) {
+           return ToNative.Error((Error_Opaque) dafnyValue);
+         }
+         // TODO This should indicate a codegen bug; every error Should have been taken care of.
+         return new IllegalStateException(
+           String.format("Unknown error thrown while calling service. %%s", dafnyValue)
+         );
        }
      }
     """.formatted(

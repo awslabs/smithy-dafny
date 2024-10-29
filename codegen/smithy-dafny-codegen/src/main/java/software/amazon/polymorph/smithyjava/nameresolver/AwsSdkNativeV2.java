@@ -157,7 +157,9 @@ public class AwsSdkNativeV2 extends Native {
     }
 
     if (shape.isListShape()) {
-      final Shape memberShape = model.expectShape(shape.asListShape().get().getMember().getTarget());
+      final Shape memberShape = model.expectShape(
+        shape.asListShape().get().getMember().getTarget()
+      );
       if (memberShape.isBlobShape()) {
         return ParameterizedTypeName.get(
           ClassName.get(List.class),
@@ -286,8 +288,7 @@ public class AwsSdkNativeV2 extends Native {
       if (!smithyName.simpleName().endsWith("Exception")) {
         return ClassName.get(
           smithyName.packageName(),
-          smithyName
-            .simpleName() + "Exception"
+          smithyName.simpleName() + "Exception"
         );
       }
     }

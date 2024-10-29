@@ -13,7 +13,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -24,7 +23,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Modifier;
-
 import software.amazon.polymorph.smithydafny.DafnyNameResolver;
 import software.amazon.polymorph.smithyjava.MethodReference;
 import software.amazon.polymorph.smithyjava.generator.ToNative;
@@ -268,7 +266,9 @@ public class ToNativeAwsV2 extends ToNative {
     // This is the only time when Polymorph needs to convert a list of a Dafny type to a list
     //     of a type that Polymorph does not know about. So this is a special case and warrants
     //     its own generation logic.
-    final Shape memberTarget = subject.model.expectShape(memberShape.getTarget());
+    final Shape memberTarget = subject.model.expectShape(
+      memberShape.getTarget()
+    );
     if (memberTarget.isBlobShape()) {
       ParameterSpec parameterSpec = ParameterSpec
         .builder(subject.dafnyNameResolver.typeForShape(shapeId), VAR_INPUT)
@@ -615,12 +615,14 @@ public class ToNativeAwsV2 extends ToNative {
         )
         .endControlFlow()
     );
-    method.addStatement("""
+    method.addStatement(
+      """
       // TODO This should indicate a codegen bug; every error Should have been taken care of.
       return new IllegalStateException(
         String.format("Unknown error thrown while calling service. %s", dafnyValue)
-      );
-      """);
+      )
+      """
+    );
     return method.build();
   }
 }
