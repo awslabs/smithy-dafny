@@ -4,6 +4,9 @@ namespace polymorph.tutorial.sqsextended
 
 use com.amazonaws.sqs#Message
 
+///
+/// An extended client for SQS that adds common client-side operations.
+///
 @aws.polymorph#localService(
   sdkId: "SQSExtended",
   config: SQSExtendedClientConfig,
@@ -20,10 +23,16 @@ service AmazonSQSExtended {
   ],
   errors: [SQSExtendedError],
 }
+
+///
+/// Configuration for creating a new extended SQS client.
+///
 structure SQSExtendedClientConfig {
+  /// The underlying SQS client.
   @required
   sqsClient: SQSClientReference
 }
+
 @error("server")
 structure SQSExtendedError {
   @required
@@ -33,6 +42,9 @@ structure SQSExtendedError {
 @aws.polymorph#reference(service: com.amazonaws.sqs#AmazonSQS)
 structure SQSClientReference {}
 
+///
+/// A callback for handling SQS messages.
+///
 @aws.polymorph#extendable
 resource MessageHandler {
   operations: [
@@ -43,20 +55,22 @@ resource MessageHandler {
 @aws.polymorph#reference(resource: MessageHandler)
 structure MessageHandlerReference {}
 
+///
+/// Processes the given message.
+/// 
+/// If this does not produce an error, the message will be automatically deleted.
+///
 operation HandleMessage {
   input := {
     @required
     message: Message
   }
-  errors: [RetryMessageError]
 }
 
-@error("client")
-structure RetryMessageError {
-  @required
-  message: String
-}
-
+///
+/// Calls ReceiveMessage and applies the given handler to each message.
+/// Automatically deletes each successfully handled message.
+///
 operation HandleMessages {
   input := {
     @required
