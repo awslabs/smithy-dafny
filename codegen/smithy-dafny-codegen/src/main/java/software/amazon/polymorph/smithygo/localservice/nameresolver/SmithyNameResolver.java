@@ -217,4 +217,5 @@ public class SmithyNameResolver {
       .concat(DOT)
       .concat("Client");
   }
+}
 
