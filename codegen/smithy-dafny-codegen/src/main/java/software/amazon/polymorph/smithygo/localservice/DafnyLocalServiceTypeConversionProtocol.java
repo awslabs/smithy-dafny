@@ -1375,7 +1375,8 @@ public class DafnyLocalServiceTypeConversionProtocol
           inputType =
             GoCodegenUtils.getType(
               context.symbolProvider().toSymbol(visitingShape),
-              visitingShape
+              visitingShape,
+              true
             );
           if (
             context
@@ -1432,7 +1433,8 @@ public class DafnyLocalServiceTypeConversionProtocol
           alreadyVisited.add(visitingMemberShape.toShapeId());
           var outputType = GoCodegenUtils.getType(
             context.symbolProvider().toSymbol(visitingShape),
-            visitingShape
+            visitingShape,
+            true
           );
           if (visitingShape.hasTrait(ReferenceTrait.class)) {
             final var referenceTrait = visitingShape.expectTrait(
@@ -1444,7 +1446,8 @@ public class DafnyLocalServiceTypeConversionProtocol
             outputType =
               GoCodegenUtils.getType(
                 context.symbolProvider().toSymbol(visitingShape),
-                visitingShape
+                visitingShape,
+                true
               );
             if (resourceOrService.isServiceShape()) {
               if (resourceOrService.hasTrait(ServiceTrait.class)) {

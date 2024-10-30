@@ -809,7 +809,8 @@ public class DafnyAwsSdkClientTypeConversionProtocol
             );
           var inputType = GoCodegenUtils.getType(
             context.symbolProvider().toSymbol(visitingShape),
-            serviceShape.expectTrait(ServiceTrait.class)
+            serviceShape.expectTrait(ServiceTrait.class),
+            true
           );
           if (
             AwsSdkGoPointableIndex
@@ -866,7 +867,8 @@ public class DafnyAwsSdkClientTypeConversionProtocol
           alreadyVisited.add(visitingMemberShape.toShapeId());
           var outputType = GoCodegenUtils.getType(
             context.symbolProvider().toSymbol(visitingShape),
-            serviceTrait
+            serviceTrait,
+            true
           );
           if (
             ShapeVisitorHelper.isToNativeShapePointable(visitingMemberShape)
