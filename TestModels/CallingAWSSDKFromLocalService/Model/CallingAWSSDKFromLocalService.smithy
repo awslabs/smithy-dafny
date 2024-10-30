@@ -26,7 +26,9 @@ service SimpleCallingAWSSDKFromLocalService {
   resources: [],
   operations: [ 
                 CallDDBScan,
-                CallKMSEncrypt],
+                CallDDBGetItem,
+                CallKMSEncrypt,
+                CallKMSDecrypt],
   errors: [ SimpleCallingAWSSDKFromLocalServiceException ],
 }
 
@@ -49,6 +51,25 @@ structure CallDDBScanOutput {
   itemOutput: com.amazonaws.dynamodb#Integer,
 }
 
+operation CallDDBGetItem {
+  input: CallDDBGetItemInput,
+  output: CallDDBGetItemOutput,
+}
+
+structure CallDDBGetItemInput {
+  @required
+  ddbClient: DdbClientReference,
+  @required
+  tableArn: com.amazonaws.dynamodb#TableArn
+  @required
+  key: com.amazonaws.dynamodb#Key
+}
+
+structure CallDDBGetItemOutput {
+  @required
+  itemOutput: com.amazonaws.dynamodb#AttributeMap,
+}
+
 operation CallKMSEncrypt {
   input: CallKMSEncryptInput,
   output: CallKMSEncryptOutput,
@@ -66,6 +87,27 @@ structure CallKMSEncryptInput {
 structure CallKMSEncryptOutput {
   @required
   encryptOutput: com.amazonaws.kms#KeyIdType,
+}
+
+operation CallKMSDecrypt {
+  input: CallKMSDecryptInput,
+  output: CallKMSDecryptOutput,
+}
+
+structure CallKMSDecryptInput {
+  @required
+  kmsClient: KmsClientReference,
+  @required
+  keyId: com.amazonaws.kms#KeyIdType,
+  @required
+  ciphertextBlob: com.amazonaws.kms#CiphertextType
+}
+
+structure CallKMSDecryptOutput {
+  @required
+  KeyIdType: com.amazonaws.kms#KeyIdType,
+  @required
+  Plaintext: com.amazonaws.kms#PlaintextType
 }
 
 @error("client")

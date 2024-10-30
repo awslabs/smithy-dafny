@@ -5,6 +5,7 @@ go 1.23.0
 require github.com/dafny-lang/DafnyStandardLibGo v0.0.0
 
 require (
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.9
 	github.com/aws/smithy-go v1.22.0
 	github.com/dafny-lang/DafnyRuntimeGo/v4 v4.8.0
 	github.com/smithy-lang/smithy-dafny/TestModels/CallingAWSSDKFromLocalService v0.0.0
@@ -20,7 +21,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.21 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.21 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.2 // indirect

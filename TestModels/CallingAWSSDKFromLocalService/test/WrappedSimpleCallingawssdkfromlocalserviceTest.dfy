@@ -20,9 +20,21 @@ module WrappedSimpleCallingawssdkfromlocalserviceTest {
     SimpleCallingawssdkfromlocalserviceImplTest.TestCallDDBScan_Failure(client);
   }
 
+  method{:test} TestCallDDBGetItem() {
+    var client :- expect WrappedSimpleCallingawssdkfromlocalserviceService.WrappedSimpleCallingawssdkfromlocalservice();
+    SimpleCallingawssdkfromlocalserviceImplTest.TestCallDDBGetItem_Success(client);
+    SimpleCallingawssdkfromlocalserviceImplTest.TestCallDDBGetItem_Failure(client);
+  }
+
   method{:test} TestCallKMSEncrypt() {
     var client :- expect WrappedSimpleCallingawssdkfromlocalserviceService.WrappedSimpleCallingawssdkfromlocalservice();
     SimpleCallingawssdkfromlocalserviceImplTest.TestCallKMSEncrypt_Success(client);
     SimpleCallingawssdkfromlocalserviceImplTest.TestCallKMSEncrypt_Failure(client);
+  }
+
+  method{:test} TestCallKMSDecrypt() {
+    var client :- expect WrappedSimpleCallingawssdkfromlocalserviceService.WrappedSimpleCallingawssdkfromlocalservice();
+    SimpleCallingawssdkfromlocalserviceImplTest.TestCallKMSDecrypt_Success(client);
+    SimpleCallingawssdkfromlocalserviceImplTest.TestCallKMSDecrypt_Failure(client);
   }
 }

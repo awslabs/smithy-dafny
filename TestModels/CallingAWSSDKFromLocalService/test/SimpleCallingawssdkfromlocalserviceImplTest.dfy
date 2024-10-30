@@ -7,6 +7,7 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
   import Com.Amazonaws.Dynamodb
   import Com.Amazonaws.Kms
   import SimpleCallingawssdkfromlocalservice
+  import opened StandardLibrary.UInt
 
   // For call to DDB
   const TABLE_ARN_SUCCESS_CASE := "arn:aws:dynamodb:us-west-2:370957321024:table/TestTable"
@@ -19,6 +20,13 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
   const NONEXISTENT_KEY_ID := "arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7g"
   // The string "asdf" as bytes
   const PLAIN_TEXT: Kms.Types.PlaintextType := [ 97, 115, 100, 102 ]
+
+  // This is required because
+  // https://github.com/dafny-lang/dafny/issues/2311
+  function method workAround(literal: seq<uint8>)
+    :(ret: Kms.Types.CiphertextType)
+    requires Kms.Types.IsValid_CiphertextType(literal)
+  {literal}
 
   import opened SimpleCallingawssdkfromlocalserviceTypes
   import opened Wrappers
@@ -47,6 +55,47 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
   {
     var ddbClient :- expect Dynamodb.DynamoDBClient();
     var resFailure := client.CallDDBScan(SimpleCallingawssdkfromlocalservice.Types.CallDDBScanInput(ddbClient := ddbClient, tableArn := TABLE_ARN_FAILURE_CASE));
+
+    expect resFailure.Failure?;
+  }
+
+  method{:test} CallDDBGetItem(){
+    var client :- expect SimpleCallingawssdkfromlocalservice.SimpleCallingawssdkfromlocalservice();
+    TestCallDDBGetItem_Success(client);
+    TestCallDDBGetItem_Failure(client);
+  }
+
+  method TestCallDDBGetItem_Success(client: ISimpleCallingAWSSDKFromLocalServiceClient)
+    requires client.ValidState()
+    modifies client.Modifies
+    ensures client.ValidState()
+  {
+    var Key2Get: Dynamodb.Types.Key := map[
+      "branch-key-id" := Dynamodb.Types.AttributeValue.S("aws-kms-h"),
+      "version" := Dynamodb.Types.AttributeValue.S("1")
+    ];
+    var ddbClient :- expect Dynamodb.DynamoDBClient();
+    var resSuccess := client.CallDDBGetItem(SimpleCallingawssdkfromlocalservice.Types.CallDDBGetItemInput(ddbClient := ddbClient, tableArn := TABLE_ARN_SUCCESS_CASE, key := Key2Get));
+
+    expect resSuccess.Success?;
+    // expect resSuccess.value.itemOutput;
+    var output := resSuccess.value.itemOutput;
+
+    expect output.Keys == {"branch-key-id", "version", "create-time", "enc", "hierarchy-version", "status"};
+    expect |output.Keys| == |output.Values|;
+  }
+
+  method TestCallDDBGetItem_Failure(client: ISimpleCallingAWSSDKFromLocalServiceClient)
+    requires client.ValidState()
+    modifies client.Modifies
+    ensures client.ValidState()
+  {
+    var Key2Get: Dynamodb.Types.Key := map[
+      "wrong-data" := Dynamodb.Types.AttributeValue.S("aws-kms-h"),
+      "version" := Dynamodb.Types.AttributeValue.S("1")
+    ];
+    var ddbClient :- expect Dynamodb.DynamoDBClient();
+    var resFailure := client.CallDDBGetItem(SimpleCallingawssdkfromlocalservice.Types.CallDDBGetItemInput(ddbClient := ddbClient, tableArn := TABLE_ARN_FAILURE_CASE, key := Key2Get));
 
     expect resFailure.Failure?;
   }
@@ -88,5 +137,64 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     expect resFailure_NonExistent.Failure?;
     expect resFailure_NonExistent.error.ComAmazonawsKms?;
     expect resFailure_NonExistent.error.ComAmazonawsKms.NotFoundException?;
+  }
+
+    method{:test} CallKMSDecrypt(){
+    var client :- expect SimpleCallingawssdkfromlocalservice.SimpleCallingawssdkfromlocalservice();
+    TestCallKMSDecrypt_Success(client);
+    TestCallKMSDecrypt_Failure(client);
+  }
+
+  method TestCallKMSDecrypt_Success(client: ISimpleCallingAWSSDKFromLocalServiceClient)
+    requires client.ValidState()
+    modifies client.Modifies
+    ensures client.ValidState()
+  {
+    var CiphertextBlob : seq<uint8> := [
+        1,   1,   1,   0, 120,  64, 243, 140,  39,  94,  49,   9,
+      116,  22, 193,   7,  41,  81,  80,  87,  25, 100, 173, 163,
+      239,  28,  33, 233,  76, 139, 160, 189, 188, 157,  15, 180,
+      20,   0,   0,   0,  98,  48,  96,   6,   9,  42, 134,  72,
+      134, 247,  13,   1,   7,   6, 160,  83,  48,  81,   2,   1,
+        0,  48,  76,   6,   9,  42, 134,  72, 134, 247,  13,   1,
+        7,   1,  48,  30,   6,   9,  96, 134,  72,   1, 101,   3,
+        4,   1,  46,  48,  17,   4,  12, 196, 249,  60,   7,  21,
+      231,  87,  70, 216,  12,  31,  13,   2,   1,  16, 128,  31,
+      222, 119, 162, 112,  88, 153,  39, 197,  21, 182, 116, 176,
+      120, 174, 107,  82, 182, 223, 160, 201,  15,  29,   3, 254,
+        3, 208,  72, 171,  64, 207, 175
+    ];
+    var kmsClient :- expect Kms.KMSClient();
+    var resSuccess := client.CallKMSDecrypt(SimpleCallingawssdkfromlocalservice.Types.CallKMSDecryptInput(kmsClient := kmsClient, keyId := KEY_ID_SUCCESS_CASE, ciphertextBlob := workAround(CiphertextBlob)));
+
+    expect resSuccess.Success?;
+    expect resSuccess.value.KeyIdType == KEY_ID_SUCCESS_CASE;
+    expect resSuccess.value.Plaintext == [ 165, 191, 67, 62 ];
+  }
+
+  method TestCallKMSDecrypt_Failure(client: ISimpleCallingAWSSDKFromLocalServiceClient)
+    requires client.ValidState()
+    modifies client.Modifies
+    ensures client.ValidState()
+  {
+    var CiphertextBlob : seq<uint8> := [
+        1,   1,   1,   0, 120,  64, 243, 140,  39,  94,  49,   9,
+      116,  22, 193,   7,  41,  81,  80,  87,  25, 100, 173, 163,
+      239,  28,  33, 233,  76, 139, 160, 189, 188, 157,  15, 180,
+      20,   0,   0,   0,  98,  48,  96,   6,   9,  42, 134,  72,
+      134, 247,  13,   1,   7,   6, 160,  83,  48,  81,   2,   1,
+        0,  48,  76,   6,   9,  42, 134,  72, 134, 247,  13,   1,
+        7,   1,  48,  30,   6,   9,  96, 134,  72,   1, 101,   3,
+        4,   1,  46,  48,  17,   4,  12, 196, 249,  60,   7,  21,
+      231,  87,  70, 216,  12,  31,  13,   2,   1,  16, 128,  31,
+      222, 119, 162, 112,  88, 153,  39, 197,  21, 182, 116, 176,
+      120, 174, 107,  82, 182, 223, 160, 201,  15,  29,   3, 254,
+        3, 208,  72, 171,  64, 207, 175
+    ];
+    var kmsClient :- expect Kms.KMSClient();
+    var resFailure := client.CallKMSDecrypt(SimpleCallingawssdkfromlocalservice.Types.CallKMSDecryptInput(kmsClient := kmsClient, keyId := NONEXISTENT_KEY_ID, ciphertextBlob := workAround(CiphertextBlob)));
+    expect resFailure.Failure?;
+    expect resFailure.error.ComAmazonawsKms?;
+    expect resFailure.error.ComAmazonawsKms.IncorrectKeyException?;
   }
 }
