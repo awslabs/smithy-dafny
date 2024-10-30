@@ -24,6 +24,7 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
     ShapeType.BOOLEAN,
     ShapeType.BLOB,
     ShapeType.DOUBLE,
+    ShapeType.ENUM,
     ShapeType.INTEGER,
     ShapeType.LIST,
     ShapeType.LONG,
