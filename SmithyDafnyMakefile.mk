@@ -566,7 +566,7 @@ transpile_implementation_rust: SRC_INDEX=$(RUST_SRC_INDEX)
 transpile_implementation_rust: TEST_INDEX=$(RUST_TEST_INDEX)
 # The Dafny Rust code generator is not complete yet,
 # so we want to emit code even if there are unsupported features in the input.
-transpile_implementation_rust: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix
+transpile_implementation_rust: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix --rust-module-name implementation_from_dafny
 # The Dafny Rust code generator only supports a single crate for everything,
 # so we inline all dependencies by not passing `-library` to Dafny.
 transpile_implementation_rust: TRANSPILE_DEPENDENCIES=
@@ -574,7 +574,7 @@ transpile_implementation_rust: STD_LIBRARY=
 transpile_implementation_rust: SRC_INDEX_TRANSPILE=$(if $(SRC_INDEX),$(SRC_INDEX),src)
 transpile_implementation_rust: TEST_INDEX_TRANSPILE=$(if $(TEST_INDEX),$(TEST_INDEX),test)
 transpile_implementation_rust: DAFNY_OTHER_FILES=$(RUST_OTHER_FILES)
-transpile_implementation_rust: $(if $(TRANSPILE_TESTS_IN_RUST), transpile_test, transpile_implementation) _mv_implementation_rust patch_after_transpile_rust
+transpile_implementation_rust: $(if $(TRANSPILE_TESTS_IN_RUST), transpile_test, transpile_implementation) _mv_implementation_rust
 
 transpile_dependencies_rust: LANG=rust
 transpile_dependencies_rust: transpile_dependencies
@@ -586,7 +586,8 @@ _mv_implementation_rust:
 # Pre-process the Dafny-generated Rust code to remove them.
 	sed -i -e 's/[[:space:]]*$$//' runtimes/rust/src/implementation_from_dafny.rs 
 	rm -f runtimes/rust/src/implementation_from_dafny.rs-e
-	rustfmt --edition 2021 runtimes/rust/src/implementation_from_dafny.rs
+# removed until it stops crashing
+#	rustfmt --edition 2021 runtimes/rust/src/implementation_from_dafny.rs
 	rm -rf implementation_from_dafny-rust
 
 patch_after_transpile_rust:
@@ -617,7 +618,7 @@ build_rust:
 
 test_rust:
 	cd runtimes/rust; \
-	cargo test -- --nocapture
+	cargo test --release -- --nocapture
 
 ########################## Cleanup targets
 
@@ -733,7 +734,7 @@ local_transpile_impl_rust_single: DAFNY_OTHER_FILES=$(RUST_OTHER_FILES)
 local_transpile_impl_rust_single: deps_var=SERVICE_DEPS_$(SERVICE)
 local_transpile_impl_rust_single: service_deps_var=SERVICE_DEPS_$(SERVICE)
 local_transpile_impl_rust_single: namespace_var=SERVICE_NAMESPACE_$(SERVICE)
-local_transpile_impl_rust_single: $(if $(TRANSPILE_TESTS_IN_RUST), transpile_test, transpile_implementation) _mv_implementation_rust _patch_after_transpile_rust
+local_transpile_impl_rust_single: $(if $(TRANSPILE_TESTS_IN_RUST), transpile_test, transpile_implementation) _mv_implementation_rust
 
 
 local_transpile_impl_single: deps_var=SERVICE_DEPS_$(SERVICE)
