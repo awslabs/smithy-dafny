@@ -11,6 +11,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import software.amazon.polymorph.TestModelTest;
 
+import static software.amazon.smithy.dafny.codegen.TestUtils.make;
+
 class JavaTestModels extends TestModelTest {
 
   private static final Set<String> DISABLED_TESTS = new HashSet<>();
@@ -28,6 +30,7 @@ class JavaTestModels extends TestModelTest {
     DISABLED_TESTS.add("SimpleTypes/SimpleBlob");
     DISABLED_TESTS.add("SimpleTypes/SimpleBoolean");
     DISABLED_TESTS.add("SimpleTypes/SimpleByte");
+    DISABLED_TESTS.add("SimpleTypes/SimpleDocument");
     DISABLED_TESTS.add("SimpleTypes/SimpleDouble");
     DISABLED_TESTS.add("SimpleTypes/SimpleEnum");
     DISABLED_TESTS.add("SimpleTypes/SimpleEnumV2");
@@ -37,6 +40,7 @@ class JavaTestModels extends TestModelTest {
     DISABLED_TESTS.add("SimpleTypes/SimpleShort");
     DISABLED_TESTS.add("SimpleTypes/SimpleString");
     DISABLED_TESTS.add("SimpleTypes/SimpleTimestamp");
+    DISABLED_TESTS.add("Streaming");
     DISABLED_TESTS.add("Union");
     DISABLED_TESTS.add("aws-sdks/kms-lite");
     DISABLED_TESTS.add("aws-sdks/sqs");

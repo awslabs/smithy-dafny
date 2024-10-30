@@ -11,6 +11,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import software.amazon.polymorph.TestModelTest;
 
+import static software.amazon.smithy.dafny.codegen.TestUtils.make;
+
 class PythonTestModels extends TestModelTest {
 
   private static final Set<String> DISABLED_TESTS = new HashSet<>();
@@ -22,9 +24,11 @@ class PythonTestModels extends TestModelTest {
     DISABLED_TESTS.add("SimpleTypes/BigDecimal");
     DISABLED_TESTS.add("SimpleTypes/BigInteger");
     DISABLED_TESTS.add("SimpleTypes/SimpleByte");
+    DISABLED_TESTS.add("SimpleTypes/SimpleDocument");
     DISABLED_TESTS.add("SimpleTypes/SimpleFloat");
     DISABLED_TESTS.add("SimpleTypes/SimpleShort");
     DISABLED_TESTS.add("SimpleTypes/SimpleTimestamp");
+    DISABLED_TESTS.add("Streaming");
     DISABLED_TESTS.add("aws-sdks/ddb-lite");
     DISABLED_TESTS.add("aws-sdks/glue");
     DISABLED_TESTS.add("aws-sdks/lakeformation");

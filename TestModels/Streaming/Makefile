@@ -7,6 +7,15 @@ include ../SharedMakefile.mk
 
 NAMESPACE=simple.streaming
 
+PROJECT_SERVICES := \
+	SimpleStreaming
+
+SERVICE_NAMESPACE_SimpleStreaming=simple.streaming
+
+SERVICE_DEPS_SimpleStreaming :=
+
+SMITHY_DEPS=dafny-dependencies/Model/traits.smithy
+
 # This project has no dependencies 
 # DEPENDENT-MODELS:= 
 # LIBRARIES :=
