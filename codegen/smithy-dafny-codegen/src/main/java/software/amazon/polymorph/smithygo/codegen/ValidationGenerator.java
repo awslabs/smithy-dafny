@@ -607,7 +607,7 @@ public class ValidationGenerator {
     final var currServiceShapeNamespace = SmithyNameResolver.smithyTypesNamespace(context.settings().getService(model));
     final var currShapeNamespace = SmithyNameResolver.smithyTypesNamespace(memberShape);
     if (!funcInput.isEmpty()) {
-        final Boolean isExternalShape = !currServiceShapeNamespace.equals(currShapeNamespace);
+        final Boolean isExternalShape = !currServiceShapeNamespace.equals(currShapeNamespace) && !currShapeNamespace.startsWith("smithy");
         var inputType = GoCodegenUtils.getType(
           symbolProvider.toSymbol(currentShape),
           currentShape,
@@ -628,8 +628,9 @@ public class ValidationGenerator {
             """.formatted(dataSourceForUnion)
       );
       for (final var memberInUnion : currentShape.getAllMembers().values()) {
-        final var currMemberNamespace = SmithyNameResolver.smithyTypesNamespace(model.expectShape(memberInUnion.getTarget()));
-        final Boolean isExternalShape = !currServiceShapeNamespace.equals(currMemberNamespace);
+        final var targetShape = model.expectShape(memberInUnion.getTarget());
+        final var currMemberNamespace = SmithyNameResolver.smithyTypesNamespace(model.expectShape(targetShape.getId()));
+        final Boolean isExternalShape = !currServiceShapeNamespace.equals(currMemberNamespace) && !currMemberNamespace.startsWith("smithy");
         final var unionMemberName = isExternalShape ? currMemberNamespace.concat(".").concat(symbolProvider.toMemberName(memberInUnion)) : symbolProvider.toMemberName(memberInUnion);
         unionValidation.append(
           """
