@@ -29,6 +29,5 @@ module TestComAmazonawsSqs {
     // and I don't want this to be brittle.
     // Moreover, Java and .NET are inconsistent about representing an empty list result,
     // so we can't even test for ret.QueueUrls.Some?
-    // TODO: link issue
   }
 }
