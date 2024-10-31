@@ -104,7 +104,10 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
           "aws.protocols#awsJson1_1",
           "aws.protocols#awsQuery",
           "aws.protocols#awsQueryError",
+          "aws.protocols#httpChecksum",
+          "smithy.api#httpPayload",
           "aws.protocols#restJson1",
+          "aws.protocols#restXml",
           "smithy.api#deprecated",
           "smithy.api#endpoint",
           // This is safe since the enum value is only relevant on the wire
@@ -112,22 +115,27 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
           // We don't generate examples yet, but that's harmless
           "smithy.api#examples",
           "smithy.api#http",
-          "smithy.api#paginated",
-          "smithy.api#suppress",
           "smithy.api#httpError",
           "smithy.api#httpHeader",
+          "smithy.api#httpLabel",
+          "smithy.api#httpPrefixHeaders",
+          "smithy.api#httpQuery",
+          "smithy.api#paginated",
+          "smithy.api#suppress",
           "smithy.api#retryable",
           "smithy.api#timestampFormat",
           "smithy.api#title",
           "smithy.api#xmlFlattened",
           "smithy.api#xmlName",
           "smithy.api#xmlNamespace",
+          "smithy.rules#clientContextParams",
+          "smithy.rules#contextParam",
           "smithy.rules#endpointTests",
           "smithy.rules#endpointRuleSet",
+          "smithy.synthetic#enum",
           // We don't really support this yet, since it implies extra API
           // methods we don't generate, but at least we don't generate incorrect code.
-          "smithy.waiters#waitable",
-          "smithy.synthetic#enum"
+          "smithy.waiters#waitable"
         )
         .map(ShapeId::from)
     )
