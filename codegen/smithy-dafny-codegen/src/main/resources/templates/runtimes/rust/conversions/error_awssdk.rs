@@ -4,10 +4,9 @@ pub fn to_dafny(
 ) -> ::std::rc::Rc<crate::r#$dafnyTypesModuleName:L::Error> {
     match value {
         $toDafnyArms:L
-        $qualifiedRustServiceErrorType:L::Opaque { obj, alt_text } =>
+        $qualifiedRustServiceErrorType:L::Opaque { obj } =>
             ::std::rc::Rc::new(crate::r#$dafnyTypesModuleName:L::Error::Opaque {
-                obj: ::dafny_runtime::Object(obj.0),
-		alt_text: ::dafny_runtime::dafny_runtime_conversions::unicode_chars_false::string_to_dafny_string(&alt_text)
+                obj: ::dafny_runtime::Object(obj.0)
             }),
     }
 }
@@ -20,10 +19,9 @@ pub fn from_dafny(
 ) -> $qualifiedRustServiceErrorType:L {
     match ::std::borrow::Borrow::borrow(&dafny_value) {
         $fromDafnyArms:L
-        crate::r#$dafnyTypesModuleName:L::Error::Opaque { obj, alt_text } =>
+        crate::r#$dafnyTypesModuleName:L::Error::Opaque { obj } =>
             $qualifiedRustServiceErrorType:L::Opaque {
-                obj: obj.clone(),
-		alt_text: ::dafny_runtime::dafny_runtime_conversions::unicode_chars_false::dafny_string_to_string(&alt_text)
+                obj: obj.clone()
             },
     }
 }
