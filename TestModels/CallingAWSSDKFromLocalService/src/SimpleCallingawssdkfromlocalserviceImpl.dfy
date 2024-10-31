@@ -24,6 +24,10 @@ module SimpleCallingawssdkfromlocalserviceImpl refines AbstractSimpleCallingawss
     true
   }
 
+  predicate CallDDBPutItemEnsuresPublicly(input: CallDDBPutItemInput, output: Result<CallDDBPutItemOutput, Error>) {
+    true
+  }
+
   predicate CallKMSEncryptEnsuresPublicly(input: CallKMSEncryptInput, output: Result<CallKMSEncryptOutput, Error>) {
     true
   }
