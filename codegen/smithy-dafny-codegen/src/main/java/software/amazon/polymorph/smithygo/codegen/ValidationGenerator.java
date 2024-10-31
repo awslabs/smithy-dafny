@@ -477,9 +477,15 @@ public class ValidationGenerator {
       );
       final String funcInput = dataSource.startsWith("input") ? "" : dataSource;
       if (!funcInput.isEmpty()) {
-        final var currServiceShapeNamespace = SmithyNameResolver.shapeNamespace(context.settings().getService(model));
-        final var currShapeNamespace = SmithyNameResolver.shapeNamespace(memberShape);
-        final Boolean isExternalShape = !currServiceShapeNamespace.equals(currShapeNamespace);
+        final var currServiceShapeNamespace = SmithyNameResolver.shapeNamespace(
+          context.settings().getService(model)
+        );
+        final var currShapeNamespace = SmithyNameResolver.shapeNamespace(
+          memberShape
+        );
+        final Boolean isExternalShape = !currServiceShapeNamespace.equals(
+          currShapeNamespace
+        );
         var inputType = GoCodegenUtils.getType(
           symbolProvider.toSymbol(currentShape),
           currentShape,
@@ -488,15 +494,19 @@ public class ValidationGenerator {
         if (isExternalShape) {
           if (SmithyNameResolver.isShapeFromAWSSDK(currentShape)) {
             writer.addImportFromModule(
-                SmithyNameResolver.getGoModuleNameForSdkNamespace(currentShape.getId().getNamespace()),
-                "types",
-                SmithyNameResolver.smithyTypesNamespace(currentShape)
+              SmithyNameResolver.getGoModuleNameForSdkNamespace(
+                currentShape.getId().getNamespace()
+              ),
+              "types",
+              SmithyNameResolver.smithyTypesNamespace(currentShape)
             );
           } else {
             writer.addImportFromModule(
-                SmithyNameResolver.getGoModuleNameForSmithyNamespace(currentShape.getId().getNamespace()),
-                "types",
-                SmithyNameResolver.smithyTypesNamespace(currentShape)
+              SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+                currentShape.getId().getNamespace()
+              ),
+              "types",
+              SmithyNameResolver.smithyTypesNamespace(currentShape)
             );
           }
         }
@@ -561,9 +571,15 @@ public class ValidationGenerator {
       final var funcName = Constants.funcNameGenerator(memberShape, "Validate");
       final var funcInput = dataSource.startsWith("input") ? "" : dataSource;
       if (!funcInput.isEmpty()) {
-        final var currServiceShapeNamespace = SmithyNameResolver.shapeNamespace(context.settings().getService(model));
-        final var currShapeNamespace = SmithyNameResolver.shapeNamespace(memberShape);
-        final Boolean isExternalShape = !currServiceShapeNamespace.equals(currShapeNamespace);
+        final var currServiceShapeNamespace = SmithyNameResolver.shapeNamespace(
+          context.settings().getService(model)
+        );
+        final var currShapeNamespace = SmithyNameResolver.shapeNamespace(
+          memberShape
+        );
+        final Boolean isExternalShape = !currServiceShapeNamespace.equals(
+          currShapeNamespace
+        );
         var inputType = GoCodegenUtils.getType(
           symbolProvider.toSymbol(currentShape),
           currentShape,
@@ -604,15 +620,22 @@ public class ValidationGenerator {
     final var funcName = Constants.funcNameGenerator(memberShape, "Validate");
     final var funcInput = dataSource.startsWith("input") ? "" : dataSource;
     var dataSourceForUnion = dataSource;
-    final var currServiceShapeNamespace = SmithyNameResolver.smithyTypesNamespace(context.settings().getService(model));
-    final var currShapeNamespace = SmithyNameResolver.smithyTypesNamespace(memberShape);
+    final var currServiceShapeNamespace =
+      SmithyNameResolver.smithyTypesNamespace(
+        context.settings().getService(model)
+      );
+    final var currShapeNamespace = SmithyNameResolver.smithyTypesNamespace(
+      memberShape
+    );
     if (!funcInput.isEmpty()) {
-        final Boolean isExternalShape = !currServiceShapeNamespace.equals(currShapeNamespace) && !currShapeNamespace.startsWith("smithy");
-        var inputType = GoCodegenUtils.getType(
-          symbolProvider.toSymbol(currentShape),
-          currentShape,
-          isExternalShape
-        );
+      final Boolean isExternalShape =
+        !currServiceShapeNamespace.equals(currShapeNamespace) &&
+        !currShapeNamespace.startsWith("smithy");
+      var inputType = GoCodegenUtils.getType(
+        symbolProvider.toSymbol(currentShape),
+        currentShape,
+        isExternalShape
+      );
       validationFuncInputTypeMap.put(memberShape, inputType);
       dataSourceForUnion = "Value";
     }
@@ -629,9 +652,17 @@ public class ValidationGenerator {
       );
       for (final var memberInUnion : currentShape.getAllMembers().values()) {
         final var targetShape = model.expectShape(memberInUnion.getTarget());
-        final var currMemberNamespace = SmithyNameResolver.smithyTypesNamespace(model.expectShape(targetShape.getId()));
-        final Boolean isExternalShape = !currServiceShapeNamespace.equals(currMemberNamespace) && !currMemberNamespace.startsWith("smithy");
-        final var unionMemberName = isExternalShape ? currMemberNamespace.concat(".").concat(symbolProvider.toMemberName(memberInUnion)) : symbolProvider.toMemberName(memberInUnion);
+        final var currMemberNamespace = SmithyNameResolver.smithyTypesNamespace(
+          model.expectShape(targetShape.getId())
+        );
+        final Boolean isExternalShape =
+          !currServiceShapeNamespace.equals(currMemberNamespace) &&
+          !currMemberNamespace.startsWith("smithy");
+        final var unionMemberName = isExternalShape
+          ? currMemberNamespace
+            .concat(".")
+            .concat(symbolProvider.toMemberName(memberInUnion))
+          : symbolProvider.toMemberName(memberInUnion);
         unionValidation.append(
           """
           case *%s:

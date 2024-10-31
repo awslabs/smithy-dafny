@@ -210,9 +210,11 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
   public String blobShape(final BlobShape shape) {
     if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
       writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSdkNamespace(shape.getId().getNamespace()),
-          "types",
-          SmithyNameResolver.smithyTypesNamespace(shape)
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
       );
     }
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
@@ -237,9 +239,11 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
   public String structureShape(final StructureShape shape) {
     if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
       writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSdkNamespace(shape.getId().getNamespace()),
-          "types",
-          SmithyNameResolver.smithyTypesNamespace(shape)
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
       );
     }
     if (shape.hasTrait(ReferenceTrait.class)) {
@@ -326,9 +330,11 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
     if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
       writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSdkNamespace(shape.getId().getNamespace()),
-          "types",
-          SmithyNameResolver.smithyTypesNamespace(shape)
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
       );
     }
     final StringBuilder builder = new StringBuilder();
@@ -374,9 +380,11 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
     if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
       writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSdkNamespace(shape.getId().getNamespace()),
-          "types",
-          SmithyNameResolver.smithyTypesNamespace(shape)
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
       );
     }
     final StringBuilder builder = new StringBuilder();
@@ -437,9 +445,11 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
     if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
       writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSdkNamespace(shape.getId().getNamespace()),
-          "types",
-          SmithyNameResolver.smithyTypesNamespace(shape)
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
       );
     }
     if (this.isOptional) {
@@ -469,9 +479,11 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
     if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
       writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSdkNamespace(shape.getId().getNamespace()),
-          "types",
-          SmithyNameResolver.smithyTypesNamespace(shape)
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
       );
     }
     if (shape.hasTrait(EnumTrait.class)) {
@@ -568,9 +580,11 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
     if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
       writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSdkNamespace(shape.getId().getNamespace()),
-          "types",
-          SmithyNameResolver.smithyTypesNamespace(shape)
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
       );
     }
     if (isOptional) {
@@ -599,9 +613,11 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
     if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
       writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSdkNamespace(shape.getId().getNamespace()),
-          "types",
-          SmithyNameResolver.smithyTypesNamespace(shape)
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
       );
     }
     if (isOptional) {
@@ -631,9 +647,11 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
     if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
       writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSdkNamespace(shape.getId().getNamespace()),
-          "types",
-          SmithyNameResolver.smithyTypesNamespace(shape)
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
       );
     }
     writer.addUseImports(SmithyGoDependency.MATH);
@@ -674,9 +692,11 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
     if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
       writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSdkNamespace(shape.getId().getNamespace()),
-          "types",
-          SmithyNameResolver.smithyTypesNamespace(shape)
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
       );
     }
     String nilCheck = "";
@@ -770,9 +790,11 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     writer.addImport("time");
     if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
       writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSdkNamespace(shape.getId().getNamespace()),
-          "types",
-          SmithyNameResolver.smithyTypesNamespace(shape)
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
       );
     }
     return "nil";

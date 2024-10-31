@@ -58,8 +58,7 @@ public final class StructureGenerator implements Runnable {
     this.symbolProvider = context.symbolProvider();
     this.writer = writer;
     this.shape = shape;
-    this.validationGenerator =
-      new ValidationGenerator(context, writer);
+    this.validationGenerator = new ValidationGenerator(context, writer);
   }
 
   @Override
