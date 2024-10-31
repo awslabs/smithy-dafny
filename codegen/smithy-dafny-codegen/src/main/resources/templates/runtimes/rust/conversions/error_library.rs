@@ -19,9 +19,14 @@ pub fn to_dafny(
                     unsafe { ::dafny_runtime::Object::from_rc(rc) }
                 },
             },
-        $qualifiedRustServiceErrorType:L::Opaque { obj } =>
+            $qualifiedRustServiceErrorType:L::Opaque { obj } =>
             crate::r#$dafnyTypesModuleName:L::Error::Opaque {
                 obj: ::dafny_runtime::Object(obj.0)
+            },
+            $qualifiedRustServiceErrorType:L::OpaqueWithText { obj, objMessage } =>
+            crate::r#$dafnyTypesModuleName:L::Error::OpaqueWithText {
+                obj: ::dafny_runtime::Object(obj.0),
+                objMessage: ::dafny_runtime::dafny_runtime_conversions::unicode_chars_false::string_to_dafny_string(&objMessage),
             },
     })
 }
@@ -43,7 +48,7 @@ pub fn from_dafny(
             $qualifiedRustServiceErrorType:L::Opaque {
                 obj: obj.clone()
             },
-        crate::r#$dafnyTypesModuleName:L::Error::Opaque { obj } =>
+            crate::r#$dafnyTypesModuleName:L::Error::Opaque { obj } =>
             {
                 use ::std::any::Any;
                 if ::dafny_runtime::is_object!(obj, $rustErrorModuleName:L::ValidationError) {
@@ -57,6 +62,24 @@ pub fn from_dafny(
                 } else {
                     $qualifiedRustServiceErrorType:L::Opaque {
                         obj: obj.clone()
+                    }
+                }
+            },
+            crate::r#$dafnyTypesModuleName:L::Error::OpaqueWithText { obj, objMessage } =>
+            {
+                use ::std::any::Any;
+                if ::dafny_runtime::is_object!(obj, $rustErrorModuleName:L::ValidationError) {
+                    let typed = ::dafny_runtime::cast_object!(obj.clone(), $rustErrorModuleName:L::ValidationError);
+                    $qualifiedRustServiceErrorType:L::ValidationError(
+                        // safety: dafny_class_to_struct will increment ValidationError's Rc
+                        unsafe {
+                            ::dafny_runtime::dafny_runtime_conversions::object::dafny_class_to_struct(typed)
+                        }
+                    )
+                } else {
+                    $qualifiedRustServiceErrorType:L::OpaqueWithText {
+                        obj: obj.clone(),
+                        objMessage: ::dafny_runtime::dafny_runtime_conversions::unicode_chars_false::dafny_string_to_string(&objMessage),
                     }
                 }
             },
