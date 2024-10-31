@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import software.amazon.polymorph.utils.ModelUtils;
 import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.neighbor.Walker;
@@ -203,7 +205,7 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
       }
 
       for (ShapeId traitId : shape.getAllTraits().keySet()) {
-        if (!supportedTraits.contains(traitId)) {
+        if (!supportedTraits.contains(traitId) && ModelUtils.isInServiceNamespace(shape, service)) {
           events.add(
             danger(
               shape,
