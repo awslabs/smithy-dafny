@@ -1,6 +1,5 @@
 package software.amazon.polymorph.smithygo.localservice.shapevisitor;
 
-import static software.amazon.polymorph.smithygo.codegen.SymbolUtils.POINTABLE;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
 
 import java.util.HashMap;
@@ -91,90 +90,105 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     final Shape resourceOrService = context
       .model()
       .expectShape(referenceTrait.getReferentId());
-    var namespace = "";
     if (resourceOrService.asResourceShape().isPresent()) {
-      final var resourceShape = resourceOrService.asResourceShape().get();
-      if (
-        !resourceOrService
-          .toShapeId()
-          .getNamespace()
-          .equals(context.settings().getService().getNamespace())
-      ) {
-        writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-            resourceOrService.toShapeId().getNamespace()
-          ),
-          SmithyNameResolver.shapeNamespace(resourceShape)
-        );
-        namespace =
-          SmithyNameResolver.shapeNamespace(resourceOrService).concat(".");
-      }
-      if (!this.isOptional) {
-        return "%s_FromDafny(%s)".formatted(
-            namespace.concat(resourceShape.toShapeId().getName()),
-            dataSource
-          );
-      }
-      return """
-      func () %s.I%s {
-          if %s == nil {
-              return nil;
-          }
-          return %s
-      }()""".formatted(
-          SmithyNameResolver.smithyTypesNamespace(resourceShape),
-          resourceShape.getId().getName(),
-          dataSource,
-          "%s_FromDafny(%s.(%s.I%s))".formatted(
-              namespace.concat(resourceShape.toShapeId().getName()),
-              dataSource,
-              DafnyNameResolver.dafnyTypesNamespace(resourceShape),
-              resourceShape.getId().getName()
-            )
-        );
-    } else {
-      final var serviceShape = resourceOrService.asServiceShape().get();
-      if (
-        !resourceOrService
-          .toShapeId()
-          .getNamespace()
-          .equals(context.settings().getService().getNamespace())
-      ) {
-        writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-            resourceOrService.toShapeId().getNamespace()
-          ),
-          SmithyNameResolver.shapeNamespace(serviceShape)
-        );
-        namespace =
-          SmithyNameResolver.shapeNamespace(resourceOrService).concat(".");
-      }
-      if (!this.isOptional) {
-        return "return %1$s{%2$s}".formatted(
-            namespace.concat(
-              context.symbolProvider().toSymbol(serviceShape).getName()
-            ),
-            dataSource
-          );
-      }
-      return """
-      return func () *%s {
-          if %s == nil {
-              return nil;
-          }
-          return &%s{%s.(*%s)}
-      }()""".formatted(
+      return referencedResourceShape(resourceOrService);
+    }
+
+    if (resourceOrService.asServiceShape().isPresent()) {
+      return referencedServiceShape(resourceOrService);
+    }
+
+    throw new UnsupportedOperationException(
+      "Unknown referenceStructureShape type: ".concat(shape.toString())
+    );
+  }
+
+  private String referencedServiceShape(final Shape resourceOrService) {
+    final var serviceShape = resourceOrService.asServiceShape().get();
+    var namespace = "";
+    if (
+      !resourceOrService
+        .toShapeId()
+        .getNamespace()
+        .equals(context.settings().getService().getNamespace())
+    ) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+          resourceOrService.toShapeId().getNamespace()
+        ),
+        SmithyNameResolver.shapeNamespace(serviceShape)
+      );
+      namespace =
+        SmithyNameResolver.shapeNamespace(resourceOrService).concat(".");
+    }
+    if (!this.isOptional) {
+      return "return %1$s{%2$s}".formatted(
           namespace.concat(
             context.symbolProvider().toSymbol(serviceShape).getName()
           ),
-          dataSource,
-          namespace.concat(
-            context.symbolProvider().toSymbol(serviceShape).getName()
-          ),
-          dataSource,
-          DafnyNameResolver.getDafnyClient(serviceShape.toShapeId().getName())
+          dataSource
         );
     }
+    return """
+    return func () *%s {
+        if %s == nil {
+            return nil;
+        }
+        return &%s{%s.(*%s)}
+    }()""".formatted(
+        namespace.concat(
+          context.symbolProvider().toSymbol(serviceShape).getName()
+        ),
+        dataSource,
+        namespace.concat(
+          context.symbolProvider().toSymbol(serviceShape).getName()
+        ),
+        dataSource,
+        DafnyNameResolver.getDafnyClient(serviceShape.toShapeId().getName())
+      );
+  }
+
+  private String referencedResourceShape(final Shape resourceOrService) {
+    final var resourceShape = resourceOrService.asResourceShape().get();
+    var namespace = "";
+    if (
+      !resourceOrService
+        .toShapeId()
+        .getNamespace()
+        .equals(context.settings().getService().getNamespace())
+    ) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+          resourceOrService.toShapeId().getNamespace()
+        ),
+        SmithyNameResolver.shapeNamespace(resourceShape)
+      );
+      namespace =
+        SmithyNameResolver.shapeNamespace(resourceOrService).concat(".");
+    }
+    if (!this.isOptional) {
+      return "%s_FromDafny(%s)".formatted(
+          namespace.concat(resourceShape.toShapeId().getName()),
+          dataSource
+        );
+    }
+    return """
+    func () %s.I%s {
+        if %s == nil {
+            return nil;
+        }
+        return %s
+    }()""".formatted(
+        SmithyNameResolver.smithyTypesNamespace(resourceShape),
+        resourceShape.getId().getName(),
+        dataSource,
+        "%s_FromDafny(%s.(%s.I%s))".formatted(
+            namespace.concat(resourceShape.toShapeId().getName()),
+            dataSource,
+            DafnyNameResolver.dafnyTypesNamespace(resourceShape),
+            resourceShape.getId().getName()
+          )
+      );
   }
 
   @Override
@@ -302,10 +316,10 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     final Boolean assertionRequired = targetShape.isStructureShape();
     builder.append(
       """
-                           var fieldValue %s
-                    if %s == nil {
-                        return nil
-                    }
+       var fieldValue %s
+      if %s == nil {
+          return nil
+      }
       for i := dafny.Iterate(%s.(dafny.Sequence)); ; {
       	val, ok := i()
       	if !ok {
