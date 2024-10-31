@@ -532,6 +532,10 @@ public class CodegenEngine {
           "runtimes/java/src/main/java/Dafny/$namespaceDir;L/__default.java",
           parameters
         );
+        writeTemplatedFile(
+          "runtimes/java/src/main/java/Dafny/$namespaceDir;L/types/__default.java",
+          parameters
+        );
         if (localServiceTest) {
           writeTemplatedFile(
             "runtimes/java/src/test/java/$namespaceDir;L/internaldafny/wrapped/__default.java",
