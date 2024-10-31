@@ -3,6 +3,8 @@
 
 package software.amazon.polymorph.smithydotnet;
 
+import static software.amazon.smithy.dafny.codegen.TestUtils.make;
+
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -11,8 +13,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import software.amazon.polymorph.TestModelTest;
 import software.amazon.polymorph.smithydafny.DafnyVersion;
-
-import static software.amazon.smithy.dafny.codegen.TestUtils.make;
 
 class DotnetTestModels extends TestModelTest {
 

@@ -1,5 +1,12 @@
 package software.amazon.polymorph.traits;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.neighbor.Walker;
@@ -9,14 +16,6 @@ import software.amazon.smithy.model.shapes.ShapeId;
 import software.amazon.smithy.model.shapes.ShapeType;
 import software.amazon.smithy.model.validation.AbstractValidator;
 import software.amazon.smithy.model.validation.ValidationEvent;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class UnsupportedFeaturesValidator extends AbstractValidator {
 
@@ -49,68 +48,88 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
     )
     .collect(Collectors.toSet());
 
-  private static final List<ShapeId> COMMON_SUPPORTED_TRAITS = List.of(
-    "smithy.api#box",
-    "smithy.api#default",
-    "smithy.api#documentation",
-    "smithy.api#error",
-    "smithy.api#enum",
-    "smithy.api#idempotencyToken",
-    "smithy.api#input",
-    "smithy.api#length",
-    "smithy.api#output",
-    "smithy.api#pattern",
-    "smithy.api#required",
-    "smithy.api#range",
-    "smithy.api#readonly",
-    "smithy.api#sensitive",
-    "smithy.api#uniqueItems"
-  ).stream().map(ShapeId::from).toList();
+  private static final List<ShapeId> COMMON_SUPPORTED_TRAITS = List
+    .of(
+      "smithy.api#box",
+      "smithy.api#default",
+      "smithy.api#documentation",
+      "smithy.api#error",
+      "smithy.api#enum",
+      "smithy.api#idempotencyToken",
+      "smithy.api#input",
+      "smithy.api#length",
+      "smithy.api#output",
+      "smithy.api#pattern",
+      "smithy.api#required",
+      "smithy.api#range",
+      "smithy.api#readonly",
+      "smithy.api#sensitive",
+      "smithy.api#uniqueItems"
+    )
+    .stream()
+    .map(ShapeId::from)
+    .toList();
 
   private static final Set<ShapeId> SUPPORTED_TRAITS_LOCAL_SERVICE = Stream
     .concat(
       COMMON_SUPPORTED_TRAITS.stream(),
-      Stream.of(
-        // For those that literally can't be used for non-local services,
-        // we probably want model validation to forbid them instead,
-        "aws.polymorph#extendable",
-        "aws.polymorph#localService",
-        "aws.polymorph#dafnyUtf8Bytes",
-        "aws.polymorph#javadoc",
-        "aws.polymorph#positional",
-        "aws.polymorph#reference"
-      ).map(ShapeId::from)
+      Stream
+        .of(
+          // For those that literally can't be used for non-local services,
+          // we probably want model validation to forbid them instead,
+          "aws.polymorph#extendable",
+          "aws.polymorph#localService",
+          "aws.polymorph#dafnyUtf8Bytes",
+          "aws.polymorph#javadoc",
+          "aws.polymorph#positional",
+          "aws.polymorph#reference"
+        )
+        .map(ShapeId::from)
     )
     .collect(Collectors.toSet());
 
   private static final Set<ShapeId> SUPPORTED_TRAITS_AWS_SERVICE = Stream
     .concat(
       COMMON_SUPPORTED_TRAITS.stream(),
-      Stream.of(
-        // Most of these are protocol details handled by the wrapped SDKs
-        // and not relevant for SDK consumers.
-        "aws.api#clientEndpointDiscovery",
-        "aws.api#clientDiscoveredEndpoint",
-        "aws.api#service",
-        "aws.auth#sigv4",
-        "aws.protocols#awsJson1_0",
-        "aws.protocols#awsJson1_1",
-        "aws.protocols#awsQuery",
-        "aws.protocols#awsQueryError",
-        "smithy.api#deprecated",
-        "smithy.api#paginated",
-        "smithy.api#suppress",
-        "smithy.api#httpError",
-        "smithy.api#title",
-        "smithy.api#xmlFlattened",
-        "smithy.api#xmlName",
-        "smithy.api#xmlNamespace",
-        "smithy.rules#endpointTests",
-        "smithy.rules#endpointRuleSet",
-        // We don't really support this yet, since it implies extra API
-        // methods we don't generate, but at least we don't generate incorrect code.
-        "smithy.waiters#waitable"
-      ).map(ShapeId::from)
+      Stream
+        .of(
+          // Most of these are protocol details handled by the wrapped SDKs
+          // and not relevant for SDK consumers,
+          // so it is valid and safe for our codegen to intentionally ignore them.
+          "aws.api#clientEndpointDiscovery",
+          "aws.api#clientDiscoveredEndpoint",
+          "aws.api#service",
+          "aws.auth#sigv4",
+          "aws.protocols#awsJson1_0",
+          "aws.protocols#awsJson1_1",
+          "aws.protocols#awsQuery",
+          "aws.protocols#awsQueryError",
+          "aws.protocols#restJson1",
+          "smithy.api#deprecated",
+          "smithy.api#endpoint",
+          // This is safe since the enum value is only relevant on the wire
+          "smithy.api#enumValue",
+          // We don't generate examples yet, but that's harmless
+          "smithy.api#examples",
+          "smithy.api#http",
+          "smithy.api#paginated",
+          "smithy.api#suppress",
+          "smithy.api#httpError",
+          "smithy.api#httpHeader",
+          "smithy.api#retryable",
+          "smithy.api#timestampFormat",
+          "smithy.api#title",
+          "smithy.api#xmlFlattened",
+          "smithy.api#xmlName",
+          "smithy.api#xmlNamespace",
+          "smithy.rules#endpointTests",
+          "smithy.rules#endpointRuleSet",
+          // We don't really support this yet, since it implies extra API
+          // methods we don't generate, but at least we don't generate incorrect code.
+          "smithy.waiters#waitable",
+          "smithy.synthetic#enum"
+        )
+        .map(ShapeId::from)
     )
     .collect(Collectors.toSet());
 
@@ -120,20 +139,37 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
 
     for (ServiceShape serviceShape : model.getServiceShapes()) {
       if (serviceShape.hasTrait(ServiceTrait.class)) {
-        checkForUnsupportedFeatures(model, serviceShape, events, COMMON_SUPPORTED_SHAPE_TYPES, SUPPORTED_TRAITS_AWS_SERVICE);
+        checkForUnsupportedFeatures(
+          model,
+          serviceShape,
+          events,
+          "AWS",
+          COMMON_SUPPORTED_SHAPE_TYPES,
+          SUPPORTED_TRAITS_AWS_SERVICE
+        );
       }
       if (serviceShape.hasTrait(LocalServiceTrait.class)) {
-        checkForUnsupportedFeatures(model, serviceShape, events, SUPPORTED_SHAPES_LOCAL_SERVICE, SUPPORTED_TRAITS_LOCAL_SERVICE);
+        checkForUnsupportedFeatures(
+          model,
+          serviceShape,
+          events,
+          "local",
+          SUPPORTED_SHAPES_LOCAL_SERVICE,
+          SUPPORTED_TRAITS_LOCAL_SERVICE
+        );
       }
     }
 
     return events;
   }
 
-  private void checkForUnsupportedFeatures(   Model model, ServiceShape service,
-                                              List<ValidationEvent> events,
-                                              Collection<ShapeType> supportedShapes,
-                                               Collection<ShapeId> supportedTraits
+  private void checkForUnsupportedFeatures(
+    Model model,
+    ServiceShape service,
+    List<ValidationEvent> events,
+    String serviceKindLabel,
+    Collection<ShapeType> supportedShapes,
+    Collection<ShapeId> supportedTraits
   ) {
     for (Shape shape : new Walker(model).walkShapes(service)) {
       if (!supportedShapes.contains(shape.getType())) {
@@ -143,12 +179,28 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
         //    that issues with the prelude should not be the user's concern.
         // We could address 2. by putting the event on the reference to the prelude shape instead,
         // but given 1. it doesn't seem worth it.
-        events.add(error(shape, "smithy-dafny does not support this shape type: %s.".formatted(shape.getType())));
+        events.add(
+          error(
+            shape,
+            "smithy-dafny does not support this shape type for %s services: %s.".formatted(
+                serviceKindLabel,
+                shape.getType()
+              )
+          )
+        );
       }
 
       for (ShapeId traitId : shape.getAllTraits().keySet()) {
         if (!supportedTraits.contains(traitId)) {
-          events.add(danger(shape, "smithy-dafny does not support this trait: %s.".formatted(traitId)));
+          events.add(
+            danger(
+              shape,
+              "smithy-dafny does not support this trait for %s services: %s.".formatted(
+                serviceKindLabel,
+                traitId
+              )
+            )
+          );
         }
       }
     }

@@ -1,6 +1,6 @@
 package software.amazon.smithy.dafny.codegen;
 
-import software.amazon.smithy.utils.IoUtils;
+import static java.util.function.Function.identity;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -8,11 +8,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static java.util.function.Function.identity;
+import software.amazon.smithy.utils.IoUtils;
 
 public class TestUtils {
-
 
   private static Set<String> passthroughEnvrionmentVariables() {
     return Set.of("PATH");
@@ -41,11 +39,11 @@ public class TestUtils {
     if (exitCode != 0) {
       throw new RuntimeException(
         "make command [" +
-          args +
-          "] failed (exit code: " +
-          exitCode +
-          "). Output:\n" +
-          output
+        args +
+        "] failed (exit code: " +
+        exitCode +
+        "). Output:\n" +
+        output
       );
     }
   }
