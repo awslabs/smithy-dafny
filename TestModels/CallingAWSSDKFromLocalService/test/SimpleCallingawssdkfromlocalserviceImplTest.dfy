@@ -112,9 +112,9 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     ensures client.ValidState()
   {
     var attributeValueMap: Dynamodb.Types.PutItemInputAttributeMap := map[
-          "branch-key-id"   := Dynamodb.Types.AttributeValue.S("aws-kms-put-item"),
-          "status" := Dynamodb.Types.AttributeValue.S("ACTIVE"),
-          "version" := Dynamodb.Types.AttributeValue.S("version-1")
+      "branch-key-id"   := Dynamodb.Types.AttributeValue.S("aws-kms-put-item"),
+      "status" := Dynamodb.Types.AttributeValue.S("ACTIVE"),
+      "version" := Dynamodb.Types.AttributeValue.S("version-1")
     ];
     var conditionExpression: Dynamodb.Types.ConditionExpression :=  "attribute_exists(version)";
     var ddbClient :- expect Dynamodb.DynamoDBClient();
@@ -129,9 +129,9 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     ensures client.ValidState()
   {
     var attributeValueMap: Dynamodb.Types.PutItemInputAttributeMap := map[
-          "branch-key-id"   := Dynamodb.Types.AttributeValue.S("aws-kms-put-item"),
-          "status" := Dynamodb.Types.AttributeValue.S("ACTIVE"),
-          "version" := Dynamodb.Types.AttributeValue.S("version-1")
+      "branch-key-id"   := Dynamodb.Types.AttributeValue.S("aws-kms-put-item"),
+      "status" := Dynamodb.Types.AttributeValue.S("ACTIVE"),
+      "version" := Dynamodb.Types.AttributeValue.S("version-1")
     ];
     var conditionExpression: Dynamodb.Types.ConditionExpression :=  "attribute_not_exists(version)";
     var ddbClient :- expect Dynamodb.DynamoDBClient();
@@ -181,7 +181,7 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     expect resFailure_NonExistent.error.ComAmazonawsKms.NotFoundException?;
   }
 
-    method{:test} CallKMSDecrypt(){
+  method{:test} CallKMSDecrypt(){
     var client :- expect SimpleCallingawssdkfromlocalservice.SimpleCallingawssdkfromlocalservice();
     TestCallKMSDecrypt_Success(client);
     TestCallKMSDecrypt_Failure(client);
@@ -193,18 +193,18 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     ensures client.ValidState()
   {
     var CiphertextBlob : seq<uint8> := [
-        1,   1,   1,   0, 120,  64, 243, 140,  39,  94,  49,   9,
+      1,   1,   1,   0, 120,  64, 243, 140,  39,  94,  49,   9,
       116,  22, 193,   7,  41,  81,  80,  87,  25, 100, 173, 163,
       239,  28,  33, 233,  76, 139, 160, 189, 188, 157,  15, 180,
       20,   0,   0,   0,  98,  48,  96,   6,   9,  42, 134,  72,
       134, 247,  13,   1,   7,   6, 160,  83,  48,  81,   2,   1,
-        0,  48,  76,   6,   9,  42, 134,  72, 134, 247,  13,   1,
-        7,   1,  48,  30,   6,   9,  96, 134,  72,   1, 101,   3,
-        4,   1,  46,  48,  17,   4,  12, 196, 249,  60,   7,  21,
+      0,  48,  76,   6,   9,  42, 134,  72, 134, 247,  13,   1,
+      7,   1,  48,  30,   6,   9,  96, 134,  72,   1, 101,   3,
+      4,   1,  46,  48,  17,   4,  12, 196, 249,  60,   7,  21,
       231,  87,  70, 216,  12,  31,  13,   2,   1,  16, 128,  31,
       222, 119, 162, 112,  88, 153,  39, 197,  21, 182, 116, 176,
       120, 174, 107,  82, 182, 223, 160, 201,  15,  29,   3, 254,
-        3, 208,  72, 171,  64, 207, 175
+      3, 208,  72, 171,  64, 207, 175
     ];
     var kmsClient :- expect Kms.KMSClient();
     var resSuccess := client.CallKMSDecrypt(SimpleCallingawssdkfromlocalservice.Types.CallKMSDecryptInput(kmsClient := kmsClient, keyId := KEY_ID_SUCCESS_CASE, ciphertextBlob := workAround(CiphertextBlob)));
@@ -220,18 +220,18 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     ensures client.ValidState()
   {
     var CiphertextBlob : seq<uint8> := [
-        1,   1,   1,   0, 120,  64, 243, 140,  39,  94,  49,   9,
+      1,   1,   1,   0, 120,  64, 243, 140,  39,  94,  49,   9,
       116,  22, 193,   7,  41,  81,  80,  87,  25, 100, 173, 163,
       239,  28,  33, 233,  76, 139, 160, 189, 188, 157,  15, 180,
       20,   0,   0,   0,  98,  48,  96,   6,   9,  42, 134,  72,
       134, 247,  13,   1,   7,   6, 160,  83,  48,  81,   2,   1,
-        0,  48,  76,   6,   9,  42, 134,  72, 134, 247,  13,   1,
-        7,   1,  48,  30,   6,   9,  96, 134,  72,   1, 101,   3,
-        4,   1,  46,  48,  17,   4,  12, 196, 249,  60,   7,  21,
+      0,  48,  76,   6,   9,  42, 134,  72, 134, 247,  13,   1,
+      7,   1,  48,  30,   6,   9,  96, 134,  72,   1, 101,   3,
+      4,   1,  46,  48,  17,   4,  12, 196, 249,  60,   7,  21,
       231,  87,  70, 216,  12,  31,  13,   2,   1,  16, 128,  31,
       222, 119, 162, 112,  88, 153,  39, 197,  21, 182, 116, 176,
       120, 174, 107,  82, 182, 223, 160, 201,  15,  29,   3, 254,
-        3, 208,  72, 171,  64, 207, 175
+      3, 208,  72, 171,  64, 207, 175
     ];
     var kmsClient :- expect Kms.KMSClient();
     var resFailure := client.CallKMSDecrypt(SimpleCallingawssdkfromlocalservice.Types.CallKMSDecryptInput(kmsClient := kmsClient, keyId := NONEXISTENT_KEY_ID, ciphertextBlob := workAround(CiphertextBlob)));
