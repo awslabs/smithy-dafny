@@ -55,16 +55,15 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
       "smithy.api#documentation",
       "smithy.api#error",
       "smithy.api#enum",
-      "smithy.api#idempotencyToken",
+      "smithy.api#enumValue",
       "smithy.api#input",
       "smithy.api#length",
       "smithy.api#output",
-      "smithy.api#pattern",
       "smithy.api#required",
       "smithy.api#range",
       "smithy.api#readonly",
-      "smithy.api#sensitive",
-      "smithy.api#uniqueItems"
+      "smithy.api#uniqueItems",
+      "smithy.synthetic#enum"
     )
     .stream()
     .map(ShapeId::from)
@@ -82,8 +81,11 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
           "aws.polymorph#dafnyUtf8Bytes",
           "aws.polymorph#javadoc",
           "aws.polymorph#positional",
-          "aws.polymorph#reference"
-        )
+          "aws.polymorph#reference",
+          // Not technically supported for all target languages yet.
+          // But we also emit a separate WARNING for this in NoReferencesInSmokeTestsValidator anyway.
+          "smithy.test#smokeTests"
+          )
         .map(ShapeId::from)
     )
     .collect(Collectors.toSet());
@@ -120,7 +122,10 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
           "smithy.api#httpLabel",
           "smithy.api#httpPrefixHeaders",
           "smithy.api#httpQuery",
+          "smithy.api#idempotencyToken",
           "smithy.api#paginated",
+          "smithy.api#pattern",
+          "smithy.api#sensitive",
           "smithy.api#suppress",
           "smithy.api#retryable",
           "smithy.api#timestampFormat",
@@ -132,7 +137,6 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
           "smithy.rules#contextParam",
           "smithy.rules#endpointTests",
           "smithy.rules#endpointRuleSet",
-          "smithy.synthetic#enum",
           // We don't really support this yet, since it implies extra API
           // methods we don't generate, but at least we don't generate incorrect code.
           "smithy.waiters#waitable"
