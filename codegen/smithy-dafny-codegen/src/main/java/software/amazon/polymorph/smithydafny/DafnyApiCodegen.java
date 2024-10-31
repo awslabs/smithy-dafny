@@ -182,7 +182,17 @@ public class DafnyApiCodegen {
         // Error types are generated *after*
         // all other types to account
         // for any dependent modules
-        modeledErrorDataType
+        modeledErrorDataType,
+        TokenTree.of(
+          """
+          // This dummy subset type is included to make sure Dafny
+          // always generates a _ExternBase___default.java class.
+          type DummySubsetType = x: int | IsDummySubsetType(x) witness 1
+          predicate method IsDummySubsetType(x: int) {
+            0 < x
+          }
+          """
+        )
       )
       .lineSeparated()
       .braced();
@@ -2634,12 +2644,14 @@ public class DafnyApiCodegen {
     final String defaultFunctionMethodName =
       "Default%s".formatted(localServiceTrait.getConfigId().getName());
 
-    final TokenTree defaultConfig = TokenTree.of(
-      "function method %s(): %s".formatted(
-          defaultFunctionMethodName,
-          configTypeName
-        )
-    );
+    final TokenTree defaultConfig = localServiceTrait.getConfigRequired()
+      ? TokenTree.empty()
+      : TokenTree.of(
+        "function method %s(): %s".formatted(
+            defaultFunctionMethodName,
+            configTypeName
+          )
+      );
 
     // "Managed reference" shapes are shapes in the local service config whose target types have the Polymorph
     //   Reference trait.
@@ -2651,11 +2663,16 @@ public class DafnyApiCodegen {
 
     TokenTree serviceMethod = TokenTree
       .of(
-        "method %s(config: %s := %s())".formatted(
-            localServiceTrait.getSdkId(),
-            configTypeName,
-            defaultFunctionMethodName
-          ),
+        localServiceTrait.getConfigRequired()
+          ? "method %s(config: %s)".formatted(
+              localServiceTrait.getSdkId(),
+              configTypeName
+            )
+          : "method %s(config: %s := %s())".formatted(
+              localServiceTrait.getSdkId(),
+              configTypeName,
+              defaultFunctionMethodName
+            ),
         // Yes, Error is hard coded
         // this can work because we need to be able Errors from other modules...
         "returns (res: Result<%s, Error>)\n".formatted(dafnyClientClass)
