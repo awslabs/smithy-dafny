@@ -26,6 +26,12 @@ module WrappedSimpleCallingawssdkfromlocalserviceTest {
     SimpleCallingawssdkfromlocalserviceImplTest.TestCallDDBGetItem_Failure(client);
   }
 
+  method{:test} TestCallDDBPutItem() {
+    var client :- expect WrappedSimpleCallingawssdkfromlocalserviceService.WrappedSimpleCallingawssdkfromlocalservice();
+    SimpleCallingawssdkfromlocalserviceImplTest.TestCallDDBGetItem_Success(client);
+    SimpleCallingawssdkfromlocalserviceImplTest.TestCallDDBGetItem_Failure(client);
+  }
+
   method{:test} TestCallKMSEncrypt() {
     var client :- expect WrappedSimpleCallingawssdkfromlocalserviceService.WrappedSimpleCallingawssdkfromlocalservice();
     SimpleCallingawssdkfromlocalserviceImplTest.TestCallKMSEncrypt_Success(client);

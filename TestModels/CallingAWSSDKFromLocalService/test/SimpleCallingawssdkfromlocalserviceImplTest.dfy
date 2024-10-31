@@ -100,6 +100,48 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     expect resFailure.Failure?;
   }
 
+  method{:test} CallDDBPutItem(){
+    var client :- expect SimpleCallingawssdkfromlocalservice.SimpleCallingawssdkfromlocalservice();
+    TestCallDDBPutItem_Success(client);
+    TestCallDDBPutItem_Failure(client);
+  }
+
+  method TestCallDDBPutItem_Success(client: ISimpleCallingAWSSDKFromLocalServiceClient)
+    requires client.ValidState()
+    modifies client.Modifies
+    ensures client.ValidState()
+  {
+    var attributeValueMap: Dynamodb.Types.PutItemInputAttributeMap := map[
+          "branch-key-id"   := Dynamodb.Types.AttributeValue.S("aws-kms-put-item"),
+          "status" := Dynamodb.Types.AttributeValue.S("ACTIVE"),
+          "version" := Dynamodb.Types.AttributeValue.S("version-1")
+    ];
+    var conditionExpression: Dynamodb.Types.ConditionExpression :=  "attribute_exists(version)";
+    var ddbClient :- expect Dynamodb.DynamoDBClient();
+    var resSuccess := client.CallDDBPutItem(SimpleCallingawssdkfromlocalservice.Types.CallDDBPutItemInput(ddbClient := ddbClient, tableArn := TABLE_ARN_SUCCESS_CASE, attributeMap := attributeValueMap, conditionExpression := conditionExpression));
+
+    expect resSuccess.Success?;
+  }
+
+  method TestCallDDBPutItem_Failure(client: ISimpleCallingAWSSDKFromLocalServiceClient)
+    requires client.ValidState()
+    modifies client.Modifies
+    ensures client.ValidState()
+  {
+    var attributeValueMap: Dynamodb.Types.PutItemInputAttributeMap := map[
+          "branch-key-id"   := Dynamodb.Types.AttributeValue.S("aws-kms-put-item"),
+          "status" := Dynamodb.Types.AttributeValue.S("ACTIVE"),
+          "version" := Dynamodb.Types.AttributeValue.S("version-1")
+    ];
+    var conditionExpression: Dynamodb.Types.ConditionExpression :=  "attribute_not_exists(version)";
+    var ddbClient :- expect Dynamodb.DynamoDBClient();
+    var resFailure := client.CallDDBPutItem(SimpleCallingawssdkfromlocalservice.Types.CallDDBPutItemInput(ddbClient := ddbClient, tableArn := TABLE_ARN_SUCCESS_CASE, attributeMap := attributeValueMap, conditionExpression := conditionExpression));
+
+    expect resFailure.Failure?;
+    expect resFailure.error.ComAmazonawsDynamodb?;
+    expect resFailure.error.ComAmazonawsDynamodb.ConditionalCheckFailedException?;
+  }
+
   method{:test} CallKMSEncrypt(){
     var client :- expect SimpleCallingawssdkfromlocalservice.SimpleCallingawssdkfromlocalservice();
     TestCallKMSEncrypt_Success(client);

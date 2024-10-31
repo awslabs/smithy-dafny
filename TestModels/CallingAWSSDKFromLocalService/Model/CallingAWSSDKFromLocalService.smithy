@@ -27,6 +27,7 @@ service SimpleCallingAWSSDKFromLocalService {
   operations: [ 
                 CallDDBScan,
                 CallDDBGetItem,
+                CallDDBPutItem,
                 CallKMSEncrypt,
                 CallKMSDecrypt],
   errors: [ SimpleCallingAWSSDKFromLocalServiceException ],
@@ -60,7 +61,7 @@ structure CallDDBGetItemInput {
   @required
   ddbClient: DdbClientReference,
   @required
-  tableArn: com.amazonaws.dynamodb#TableArn
+  tableArn: com.amazonaws.dynamodb#TableArn,
   @required
   key: com.amazonaws.dynamodb#Key
 }
@@ -68,6 +69,26 @@ structure CallDDBGetItemInput {
 structure CallDDBGetItemOutput {
   @required
   itemOutput: com.amazonaws.dynamodb#AttributeMap,
+}
+
+operation CallDDBPutItem {
+  input: CallDDBPutItemInput,
+  output: CallDDBPutItemOutput
+}
+
+structure CallDDBPutItemInput {
+  @required
+  ddbClient: DdbClientReference,
+  @required
+  tableArn: com.amazonaws.dynamodb#TableArn,
+  @required
+  attributeMap: com.amazonaws.dynamodb#PutItemInputAttributeMap
+  @required
+  conditionExpression: com.amazonaws.dynamodb#ConditionExpression
+}
+
+structure CallDDBPutItemOutput {
+
 }
 
 operation CallKMSEncrypt {

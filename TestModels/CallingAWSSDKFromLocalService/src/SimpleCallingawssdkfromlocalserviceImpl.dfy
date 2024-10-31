@@ -60,6 +60,22 @@ module SimpleCallingawssdkfromlocalserviceImpl refines AbstractSimpleCallingawss
     }
   }
 
+  method CallDDBPutItem ( config: InternalConfig,  input: CallDDBPutItemInput )
+    returns (output: Result<CallDDBPutItemOutput, Error>) {
+    var PutItemInput := Dynamodb.Types.PutItemInput(
+      TableName := input.tableArn,
+      Item := input.attributeMap,
+      ConditionExpression := Wrappers.Some(input.conditionExpression)
+    );
+    var retPutItem := input.ddbClient.PutItem(PutItemInput);
+    var emptyMap : Dynamodb.Types.AttributeMap := map[];
+    if retPutItem.Success? {
+      return Success(CallDDBPutItemOutput());
+    } else {
+      return Failure(ComAmazonawsDynamodb(retPutItem.error));
+    }
+  }
+
   method CallKMSEncrypt ( config: InternalConfig,  input: CallKMSEncryptInput )
     returns (output: Result<CallKMSEncryptOutput, Error>) {
     var encryptInput := Kms.Types.EncryptRequest(
