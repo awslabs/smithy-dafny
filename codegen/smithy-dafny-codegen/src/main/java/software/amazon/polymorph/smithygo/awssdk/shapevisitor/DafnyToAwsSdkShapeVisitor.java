@@ -372,7 +372,7 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
     if (shape.hasTrait(EnumTrait.class)) {
       var nilCheck = "";
       if (this.isOptional) {
-        var unAssertedDataSource = dataSource.startsWith("input.(")
+        final var unAssertedDataSource = dataSource.startsWith("input.(")
           ? "input"
           : dataSource;
         nilCheck =
