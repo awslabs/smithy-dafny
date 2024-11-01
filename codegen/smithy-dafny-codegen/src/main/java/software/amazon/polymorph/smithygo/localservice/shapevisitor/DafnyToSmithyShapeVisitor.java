@@ -416,45 +416,79 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
   public String stringShape(final StringShape shape) {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
     if (shape.hasTrait(EnumTrait.class)) {
-      return """
-         return func () *%s.%s {
-         var u %s.%s
-                     if %s == nil {
-                         return nil
-                     }
-      	inputEnum := %s.(%s)
-      	index := -1;
-      	for allEnums := dafny.Iterate(%s{}.AllSingletonConstructors()); ; {
-      		enum, ok := allEnums()
-      		if ok {
-      			index++
-      			if enum.(%s).Equals(inputEnum) {
-      				break;
-      			}
-      		}
-      	}
+      if (this.isOptional) {
+        return """
+          return func () *%s.%s {
+          var u %s.%s
+          if %s == nil {
+              return nil
+          }
+        	inputEnum := %s.(%s)
+        	index := -1;
+        	for allEnums := dafny.Iterate(%s{}.AllSingletonConstructors()); ; {
+        		enum, ok := allEnums()
+        		if ok {
+        			index++
+        			if enum.(%s).Equals(inputEnum) {
+        				break;
+        			}
+        		}
+        	}
 
-      	return &u.Values()[index]
-      }()""".formatted(
-          SmithyNameResolver.smithyTypesNamespace(shape),
-          context.symbolProvider().toSymbol(shape).getName(),
-          SmithyNameResolver.smithyTypesNamespace(shape),
-          context.symbolProvider().toSymbol(shape).getName(),
-          dataSource,
-          dataSource,
-          DafnyNameResolver.getDafnyType(
-            shape,
-            context.symbolProvider().toSymbol(shape)
-          ),
-          DafnyNameResolver.getDafnyCompanionStructType(
-            shape,
-            context.symbolProvider().toSymbol(shape)
-          ),
-          DafnyNameResolver.getDafnyType(
-            shape,
-            context.symbolProvider().toSymbol(shape)
-          )
-        );
+        	return &u.Values()[index]
+        }()""".formatted(
+            SmithyNameResolver.smithyTypesNamespace(shape),
+            context.symbolProvider().toSymbol(shape).getName(),
+            SmithyNameResolver.smithyTypesNamespace(shape),
+            context.symbolProvider().toSymbol(shape).getName(),
+            dataSource,
+            dataSource,
+            DafnyNameResolver.getDafnyType(
+              shape,
+              context.symbolProvider().toSymbol(shape)
+            ),
+            DafnyNameResolver.getDafnyCompanionStructType(
+              shape,
+              context.symbolProvider().toSymbol(shape)
+            ),
+            DafnyNameResolver.getDafnyType(
+              shape,
+              context.symbolProvider().toSymbol(shape)
+            )
+          );
+      } else {
+        return """
+          return func () %s.%s {
+          var u %s.%s
+        	inputEnum := %s
+        	index := -1;
+        	for allEnums := dafny.Iterate(%s{}.AllSingletonConstructors()); ; {
+        		enum, ok := allEnums()
+        		if ok {
+        			index++
+        			if enum.(%s).Equals(inputEnum) {
+        				break;
+        			}
+        		}
+        	}
+
+        	return u.Values()[index]
+        }()""".formatted(
+            SmithyNameResolver.smithyTypesNamespace(shape),
+            context.symbolProvider().toSymbol(shape).getName(),
+            SmithyNameResolver.smithyTypesNamespace(shape),
+            context.symbolProvider().toSymbol(shape).getName(),
+            dataSource,
+            DafnyNameResolver.getDafnyCompanionStructType(
+              shape,
+              context.symbolProvider().toSymbol(shape)
+            ),
+            DafnyNameResolver.getDafnyType(
+              shape,
+              context.symbolProvider().toSymbol(shape)
+            )
+          );
+      }
     }
 
     final var underlyingType = shape.hasTrait(DafnyUtf8BytesTrait.class)

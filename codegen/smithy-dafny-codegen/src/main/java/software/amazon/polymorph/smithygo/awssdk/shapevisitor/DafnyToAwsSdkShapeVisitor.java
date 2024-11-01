@@ -34,12 +34,6 @@ import software.amazon.smithy.utils.StringUtils;
 // TODO: Remove anonymous function in each of the shape visitor and test if it will work
 public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
 
-  private static final List<String> shapeName = Arrays.asList(
-    "IndexSizeBytes",
-    "ItemCount",
-    "ProcessedSizeBytes",
-    "TableSizeBytes"
-  );
   private final AwsSdkGoPointableIndex awsSdkGoPointableIndex;
   private final GenerationContext context;
   private final String dataSource;
@@ -213,7 +207,6 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
               assertionRequired,
               writer,
               memberShape.isOptional(),
-              shapeName.contains(memberName) ||
               awsSdkGoPointableIndex.isPointable(targetShape)
             )
           )
@@ -377,86 +370,54 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
   public String stringShape(final StringShape shape) {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
     if (shape.hasTrait(EnumTrait.class)) {
+      var nilCheck = "";
       if (this.isOptional) {
-        final String unAssertedDataSource = dataSource.startsWith("input.(")
+        final var unAssertedDataSource = dataSource.startsWith("input.(")
           ? "input"
           : dataSource;
-        return """
-           func () %s.%s {
-           var u %s.%s
-            //TODO: What to do if nil
-            if %s == nil {
+        nilCheck =
+          """
+          if %s == nil {
                 return u
             }
-        	inputEnum := %s.(%s)
-        	index := -1;
-        	for allEnums := dafny.Iterate(%s{}.AllSingletonConstructors()); ; {
-        		enum, ok := allEnums()
-        		if ok {
-        			index++
-        			if enum.(%s).Equals(inputEnum) {
-        				break;
-        			}
-        		}
-        	}
-        	return u.Values()[index]
-        }()""".formatted(
-            SmithyNameResolver.smithyTypesNamespaceAws(serviceTrait, true),
-            context.symbolProvider().toSymbol(shape).getName(),
-            SmithyNameResolver.smithyTypesNamespaceAws(serviceTrait, true),
-            context.symbolProvider().toSymbol(shape).getName(),
-            unAssertedDataSource,
-            dataSource,
-            DafnyNameResolver.getDafnyType(
-              shape,
-              context.symbolProvider().toSymbol(shape)
-            ),
-            DafnyNameResolver.getDafnyCompanionStructType(
-              shape,
-              context.symbolProvider().toSymbol(shape)
-            ),
-            DafnyNameResolver.getDafnyType(
-              shape,
-              context.symbolProvider().toSymbol(shape)
-            )
-          );
-      } else {
-        return """
-           func () %s.%s {
-           var u %s.%s
-
-        	inputEnum := %s
-        	index := -1;
-        	for allEnums := dafny.Iterate(%s{}.AllSingletonConstructors()); ; {
-        		enum, ok := allEnums()
-        		if ok {
-        			index++
-        			if enum.(%s).Equals(inputEnum.(%s)) {
-        				break;
-        			}
-        		}
-        	}
-        	return u.Values()[index]
-        }()""".formatted(
-            SmithyNameResolver.smithyTypesNamespaceAws(serviceTrait, true),
-            context.symbolProvider().toSymbol(shape).getName(),
-            SmithyNameResolver.smithyTypesNamespaceAws(serviceTrait, true),
-            context.symbolProvider().toSymbol(shape).getName(),
-            dataSource,
-            DafnyNameResolver.getDafnyCompanionStructType(
-              shape,
-              context.symbolProvider().toSymbol(shape)
-            ),
-            DafnyNameResolver.getDafnyType(
-              shape,
-              context.symbolProvider().toSymbol(shape)
-            ),
-            DafnyNameResolver.getDafnyType(
-              shape,
-              context.symbolProvider().toSymbol(shape)
-            )
-          );
+          """.formatted(unAssertedDataSource);
       }
+      return """
+         func () %s.%s {
+         var u %s.%s
+         %s
+      	inputEnum := %s.(%s)
+      	index := -1;
+      	for allEnums := dafny.Iterate(%s{}.AllSingletonConstructors()); ; {
+      		enum, ok := allEnums()
+      		if ok {
+      			index++
+      			if enum.(%s).Equals(inputEnum) {
+      				break;
+      			}
+      		}
+      	}
+      	return u.Values()[index]
+      }()""".formatted(
+          SmithyNameResolver.smithyTypesNamespaceAws(serviceTrait, true),
+          context.symbolProvider().toSymbol(shape).getName(),
+          SmithyNameResolver.smithyTypesNamespaceAws(serviceTrait, true),
+          context.symbolProvider().toSymbol(shape).getName(),
+          nilCheck,
+          dataSource,
+          DafnyNameResolver.getDafnyType(
+            shape,
+            context.symbolProvider().toSymbol(shape)
+          ),
+          DafnyNameResolver.getDafnyCompanionStructType(
+            shape,
+            context.symbolProvider().toSymbol(shape)
+          ),
+          DafnyNameResolver.getDafnyType(
+            shape,
+            context.symbolProvider().toSymbol(shape)
+          )
+        );
     }
 
     final var underlyingType = shape.hasTrait(DafnyUtf8BytesTrait.class)
