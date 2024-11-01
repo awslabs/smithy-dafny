@@ -44,7 +44,9 @@ public class NoMarkupInDocumentationTraitsValidator extends AbstractValidator {
         // we're generating vs just importing is to use the
         // "sources" vs. "imports" concept for Smithy build plugins:
         // https://smithy.io/2.0/guides/smithy-build-json.html#using-smithy-build-json
-        if (!ModelUtils.isInServiceNamespace(shape, (ServiceShape)localService)) {
+        if (
+          !ModelUtils.isInServiceNamespace(shape, (ServiceShape) localService)
+        ) {
           continue;
         }
 

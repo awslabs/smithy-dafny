@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import software.amazon.polymorph.utils.ModelUtils;
 import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.model.Model;
@@ -53,7 +52,6 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
   private static final List<ShapeId> COMMON_SUPPORTED_TRAITS = List
     .of(
       "smithy.api#box",
-      "smithy.api#default",
       "smithy.api#documentation",
       "smithy.api#error",
       "smithy.api#enum",
@@ -64,7 +62,6 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
       "smithy.api#required",
       "smithy.api#range",
       "smithy.api#readonly",
-      "smithy.api#uniqueItems",
       "smithy.synthetic#enum"
     )
     .stream()
@@ -87,7 +84,7 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
           // Not technically supported for all target languages yet.
           // But we also emit a separate WARNING for this in NoReferencesInSmokeTestsValidator anyway.
           "smithy.test#smokeTests"
-          )
+        )
         .map(ShapeId::from)
     )
     .collect(Collectors.toSet());
@@ -112,6 +109,7 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
           "smithy.api#httpPayload",
           "aws.protocols#restJson1",
           "aws.protocols#restXml",
+          "smithy.api#default",
           "smithy.api#deprecated",
           "smithy.api#endpoint",
           // This is safe since the enum value is only relevant on the wire
@@ -132,6 +130,7 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
           "smithy.api#retryable",
           "smithy.api#timestampFormat",
           "smithy.api#title",
+          "smithy.api#uniqueItems",
           "smithy.api#xmlFlattened",
           "smithy.api#xmlName",
           "smithy.api#xmlNamespace",
@@ -205,14 +204,17 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
       }
 
       for (ShapeId traitId : shape.getAllTraits().keySet()) {
-        if (!supportedTraits.contains(traitId) && ModelUtils.isInServiceNamespace(shape, service)) {
+        if (
+          !supportedTraits.contains(traitId) &&
+          ModelUtils.isInServiceNamespace(shape, service)
+        ) {
           events.add(
             danger(
               shape,
               "smithy-dafny does not support this trait for %s services: %s.".formatted(
-                serviceKindLabel,
-                traitId
-              )
+                  serviceKindLabel,
+                  traitId
+                )
             )
           );
         }
