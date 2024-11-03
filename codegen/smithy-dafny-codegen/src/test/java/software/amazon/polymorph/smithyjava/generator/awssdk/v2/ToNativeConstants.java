@@ -107,7 +107,7 @@ public class ToNativeConstants {
      import software.amazon.awssdk.services.kms.model.KmsException;
      import software.amazon.cryptography.services.kms.internaldafny.types.Error;
      import software.amazon.cryptography.services.kms.internaldafny.types.Error_DependencyTimeoutException;
-     import software.amazon.cryptography.services.kms.internaldafny.types.Error_Opaque;
+     import software.amazon.cryptography.services.kms.internaldafny.types.Error_OpaqueWithText;
      import software.amazon.cryptography.services.kms.internaldafny.types.IKeyManagementServiceClient;
 
      public class ToNative {
