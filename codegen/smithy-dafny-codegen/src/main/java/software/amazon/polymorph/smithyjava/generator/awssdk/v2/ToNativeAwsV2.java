@@ -29,7 +29,7 @@ import software.amazon.polymorph.smithyjava.generator.ToNative;
 import software.amazon.polymorph.smithyjava.nameresolver.AwsSdkDafnyV2;
 import software.amazon.polymorph.smithyjava.nameresolver.AwsSdkNativeV2;
 import software.amazon.polymorph.smithyjava.nameresolver.Dafny;
-import software.amazon.polymorph.smithyjava.unmodeled.OpaqueError;
+import software.amazon.polymorph.smithyjava.unmodeled.OpaqueWithTextError;
 import software.amazon.polymorph.traits.LocalServiceTrait;
 import software.amazon.polymorph.utils.AwsSdkNameResolverHelpers;
 import software.amazon.polymorph.utils.DafnyNameResolverHelpers;
@@ -527,7 +527,7 @@ public class ToNativeAwsV2 extends ToNative {
 
   protected MethodSpec errorOpaque() {
     final String methodName = "Error";
-    final TypeName inputType = subject.dafnyNameResolver.classForOpaqueError();
+    final TypeName inputType = subject.dafnyNameResolver.classForOpaqueWithTextError();
     final ClassName returnType = ClassName.get(RuntimeException.class);
     return initializeMethodSpec(methodName, inputType, returnType)
       .addComment("While the first two cases are logically identical,")
@@ -596,7 +596,7 @@ public class ToNativeAwsV2 extends ToNative {
       .map(ClassName::simpleName)
       .map(simpleName -> simpleName.replaceFirst("Error_", ""))
       .collect(Collectors.toCollection(ArrayList::new)); // We need a mutable list, so we can't use stream().toList()
-    allDafnyErrorConstructors.add("Opaque");
+    allDafnyErrorConstructors.add("OpaqueWithText");
     allDafnyErrorConstructors.forEach(constructorName ->
       method
         .beginControlFlow(
