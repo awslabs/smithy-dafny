@@ -354,11 +354,6 @@ public class ToNativeTest extends ForEachDafnyTest {
     final Path actualPath = actual.keySet().toArray(temp)[0];
     assertEquals(expectedPath, actualPath);
     final String actualSource = actual.get(actualPath).toString();
-    System.err.println("*******");
-    System.err.println(actualSource);
-    System.err.println("*******");
-    System.err.println(ToNativeConstants.KMS_A_STRING_OPERATION_JAVA_FILE);
-    System.err.println("*******");
     tokenizeAndAssertEqual(
       ToNativeConstants.KMS_A_STRING_OPERATION_JAVA_FILE,
       actualSource

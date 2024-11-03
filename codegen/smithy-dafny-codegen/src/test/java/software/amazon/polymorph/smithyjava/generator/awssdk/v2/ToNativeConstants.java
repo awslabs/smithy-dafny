@@ -139,7 +139,7 @@ public class ToNativeConstants {
            return ((Shim) dafnyValue).impl();
        }
 
-       public static RuntimeException Error(Error_Opaque dafnyValue) {
+       public static RuntimeException Error(Error_OpaqueWithText dafnyValue) {
          // While the first two cases are logically identical,
          // there is a semantic distinction.
          // An un-modeled Service Error is different from a Java Heap Exhaustion error.
@@ -157,8 +157,8 @@ public class ToNativeConstants {
          if (dafnyValue.is_DependencyTimeoutException()) {
            return ToNative.Error((Error_DependencyTimeoutException) dafnyValue);
          }
-         if (dafnyValue.is_Opaque()) {
-           return ToNative.Error((Error_Opaque) dafnyValue);
+         if (dafnyValue.is_OpaqueWithText()) {
+           return ToNative.Error((Error_OpaqueWithText) dafnyValue);
          }
          // TODO This should indicate a codegen bug; every error Should have been taken care of.
          return new IllegalStateException(
