@@ -115,7 +115,7 @@ public class ToDafnyAwsV2Constants {
       // An un-modeled Service Error is different from a Java Heap Exhaustion error.
       // In the future, Smithy-Dafny MAY allow for this distinction.
       // Which would allow Dafny developers to treat the two differently.
-      return software.amazon.cryptography.services.kms.internaldafny.types.Error.create_OpaqueWithText(nativeValue, dafny.DafnySequence.asString(nativeValue.getMessage()));
+      return software.amazon.cryptography.services.kms.internaldafny.types.Error.create_Opaque(nativeValue);
     }
     """;
 
@@ -129,7 +129,7 @@ public class ToDafnyAwsV2Constants {
       // An un-modeled Service Error is different from a Java Heap Exhaustion error.
       // In the future, Smithy-Dafny MAY allow for this distinction.
       // Which would allow Dafny developers to treat the two differently.
-      return software.amazon.cryptography.services.kms.internaldafny.types.Error.create_OpaqueWithText(nativeValue, dafny.DafnySequence.asString(nativeValue.getMessage()));
+      return software.amazon.cryptography.services.kms.internaldafny.types.Error.create_Opaque(nativeValue);
     }
     """;
 
