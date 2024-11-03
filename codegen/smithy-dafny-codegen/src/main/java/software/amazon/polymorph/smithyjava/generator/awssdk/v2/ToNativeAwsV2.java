@@ -527,7 +527,8 @@ public class ToNativeAwsV2 extends ToNative {
 
   protected MethodSpec errorOpaque() {
     final String methodName = "Error";
-    final TypeName inputType = subject.dafnyNameResolver.classForOpaqueWithTextError();
+    final TypeName inputType =
+      subject.dafnyNameResolver.classForOpaqueWithTextError();
     final ClassName returnType = ClassName.get(RuntimeException.class);
     return initializeMethodSpec(methodName, inputType, returnType)
       .addComment("While the first two cases are logically identical,")
