@@ -104,6 +104,15 @@ public class ServiceCodegen {
       opaqueExceptionPathCode.prepend(prelude)
     );
 
+    // OpaqueWithText exception class
+    final Path opaqueWithTextExceptionPath = Path.of("OpaqueWithTextError.cs");
+    final TokenTree opaqueWithTextExceptionPathCode =
+      generateOpaqueWithTextExceptionClass();
+    codeByPath.put(
+      opaqueWithTextExceptionPath,
+      opaqueWithTextExceptionPathCode.prepend(prelude)
+    );
+
     // Specific exception classes
     model
       .getStructureShapes()
@@ -341,7 +350,27 @@ public class ServiceCodegen {
           public readonly object obj;
           public OpaqueError(Exception ex) : base("OpaqueError:", ex) { this.obj = ex; }
           public OpaqueError() : base("Unknown Unexpected Error") { }
-          public OpaqueError(object obj) : base(obj is Exception ? "OpaqueError:" : "Opaque obj is not an Exception.", obj as Exception) { this.obj = obj;}
+          public OpaqueError(object obj) : base(obj is Exception ? obj as Exception, "OpaqueError:" : "Opaque obj is not an Exception.") { this.obj = obj;}
+        }
+          """
+      )
+      .namespaced(Token.of(nameResolver.namespaceForService()));
+  }
+
+  /**
+   * @return an OpaqueWithText exception class that can wrap any given System.Exception,
+   * which extends from System.Exception
+   */
+  public TokenTree generateOpaqueWithTextExceptionClass() {
+    return TokenTree
+      .of(
+        """
+        public class OpaqueWithTextError : Exception {
+          public readonly object obj;
+          public readonly string objMessage;
+          public OpaqueWithTextError(Exception ex) : base("OpaqueError:", ex) { this.obj = ex; this.objMessage = obj.ToString();}
+          public OpaqueWithTextError() : base("Unknown Unexpected Error") { }
+          public OpaqueWithTextError(object obj) : base(obj is Exception ? obj as Exception, "OpaqueWithTextError:" : "Opaque obj is not an Exception.") { this.obj = obj; this.objMessage = obj.ToString();}
         }
           """
       )

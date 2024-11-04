@@ -611,6 +611,10 @@ public class DotNetNameResolver {
     return "OpaqueError";
   }
 
+  public static String baseClassForUnknownWithTextError() {
+    return "OpaqueWithTextError";
+  }
+
   /**
    * Implements {@code DafnyAst.NonglobalVariable.CompilerizeName} for strings which are valid enum definition names
    * according to {@link ModelUtils#isValidEnumDefinitionName(String)}.
@@ -975,6 +979,16 @@ public class DotNetNameResolver {
     final ServiceShape serviceShape
   ) {
     return "%s.Error_Opaque".formatted(
+        DafnyNameResolverHelpers.dafnyExternNamespaceForShapeId(
+          serviceShape.getId()
+        )
+      );
+  }
+
+  public static String dafnyUnknownErrorTypeForSdkShape(
+    final ServiceShape serviceShape
+  ) {
+    return "%s.Error_OpaqueWithText".formatted(
         DafnyNameResolverHelpers.dafnyExternNamespaceForShapeId(
           serviceShape.getId()
         )

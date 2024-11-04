@@ -1606,6 +1606,12 @@ public class TypeConversionCodegen {
         "return new %1$s(dafnyVal._obj);".formatted(
             DotNetNameResolver.baseClassForUnknownError()
           ),
+        "case %1$s dafnyVal:".formatted(
+            DotNetNameResolver.dafnyUnknownErrorTypeForSdkShape(serviceShape)
+          ),
+        "return new %1$s(dafnyVal._obj, dafnyVal._obj.ToString());".formatted(
+            DotNetNameResolver.baseClassForUnknownWithTextError()
+          ),
         "default:",
         "// The switch MUST be complete for _IError, so `value` MUST NOT be an _IError. (How did you get here?)",
         "return new %1$s();".formatted(
