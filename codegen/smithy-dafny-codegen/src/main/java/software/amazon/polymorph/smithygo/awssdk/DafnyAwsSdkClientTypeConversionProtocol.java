@@ -713,11 +713,19 @@ public class DafnyAwsSdkClientTypeConversionProtocol
           ),
         SmithyNameResolver.shapeNamespace(serviceShape),
         writer -> {
-          writer.addUseImports(SmithyGoDependency.FMT);
+          writer.addImport(SmithyGoDependency.SMITHY_SOURCE_PATH);
           writer.write(
             """
             func OpaqueError_Output_FromDafny(dafnyOutput $L.Error)(error) {
-                return fmt.Errorf(fmt.Sprintf("%v", dafnyOutput.Dtor_obj()))
+                responseSmithyOp, ok := dafnyOutput.Dtor_obj().(*smithy.OperationError)
+                if (ok){
+                  return responseSmithyOp
+                }
+                responseGenericErr, ok := dafnyOutput.Dtor_obj().(error)
+                if (ok){
+                  return responseGenericErr
+                }
+                panic("Invalid Error")
             }""",
             DafnyNameResolver.dafnyTypesNamespace(serviceShape)
           );
@@ -806,7 +814,8 @@ public class DafnyAwsSdkClientTypeConversionProtocol
             );
           var inputType = GoCodegenUtils.getType(
             context.symbolProvider().toSymbol(visitingShape),
-            serviceShape.expectTrait(ServiceTrait.class)
+            serviceShape.expectTrait(ServiceTrait.class),
+            true
           );
           if (
             AwsSdkGoPointableIndex
@@ -863,7 +872,8 @@ public class DafnyAwsSdkClientTypeConversionProtocol
           alreadyVisited.add(visitingMemberShape.toShapeId());
           var outputType = GoCodegenUtils.getType(
             context.symbolProvider().toSymbol(visitingShape),
-            serviceTrait
+            serviceTrait,
+            true
           );
           if (
             ShapeVisitorHelper.isToNativeShapePointable(visitingMemberShape)

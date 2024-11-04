@@ -1,23 +1,23 @@
 // Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 include "../Model/SimpleCallingawssdkfromlocalserviceTypes.dfy"
-include "SimpleCallingAWSSDKFromLocalServiceImpl.dfy"
+include "SimpleCallingawssdkfromlocalserviceImpl.dfy"
 
-module {:extern "simple.callingawssdkfromlocalservice.internaldafny" } SimpleCallingAWSSDKFromLocalService refines AbstractSimpleCallingawssdkfromlocalserviceService {
-  import Operations = SimpleCallingAWSSDKFromLocalServiceImpl
+module {:extern "simple.callingawssdkfromlocalservice.internaldafny" } SimpleCallingawssdkfromlocalservice refines AbstractSimpleCallingawssdkfromlocalserviceService {
+  import Operations = SimpleCallingawssdkfromlocalserviceImpl
 
-  function method DefaultSimpleCallingAWSSDKFromLocalServiceConfig(): SimpleCallingAWSSDKFromLocalServiceConfig {
-    SimpleCallingAWSSDKFromLocalServiceConfig
+  function method DefaultSimpleCallingawssdkfromlocalserviceConfig(): SimpleCallingawssdkfromlocalserviceConfig {
+    SimpleCallingawssdkfromlocalserviceConfig
   }
 
-  method SimpleCallingAWSSDKFromLocalService(config: SimpleCallingAWSSDKFromLocalServiceConfig)
-    returns (res: Result<SimpleCallingAWSSDKFromLocalServiceClient, Error>)
+  method SimpleCallingawssdkfromlocalservice(config: SimpleCallingawssdkfromlocalserviceConfig)
+    returns (res: Result<SimpleCallingawssdkfromlocalserviceClient, Error>)
   {
-    var client := new SimpleCallingAWSSDKFromLocalServiceClient(Operations.Config);
+    var client := new SimpleCallingawssdkfromlocalserviceClient(Operations.Config);
     return Success(client);
   }
 
-  class SimpleCallingAWSSDKFromLocalServiceClient... {
+  class SimpleCallingawssdkfromlocalserviceClient... {
     predicate ValidState()
     {
       && Operations.ValidInternalConfig?(config)

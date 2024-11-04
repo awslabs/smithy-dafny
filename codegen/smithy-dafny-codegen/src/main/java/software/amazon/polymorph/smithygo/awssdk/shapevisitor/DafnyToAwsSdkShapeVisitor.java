@@ -234,7 +234,8 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
       .expectShape(memberShape.getTarget());
     final var typeName = GoCodegenUtils.getType(
       context.symbolProvider().toSymbol(targetShape),
-      serviceTrait
+      serviceTrait,
+      true
     );
     final String unAssertedDataSource = dataSource.startsWith("input.(")
       ? "input"
@@ -287,7 +288,8 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
       .expectShape(valueMemberShape.getTarget());
     final var typeName = GoCodegenUtils.getType(
       context.symbolProvider().toSymbol(valueTargetShape),
-      serviceTrait
+      serviceTrait,
+      true
     );
 
     var nilCheck = "";
