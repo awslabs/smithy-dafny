@@ -47,7 +47,7 @@ module SimpleCallingawssdkfromlocalserviceImpl refines AbstractSimpleCallingawss
     );
     var retScan := input.ddbClient.Scan(ScanInput);
     if retScan.Success? {
-      return Success(CallDDBScanOutput(itemOutput := retScan.value.Count.UnwrapOr(-1)));
+      return Success(CallDDBScanOutput(itemOutput := retScan.value.Count));
     } else {
       return Failure(ComAmazonawsDynamodb(retScan.error));
     }
@@ -62,7 +62,7 @@ module SimpleCallingawssdkfromlocalserviceImpl refines AbstractSimpleCallingawss
     var retGetItem := input.ddbClient.GetItem(GetItemInput);
     var emptyMap : Dynamodb.Types.AttributeMap := map[];
     if retGetItem.Success? {
-      return Success(CallDDBGetItemOutput(itemOutput := retGetItem.value.Item.UnwrapOr(emptyMap)));
+      return Success(CallDDBGetItemOutput(itemOutput := retGetItem.value.Item));
     } else {
       return Failure(ComAmazonawsDynamodb(retGetItem.error));
     }
@@ -95,7 +95,7 @@ module SimpleCallingawssdkfromlocalserviceImpl refines AbstractSimpleCallingawss
     );
     var retEncryptResponse := input.kmsClient.Encrypt(encryptInput);
     if retEncryptResponse.Success? {
-      return Success(CallKMSEncryptOutput(encryptOutput := retEncryptResponse.value.KeyId.UnwrapOr("DummyString")));
+      return Success(CallKMSEncryptOutput(encryptOutput := retEncryptResponse.value.KeyId));
     } else {
       return Failure(Types.ComAmazonawsKms(retEncryptResponse.error));
     }
@@ -108,9 +108,8 @@ module SimpleCallingawssdkfromlocalserviceImpl refines AbstractSimpleCallingawss
       KeyId := Wrappers.Some(input.keyId)
     );
     var retDecryptResponse := input.kmsClient.Decrypt(decryptInput);
-    var emptyPlainText : Kms.Types.PlaintextType := [ 0 ];
     if retDecryptResponse.Success? {
-      return Success(CallKMSDecryptOutput(KeyIdType := retDecryptResponse.value.KeyId.UnwrapOr("DummyString"), Plaintext := retDecryptResponse.value.Plaintext.UnwrapOr(emptyPlainText)));
+      return Success(CallKMSDecryptOutput(KeyIdType := retDecryptResponse.value.KeyId, Plaintext := retDecryptResponse.value.Plaintext));
     } else {
       return Failure(Types.ComAmazonawsKms(retDecryptResponse.error));
     }

@@ -49,7 +49,6 @@ structure CallDDBScanInput {
 }
 
 structure CallDDBScanOutput {
-  @required
   itemOutput: com.amazonaws.dynamodb#Integer,
 }
 
@@ -68,7 +67,6 @@ structure CallDDBGetItemInput {
 }
 
 structure CallDDBGetItemOutput {
-  @required
   itemOutput: com.amazonaws.dynamodb#AttributeMap,
 }
 
@@ -107,7 +105,6 @@ structure CallKMSEncryptInput {
 }
 
 structure CallKMSEncryptOutput {
-  @required
   encryptOutput: com.amazonaws.kms#KeyIdType,
 }
 
@@ -126,9 +123,7 @@ structure CallKMSDecryptInput {
 }
 
 structure CallKMSDecryptOutput {
-  @required
   KeyIdType: com.amazonaws.kms#KeyIdType,
-  @required
   Plaintext: com.amazonaws.kms#PlaintextType
 }
 

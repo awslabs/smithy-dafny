@@ -45,7 +45,7 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     var resSuccess := client.CallDDBScan(SimpleCallingawssdkfromlocalservice.Types.CallDDBScanInput(ddbClient := ddbClient, tableArn := TABLE_ARN_SUCCESS_CASE));
 
     expect resSuccess.Success?;
-    expect resSuccess.value.itemOutput != -1;
+    expect resSuccess.value.itemOutput.Some?;
   }
 
   method TestCallDDBScan_Failure(client: ISimpleCallingAWSSDKFromLocalServiceClient)
@@ -80,8 +80,8 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     var resSuccess := client.CallDDBGetItem(SimpleCallingawssdkfromlocalservice.Types.CallDDBGetItemInput(ddbClient := ddbClient, tableArn := TABLE_ARN_SUCCESS_CASE, key := Key2Get));
 
     expect resSuccess.Success?;
-    // expect resSuccess.value.itemOutput;
-    var output := resSuccess.value.itemOutput;
+    expect resSuccess.value.itemOutput.Some?;
+    var output := resSuccess.value.itemOutput.value;
 
     expect output.Keys == {"branch-key-id", "version", "create-time", "enc", "hierarchy-version", "status"};
     expect |output.Keys| == |output.Values|;
@@ -161,7 +161,8 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     var resSuccess := client.CallKMSEncrypt(SimpleCallingawssdkfromlocalservice.Types.CallKMSEncryptInput(kmsClient := kmsClient, keyId := KEY_ID_SUCCESS_CASE, plaintext := PLAIN_TEXT));
 
     expect resSuccess.Success?;
-    expect resSuccess.value.encryptOutput == KEY_ID_SUCCESS_CASE;
+    expect resSucess.value.encryptOutput.Some?;
+    expect resSuccess.value.encryptOutput.value == KEY_ID_SUCCESS_CASE;
   }
 
   method TestCallKMSEncrypt_Failure(client: ISimpleCallingAWSSDKFromLocalServiceClient)
@@ -214,8 +215,10 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     var resSuccess := client.CallKMSDecrypt(SimpleCallingawssdkfromlocalservice.Types.CallKMSDecryptInput(kmsClient := kmsClient, keyId := KEY_ID_SUCCESS_CASE, ciphertextBlob := workAround(CiphertextBlob)));
 
     expect resSuccess.Success?;
-    expect resSuccess.value.KeyIdType == KEY_ID_SUCCESS_CASE;
-    expect resSuccess.value.Plaintext == [ 165, 191, 67, 62 ];
+    expect resSuccess.value.KeyIdType.Some?;
+    expect resSuccess.value.Plaintext.Some?;
+    expect resSuccess.value.KeyIdType.value == KEY_ID_SUCCESS_CASE;
+    expect resSuccess.value.Plaintext.value == [ 165, 191, 67, 62 ];
   }
 
   method TestCallKMSDecrypt_Failure(client: ISimpleCallingAWSSDKFromLocalServiceClient)
