@@ -117,7 +117,7 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
         final var goCodeBlock =
           """
           func () Wrappers.Option {
-              if %s == nil {
+              if (%s) == nil {
               return Wrappers.Companion_Option_.Create_None_()
               }
               return Wrappers.Companion_Option_.Create_Some_(%s)
@@ -155,7 +155,7 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
         final var goCodeBlock =
           """
           func () Wrappers.Option {
-              if %s == nil {
+              if (%s) == nil {
               return Wrappers.Companion_Option_.Create_None_()
               }
               return Wrappers.Companion_Option_.Create_Some_(%s)
