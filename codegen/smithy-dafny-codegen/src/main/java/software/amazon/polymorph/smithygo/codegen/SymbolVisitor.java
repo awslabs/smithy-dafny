@@ -392,10 +392,7 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
     final String namespace;
     if (shape.hasTrait(ServiceTrait.class)) {
       namespace =
-        SmithyNameResolver.smithyTypesNamespaceAws(
-          shape.expectTrait(ServiceTrait.class),
-          false
-        );
+        shape.expectTrait(ServiceTrait.class).getSdkId().toLowerCase();
     } else {
       namespace = SmithyNameResolver.smithyTypesNamespace(shape);
     }
