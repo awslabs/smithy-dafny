@@ -1035,17 +1035,21 @@ public class DafnyLocalServiceTypeConversionProtocol
           .expectTrait(ServiceTrait.class)
           .getSdkId()
           .concat("Error");
-        sdkOpaqueErrHandler.append("""
-              if (err.(*smithy.OperationError).Service() == "%s") {
-                %s := %s.Error_ToDafny(err)
-                return %s.Create_%s_(%s)
-              }
-            """.formatted(depShape
-            .expectTrait(ServiceTrait.class)
-            .getSdkId(), sdkDepErrorVar,
-            SmithyNameResolver.shapeNamespace(depShape),DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
-            DafnyNameResolver.dafnyNamespace(depShape),
-            sdkDepErrorVar));
+        sdkOpaqueErrHandler.append(
+          """
+            if (err.(*smithy.OperationError).Service() == "%s") {
+              %s := %s.Error_ToDafny(err)
+              return %s.Create_%s_(%s)
+            }
+          """.formatted(
+              depShape.expectTrait(ServiceTrait.class).getSdkId(),
+              sdkDepErrorVar,
+              SmithyNameResolver.shapeNamespace(depShape),
+              DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
+              DafnyNameResolver.dafnyNamespace(depShape),
+              sdkDepErrorVar
+            )
+        );
         sdkErrHandler.append(
           """
           %s := %s.Error_ToDafny(err)
@@ -1076,7 +1080,8 @@ public class DafnyLocalServiceTypeConversionProtocol
       }
     }
     if (sdkDepFound) {
-      final var createOpaqueError = """
+      final var createOpaqueError =
+        """
         return %s.Companion_Error_.Create_Opaque_(err, dafny.SeqOfChars([]dafny.Char(err.Error())...))
         """.formatted(DafnyNameResolver.dafnyTypesNamespace(serviceShape));
       sdkErrHandler.append(createOpaqueError);
@@ -1469,7 +1474,9 @@ public class DafnyLocalServiceTypeConversionProtocol
             if (resourceOrService.isServiceShape()) {
               if (resourceOrService.hasTrait(ServiceTrait.class)) {
                 outputType =
-                  SmithyNameResolver.getAwsServiceClient(resourceOrService.expectTrait(ServiceTrait.class));
+                  SmithyNameResolver.getAwsServiceClient(
+                    resourceOrService.expectTrait(ServiceTrait.class)
+                  );
               } else {
                 final var namespace = SmithyNameResolver
                   .shapeNamespace(resourceOrService)

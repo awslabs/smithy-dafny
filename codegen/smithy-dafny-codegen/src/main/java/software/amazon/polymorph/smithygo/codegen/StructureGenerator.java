@@ -131,9 +131,11 @@ public final class StructureGenerator implements Runnable {
                 .expectShape(refShape.getReferentId())
                 .hasTrait(ServiceTrait.class)
             ) {
-              writer.addImport(SmithyNameResolver.getGoModuleNameForSdkNamespace(
-                refShape.getReferentId().getNamespace()
-              ));
+              writer.addImport(
+                SmithyNameResolver.getGoModuleNameForSdkNamespace(
+                  refShape.getReferentId().getNamespace()
+                )
+              );
             }
           }
           if (
