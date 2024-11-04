@@ -12,6 +12,7 @@ import software.amazon.polymorph.smithygo.utils.Constants;
 import software.amazon.polymorph.smithygo.utils.GoCodegenUtils;
 import software.amazon.polymorph.traits.DafnyUtf8BytesTrait;
 import software.amazon.polymorph.traits.ReferenceTrait;
+import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.codegen.core.SymbolProvider;
 import software.amazon.smithy.model.Model;
@@ -492,13 +493,22 @@ public class ValidationGenerator {
           isExternalShape
         );
         if (isExternalShape) {
-          writer.addImportFromModule(
+          if (SmithyNameResolver.isShapeFromAWSSDK(currentShape)) {
+            writer.addImportFromModule(
+              SmithyNameResolver.getGoModuleNameForSdkNamespace(
+                currentShape.getId().getNamespace()
+              ),
+              "types",
+              SmithyNameResolver.smithyTypesNamespace(currentShape)
+            );
+          } else {
+            writer.addImportFromModule(
               SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                 currentShape.getId().getNamespace()
               ),
-              SmithyNameResolver.smithyTypesNamespace(currentShape),
               SmithyNameResolver.smithyTypesNamespace(currentShape)
             );
+          }
         }
         validationFuncInputTypeMap.put(memberShape, inputType);
         dataSourceForList = "Value";
@@ -575,6 +585,24 @@ public class ValidationGenerator {
           currentShape,
           isExternalShape
         );
+        if (isExternalShape) {
+          if (SmithyNameResolver.isShapeFromAWSSDK(currentShape)) {
+            writer.addImportFromModule(
+              SmithyNameResolver.getGoModuleNameForSdkNamespace(
+                currentShape.getId().getNamespace()
+              ),
+              "types",
+              SmithyNameResolver.smithyTypesNamespace(currentShape)
+            );
+          } else {
+            writer.addImportFromModule(
+              SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+                currentShape.getId().getNamespace()
+              ),
+              SmithyNameResolver.smithyTypesNamespace(currentShape)
+            );
+          }
+        }
         validationFuncInputTypeMap.put(memberShape, inputType);
         dataSourceForMap = "Value";
       }
@@ -626,6 +654,24 @@ public class ValidationGenerator {
         currentShape,
         isExternalShape
       );
+      if (isExternalShape) {
+        if (SmithyNameResolver.isShapeFromAWSSDK(currentShape)) {
+          writer.addImportFromModule(
+            SmithyNameResolver.getGoModuleNameForSdkNamespace(
+              currentShape.getId().getNamespace()
+            ),
+            "types",
+            SmithyNameResolver.smithyTypesNamespace(currentShape)
+          );
+        } else {
+          writer.addImportFromModule(
+            SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+              currentShape.getId().getNamespace()
+            ),
+            SmithyNameResolver.smithyTypesNamespace(currentShape)
+          );
+        }
+      }
       validationFuncInputTypeMap.put(memberShape, inputType);
       dataSourceForUnion = "Value";
     }
