@@ -350,7 +350,7 @@ public class ServiceCodegen {
           public readonly object obj;
           public OpaqueError(Exception ex) : base("OpaqueError:", ex) { this.obj = ex; }
           public OpaqueError() : base("Unknown Unexpected Error") { }
-          public OpaqueError(object obj) : base(obj is Exception ? obj as Exception, "OpaqueError:" : "Opaque obj is not an Exception.") { this.obj = obj;}
+          public OpaqueError(object obj) : base(obj is Exception ? "OpaqueError:" : "Opaque obj is not an Exception.", obj as Exception) { this.obj = obj;}
         }
           """
       )
@@ -370,7 +370,7 @@ public class ServiceCodegen {
           public readonly string objMessage;
           public OpaqueWithTextError(Exception ex) : base("OpaqueError:", ex) { this.obj = ex; this.objMessage = obj.ToString();}
           public OpaqueWithTextError() : base("Unknown Unexpected Error") { }
-          public OpaqueWithTextError(object obj) : base(obj is Exception ? obj as Exception, "OpaqueWithTextError:" : "Opaque obj is not an Exception.") { this.obj = obj; this.objMessage = obj.ToString();}
+          public OpaqueWithTextError(object obj, string objMessage) : base(obj is Exception ? "OpaqueWithTextError:" : "Opaque obj is not an Exception.", obj as Exception) { this.obj = obj; this.objMessage = objMessage;}
         }
           """
       )
