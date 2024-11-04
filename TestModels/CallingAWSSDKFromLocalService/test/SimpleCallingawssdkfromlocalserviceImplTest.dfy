@@ -161,7 +161,7 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     var resSuccess := client.CallKMSEncrypt(SimpleCallingawssdkfromlocalservice.Types.CallKMSEncryptInput(kmsClient := kmsClient, keyId := KEY_ID_SUCCESS_CASE, plaintext := PLAIN_TEXT));
 
     expect resSuccess.Success?;
-    expect resSucess.value.encryptOutput.Some?;
+    expect resSuccess.value.encryptOutput.Some?;
     expect resSuccess.value.encryptOutput.value == KEY_ID_SUCCESS_CASE;
   }
 
