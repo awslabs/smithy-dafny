@@ -273,9 +273,7 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
       ServiceShape.class
     );
     if (shape.hasTrait(ServiceTrait.class)) {
-      return DafnyNameResolver.getDafnyClientName(
-        shape.expectTrait(ServiceTrait.class).getSdkId()
-      );
+      return SmithyNameResolver.getAwsServiceClientName();
     }
     return StringUtils.capitalize(
       removeLeadingInvalidIdentCharacters(shape.getId().getName(serviceShape))
@@ -393,7 +391,7 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
   private Symbol.Builder symbolBuilderFor(Shape shape, String typeName) {
     final String namespace;
     if (shape.hasTrait(ServiceTrait.class)) {
-      namespace = DafnyNameResolver.dafnyTypesNamespace(shape);
+      namespace = SmithyNameResolver.smithyTypesNamespaceAws(shape.expectTrait(ServiceTrait.class), false);
     } else {
       namespace = SmithyNameResolver.smithyTypesNamespace(shape);
     }
@@ -584,11 +582,12 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
       );
       var isResource = !shape.expectTrait(ReferenceTrait.class).isService();
       if (isResource || referredShape.hasTrait(ServiceTrait.class)) {
+        final var typeName = referredShape.hasTrait(ServiceTrait.class) ? getDefaultShapeName(referredShape) : "I".concat(getDefaultShapeName(referredShape)) ;
         builder.putProperty(
           "Referred",
           symbolBuilderFor(
             referredShape,
-            "I".concat(getDefaultShapeName(referredShape))
+            typeName
           )
             .putProperty(SymbolUtils.POINTABLE, false)
             .build()

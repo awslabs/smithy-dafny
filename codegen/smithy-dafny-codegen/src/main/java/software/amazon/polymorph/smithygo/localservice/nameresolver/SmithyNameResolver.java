@@ -25,6 +25,7 @@ public class SmithyNameResolver {
       "bool" //boolean shape
     )
   );
+  private static String awsServiceClientName = "Client";
 
   public static Boolean isShapeFromAWSSDK(final Shape shape) {
     // Is there a better way to do this?
@@ -216,6 +217,10 @@ public class SmithyNameResolver {
     return SmithyNameResolver
       .smithyTypesNamespaceAws(serviceTrait, false)
       .concat(DOT)
-      .concat("Client");
+      .concat(getAwsServiceClientName());
+  }
+
+  public static String getAwsServiceClientName() {
+    return awsServiceClientName;
   }
 }

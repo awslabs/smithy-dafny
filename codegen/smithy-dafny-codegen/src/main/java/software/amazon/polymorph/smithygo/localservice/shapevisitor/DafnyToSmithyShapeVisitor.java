@@ -158,13 +158,15 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
             ),
             DafnyNameResolver.dafnyTypesNamespace(serviceShape)
           );
-          return "return %1$s.(%2$s)".formatted(
-              dataSource,
-              DafnyNameResolver.getDafnyInterfaceClient(
-                (ServiceShape) serviceShape,
-                serviceShape.expectTrait(ServiceTrait.class)
-              )
-            );
+          return """
+              shim, ok := %1$s.(*%2$swrapped.Shim)
+              if !ok {
+                  panic("Not able to convert client to native")
+              }
+              return *shim.Client
+              """.formatted(dataSource, DafnyNameResolver.dafnyNamespace(
+                resourceOrService.expectTrait(ServiceTrait.class)
+              ));
         } else {
           return "return %1$s{%2$s}".formatted(
               namespace.concat(
