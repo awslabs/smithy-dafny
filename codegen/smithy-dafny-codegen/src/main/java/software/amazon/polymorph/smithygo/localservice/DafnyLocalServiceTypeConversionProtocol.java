@@ -27,7 +27,6 @@ import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.ResourceShape;
 import software.amazon.smithy.model.shapes.ServiceShape;
-import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.shapes.ShapeId;
 import software.amazon.smithy.model.shapes.StructureShape;
 import software.amazon.smithy.model.traits.ErrorTrait;
@@ -1006,6 +1005,7 @@ public class DafnyLocalServiceTypeConversionProtocol
     final Collection<ShapeId> dependencies
   ) {
     final var sdkErrHandler = new StringBuilder();
+    final var sdkOpaqueErrHandler = new StringBuilder();
     final var serviceShape = context.settings().getService(context.model());
     Boolean sdkDepFound = false;
     for (final var dep : dependencies) {
@@ -1016,6 +1016,11 @@ public class DafnyLocalServiceTypeConversionProtocol
           sdkErrHandler.append(
             """
             case smithy.APIError:
+            """
+          );
+          sdkOpaqueErrHandler.append(
+            """
+            case *smithy.OperationError:
             """
           );
         }
@@ -1030,6 +1035,17 @@ public class DafnyLocalServiceTypeConversionProtocol
           .expectTrait(ServiceTrait.class)
           .getSdkId()
           .concat("Error");
+        sdkOpaqueErrHandler.append("""
+              if (err.(*smithy.OperationError).Service() == "%s") {
+                %s := %s.Error_ToDafny(err)
+                return %s.Create_%s_(%s)
+              }
+            """.formatted(depShape
+            .expectTrait(ServiceTrait.class)
+            .getSdkId(), sdkDepErrorVar,
+            SmithyNameResolver.shapeNamespace(depShape),DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
+            DafnyNameResolver.dafnyNamespace(depShape),
+            sdkDepErrorVar));
         sdkErrHandler.append(
           """
           %s := %s.Error_ToDafny(err)
@@ -1062,9 +1078,13 @@ public class DafnyLocalServiceTypeConversionProtocol
     if (sdkDepFound) {
       sdkErrHandler.append(
         """
-        return %s.Companion_Error_.Create_Opaque_(err, dafny.SeqOfChars([]dafny.Char(err.Error())...))
-        """.formatted(DafnyNameResolver.dafnyTypesNamespace(serviceShape))
+        panic("Unhandled service exception");
+        """
       );
+      sdkOpaqueErrHandler.append("""
+        panic("Unhandled service exception");
+      """);
+      w.write(sdkOpaqueErrHandler.toString());
       w.write(sdkErrHandler.toString());
     }
   }
@@ -1452,10 +1472,7 @@ public class DafnyLocalServiceTypeConversionProtocol
             if (resourceOrService.isServiceShape()) {
               if (resourceOrService.hasTrait(ServiceTrait.class)) {
                 outputType =
-                  DafnyNameResolver.getDafnyInterfaceClient(
-                    (ServiceShape) resourceOrService,
-                    resourceOrService.expectTrait(ServiceTrait.class)
-                  );
+                  SmithyNameResolver.getAwsServiceClient(resourceOrService.expectTrait(ServiceTrait.class));
               } else {
                 final var namespace = SmithyNameResolver
                   .shapeNamespace(resourceOrService)
