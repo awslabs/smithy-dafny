@@ -12,12 +12,10 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
   // For call to DDB
   const TABLE_ARN_SUCCESS_CASE := "arn:aws:dynamodb:us-west-2:370957321024:table/TestTable"
   const TABLE_ARN_FAILURE_CASE := "arn:aws:dynamodb:us-west-2:370957321024:table/TestTableFailure"
-  const NONEXISTENT_TABLE_NAME := "NONEXISTENT_Table"
 
   // For call to KMS
   const KEY_ID_SUCCESS_CASE := "arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7f"
-  const INVALID_KEY_ID := "arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-invalidkeyid"
-  const NONEXISTENT_KEY_ID := "arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7g"
+  const KEY_ID_FAILURE_CASE := "arn:aws:kms:us-west-2:658956600833:key/b3537ef1-d8dc-4780-9f5a-55776cbb2f7g"
   // The string "asdf" as bytes
   const PLAIN_TEXT: Kms.Types.PlaintextType := [ 97, 115, 100, 102 ]
 
@@ -173,13 +171,13 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     var kmsClient :- expect Kms.KMSClient();
     // Test with NonExistent
     var input_NonExistent := Kms.Types.EncryptRequest(
-      KeyId := NONEXISTENT_KEY_ID,
+      KeyId := KEY_ID_FAILURE_CASE,
       Plaintext := [ 97, 115, 100, 102 ],
       EncryptionContext := Wrappers.None,
       GrantTokens := Wrappers.None,
       EncryptionAlgorithm := Wrappers.None
     );
-    var resFailure_NonExistent := client.CallKMSEncrypt(SimpleCallingawssdkfromlocalservice.Types.CallKMSEncryptInput(kmsClient := kmsClient, keyId := NONEXISTENT_KEY_ID, plaintext := PLAIN_TEXT));
+    var resFailure_NonExistent := client.CallKMSEncrypt(SimpleCallingawssdkfromlocalservice.Types.CallKMSEncryptInput(kmsClient := kmsClient, keyId := KEY_ID_FAILURE_CASE, plaintext := PLAIN_TEXT));
 
     expect resFailure_NonExistent.Failure?;
     expect resFailure_NonExistent.error.ComAmazonawsKms?;
@@ -241,7 +239,7 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
       3, 208,  72, 171,  64, 207, 175
     ];
     var kmsClient :- expect Kms.KMSClient();
-    var resFailure := client.CallKMSDecrypt(SimpleCallingawssdkfromlocalservice.Types.CallKMSDecryptInput(kmsClient := kmsClient, keyId := NONEXISTENT_KEY_ID, ciphertextBlob := workAround(CiphertextBlob)));
+    var resFailure := client.CallKMSDecrypt(SimpleCallingawssdkfromlocalservice.Types.CallKMSDecryptInput(kmsClient := kmsClient, keyId := KEY_ID_FAILURE_CASE, ciphertextBlob := workAround(CiphertextBlob)));
     expect resFailure.Failure?;
     expect resFailure.error.ComAmazonawsKms?;
     expect resFailure.error.ComAmazonawsKms.IncorrectKeyException?;
@@ -276,7 +274,7 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
   {
     var kmsClient :- expect Kms.KMSClient();
     var numberOfBytes := 32 as Kms.Types.NumberOfBytesType;
-    var resFailure := client.CallKMSGenerateDataKey(SimpleCallingawssdkfromlocalservice.Types.CallKMSGenerateDataKeyInput(kmsClient := kmsClient, keyId := NONEXISTENT_KEY_ID, numberOfBytesType := numberOfBytes));
+    var resFailure := client.CallKMSGenerateDataKey(SimpleCallingawssdkfromlocalservice.Types.CallKMSGenerateDataKeyInput(kmsClient := kmsClient, keyId := KEY_ID_FAILURE_CASE, numberOfBytesType := numberOfBytes));
 
     expect resFailure.Failure?;
     expect resFailure.error.ComAmazonawsKms?;
