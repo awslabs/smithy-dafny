@@ -492,23 +492,13 @@ public class ValidationGenerator {
           isExternalShape
         );
         if (isExternalShape) {
-          if (SmithyNameResolver.isShapeFromAWSSDK(currentShape)) {
-            writer.addImportFromModule(
-              SmithyNameResolver.getGoModuleNameForSdkNamespace(
-                currentShape.getId().getNamespace()
-              ),
-              "types",
-              SmithyNameResolver.smithyTypesNamespace(currentShape)
-            );
-          } else {
-            writer.addImportFromModule(
+          writer.addImportFromModule(
               SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                 currentShape.getId().getNamespace()
               ),
-              "types",
+              SmithyNameResolver.smithyTypesNamespace(currentShape),
               SmithyNameResolver.smithyTypesNamespace(currentShape)
             );
-          }
         }
         validationFuncInputTypeMap.put(memberShape, inputType);
         dataSourceForList = "Value";
