@@ -122,20 +122,18 @@ public final class StructureGenerator implements Runnable {
             memberSymbol.getProperty("Referred", Symbol.class).get();
           var refShape = targetShape.expectTrait(ReferenceTrait.class);
           if (refShape.isService()) {
+            namespace =
+              SmithyNameResolver.shapeNamespace(
+                model.expectShape(refShape.getReferentId())
+              );
             if (
               model
                 .expectShape(refShape.getReferentId())
                 .hasTrait(ServiceTrait.class)
             ) {
-              namespace =
-                DafnyNameResolver.dafnyTypesNamespace(
-                  model.expectShape(refShape.getReferentId())
-                );
-            } else {
-              namespace =
-                SmithyNameResolver.shapeNamespace(
-                  model.expectShape(refShape.getReferentId())
-                );
+              writer.addImport(SmithyNameResolver.getGoModuleNameForSdkNamespace(
+                refShape.getReferentId().getNamespace()
+              ));
             }
           }
           if (
