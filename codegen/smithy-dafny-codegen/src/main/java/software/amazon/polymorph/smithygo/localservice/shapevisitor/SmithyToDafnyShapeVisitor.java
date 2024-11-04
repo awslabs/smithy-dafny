@@ -133,18 +133,21 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     }
 
     if (resourceOrService.asServiceShape().isPresent()) {
-      writer.addImportFromModule(
-      SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-        resourceOrService.toShapeId().getNamespace()
-        ),
-        DafnyNameResolver.dafnyTypesNamespace(resourceOrService)
-      );
-      final var shim = "%swrapped.Shim".formatted(
-          DafnyNameResolver.dafnyNamespace(
-            resourceOrService.expectTrait(ServiceTrait.class)
-          )
+      var clientConversion = dataSource; 
+      if (resourceOrService.hasTrait(ServiceTrait.class)) {
+        writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+          resourceOrService.toShapeId().getNamespace()
+          ),
+          DafnyNameResolver.dafnyTypesNamespace(resourceOrService)
         );
-      final var clientConversion = "&%s{Client: &%s}".formatted(shim, dataSource);
+        final var shim = "%swrapped.Shim".formatted(
+            DafnyNameResolver.dafnyNamespace(
+              resourceOrService.expectTrait(ServiceTrait.class)
+            )
+          );
+        clientConversion = "&%s{Client: &%s}".formatted(shim, dataSource);
+      }
       if (!this.isOptional) {
         return clientConversion;
       } else {
