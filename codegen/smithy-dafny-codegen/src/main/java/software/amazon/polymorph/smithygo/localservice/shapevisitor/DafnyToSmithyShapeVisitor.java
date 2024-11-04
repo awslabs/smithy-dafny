@@ -746,11 +746,4 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         return union
     """.formatted(functionInit, eachMemberInUnion);
   }
-
-  @Override
-  public String timestampShape(final TimestampShape shape) {
-    // TODO: Figure out timestamp types when working on timestampShape
-    writer.addImport("time");
-    return "nil";
-  }
 }

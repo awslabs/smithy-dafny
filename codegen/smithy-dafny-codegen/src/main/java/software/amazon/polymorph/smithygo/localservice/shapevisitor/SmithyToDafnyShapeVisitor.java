@@ -762,10 +762,4 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     %s
     %s""".formatted(functionInit, eachMemberInUnion, defaultCase);
   }
-
-  @Override
-  public String timestampShape(final TimestampShape shape) {
-    writer.addImport("time");
-    return "Wrappers.Companion_Option_.Create_None_()";
-  }
 }
