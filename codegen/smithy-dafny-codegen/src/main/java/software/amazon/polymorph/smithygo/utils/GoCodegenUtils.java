@@ -15,16 +15,20 @@ public class GoCodegenUtils {
 
   public static String getType(
     final Symbol symbol,
-    final ServiceTrait serviceTrait
+    final ServiceTrait serviceTrait,
+    final Boolean includeNamespace
   ) {
     if (
       symbol.getProperty(SymbolUtils.GO_ELEMENT_TYPE, Symbol.class).isEmpty()
     ) {
-      return SmithyNameResolver.getSmithyTypeAws(serviceTrait, symbol, true);
+      return includeNamespace
+        ? SmithyNameResolver.getSmithyTypeAws(serviceTrait, symbol, true)
+        : symbol.getName();
     }
     final var type = getType(
       symbol.expectProperty(SymbolUtils.GO_ELEMENT_TYPE, Symbol.class),
-      serviceTrait
+      serviceTrait,
+      includeNamespace
     );
     if (symbol.getProperty(SymbolUtils.GO_MAP).isPresent()) {
       return "map[string]" + type;
@@ -35,15 +39,22 @@ public class GoCodegenUtils {
     throw new RuntimeException("Failed to determine shape type");
   }
 
-  public static String getType(final Symbol symbol, final Shape shape) {
+  public static String getType(
+    final Symbol symbol,
+    final Shape shape,
+    final Boolean includeNamespace
+  ) {
     if (
       symbol.getProperty(SymbolUtils.GO_ELEMENT_TYPE, Symbol.class).isEmpty()
     ) {
-      return SmithyNameResolver.getSmithyType(shape, symbol);
+      return includeNamespace
+        ? SmithyNameResolver.getSmithyType(shape, symbol)
+        : symbol.getName();
     }
     var type = getType(
       symbol.expectProperty(SymbolUtils.GO_ELEMENT_TYPE, Symbol.class),
-      shape
+      shape,
+      includeNamespace
     );
     if (symbol.getProperty(SymbolUtils.GO_MAP).isPresent()) {
       type = "map[string]" + type;
