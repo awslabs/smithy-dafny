@@ -184,6 +184,7 @@ public class ToNativeAwsV2 extends ToNative {
       .addMethods(convertServiceErrors)
       .addMethod(modeledService(subject.serviceShape))
       .addMethod(errorOpaque())
+      .addMethod(errorOpaqueWithText())
       .addMethod(dafnyError())
       .build();
   }
@@ -528,6 +529,59 @@ public class ToNativeAwsV2 extends ToNative {
 
   protected MethodSpec errorOpaque() {
     final String methodName = "Error";
+    final TypeName inputType = subject.dafnyNameResolver.classForOpaqueError();
+    final ClassName returnType = ClassName.get(RuntimeException.class);
+    return initializeMethodSpec(methodName, inputType, returnType)
+      .addComment("While the first two cases are logically identical,")
+      .addComment("there is a semantic distinction.")
+      .addComment(
+        "An un-modeled Service Error is different from a Java Heap Exhaustion error."
+      )
+      .addComment("In the future, Smithy-Dafny MAY allow for this distinction.")
+      .addComment(
+        "Which would allow Dafny developers to treat the two differently."
+      )
+      // If obj is an instance of the Service's Base Exception
+      .beginControlFlow(
+        "if ($L.$L instanceof $T)",
+        VAR_INPUT,
+        Dafny.datatypeDeconstructor("obj"),
+        subject.nativeNameResolver.baseErrorForService()
+      )
+      .addStatement(
+        "return ($T) $L.$L",
+        subject.nativeNameResolver.baseErrorForService(),
+        VAR_INPUT,
+        Dafny.datatypeDeconstructor("obj")
+      )
+      // If obj is ANY Exception
+      .nextControlFlow(
+        "else if ($L.$L instanceof $T)",
+        VAR_INPUT,
+        Dafny.datatypeDeconstructor("obj"),
+        Exception.class
+      )
+      .addStatement(
+        "return ($T) $L.$L",
+        RuntimeException.class,
+        VAR_INPUT,
+        Dafny.datatypeDeconstructor("obj")
+      )
+      .endControlFlow()
+      // If obj is not ANY exception and String is not set, Give Up with IllegalStateException
+      .addStatement(
+        "return new $T(String.format($S, $L))",
+        IllegalStateException.class,
+        "Unknown error thrown while calling " +
+        AwsSdkNativeV2.titleForService(subject.serviceShape) +
+        ". %s",
+        VAR_INPUT
+      )
+      .build();
+  }
+
+  protected MethodSpec errorOpaqueWithText() {
+    final String methodName = "Error";
     final TypeName inputType =
       subject.dafnyNameResolver.classForOpaqueWithTextError();
     final ClassName returnType = ClassName.get(RuntimeException.class);
@@ -598,6 +652,7 @@ public class ToNativeAwsV2 extends ToNative {
       .map(ClassName::simpleName)
       .map(simpleName -> simpleName.replaceFirst("Error_", ""))
       .collect(Collectors.toCollection(ArrayList::new)); // We need a mutable list, so we can't use stream().toList()
+    allDafnyErrorConstructors.add("Opaque");
     allDafnyErrorConstructors.add("OpaqueWithText");
     allDafnyErrorConstructors.forEach(constructorName ->
       method
