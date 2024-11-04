@@ -1882,7 +1882,9 @@ public class DafnyApiCodegen {
         Token.of("// A better Opaque, with a visible string representation."),
         Token.of("| OpaqueWithText(obj: object, objMessage : string)"),
         // Helper error for use with `extern`
-        Token.of("type OpaqueError = e: Error | e.Opaque? witness *")
+        Token.of(
+          "type OpaqueError = e: Error | e.Opaque? || e.OpaqueWithText? witness *"
+        )
       )
       .lineSeparated();
   }
