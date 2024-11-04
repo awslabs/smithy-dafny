@@ -227,7 +227,9 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     return goCodeBlock.formatted(
       returnType,
       nilCheck,
-      someWrapIfRequired.formatted(typeConversionMethodBuilder.append(")").toString())
+      someWrapIfRequired.formatted(
+        typeConversionMethodBuilder.append(")").toString()
+      )
     );
   }
 

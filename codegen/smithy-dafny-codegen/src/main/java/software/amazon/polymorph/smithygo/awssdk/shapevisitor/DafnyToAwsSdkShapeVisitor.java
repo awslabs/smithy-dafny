@@ -303,7 +303,9 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
     );
 
     // Close structure
-    return typeConversionMethodBuilder.append("return fieldValue }()").toString();
+    return typeConversionMethodBuilder
+      .append("return fieldValue }()")
+      .toString();
   }
 
   @Override
