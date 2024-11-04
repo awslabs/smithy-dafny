@@ -153,10 +153,10 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       if (!this.isOptional) {
         if (serviceShape.hasTrait(ServiceTrait.class)) {
           writer.addImport(
-                SmithyNameResolver.getGoModuleNameForSdkNamespace(
-                  serviceShape.getId().getNamespace()
-                )
-              );
+            SmithyNameResolver.getGoModuleNameForSdkNamespace(
+              serviceShape.getId().getNamespace()
+            )
+          );
           return """
           shim, ok := %1$s.(*%2$swrapped.Shim)
           if !ok {
