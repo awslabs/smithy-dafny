@@ -28,8 +28,8 @@ module WrappedSimpleCallingawssdkfromlocalserviceTest {
 
   method{:test} TestCallDDBPutItem() {
     var client :- expect WrappedSimpleCallingawssdkfromlocalserviceService.WrappedSimpleCallingawssdkfromlocalservice();
-    SimpleCallingawssdkfromlocalserviceImplTest.TestCallDDBGetItem_Success(client);
-    SimpleCallingawssdkfromlocalserviceImplTest.TestCallDDBGetItem_Failure(client);
+    SimpleCallingawssdkfromlocalserviceImplTest.TestCallDDBPutItem_Success(client);
+    SimpleCallingawssdkfromlocalserviceImplTest.TestCallDDBPutItem_Failure(client);
   }
 
   method{:test} TestCallKMSEncrypt() {
@@ -42,5 +42,11 @@ module WrappedSimpleCallingawssdkfromlocalserviceTest {
     var client :- expect WrappedSimpleCallingawssdkfromlocalserviceService.WrappedSimpleCallingawssdkfromlocalservice();
     SimpleCallingawssdkfromlocalserviceImplTest.TestCallKMSDecrypt_Success(client);
     SimpleCallingawssdkfromlocalserviceImplTest.TestCallKMSDecrypt_Failure(client);
+  }
+
+  method{:test} TestCallKMSGenerateDataKey() {
+    var client :- expect WrappedSimpleCallingawssdkfromlocalserviceService.WrappedSimpleCallingawssdkfromlocalservice();
+    SimpleCallingawssdkfromlocalserviceImplTest.TestCallKMSGenerateDataKey_Success(client);
+    SimpleCallingawssdkfromlocalserviceImplTest.TestCallKMSGenerateDataKey_Failure(client);
   }
 }

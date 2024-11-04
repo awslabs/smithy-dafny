@@ -29,7 +29,8 @@ service SimpleCallingAWSSDKFromLocalService {
                 CallDDBGetItem,
                 CallDDBPutItem,
                 CallKMSEncrypt,
-                CallKMSDecrypt],
+                CallKMSDecrypt,
+                CallKMSGenerateDataKey],
   errors: [ SimpleCallingAWSSDKFromLocalServiceException ],
 }
 
@@ -129,6 +130,26 @@ structure CallKMSDecryptOutput {
   KeyIdType: com.amazonaws.kms#KeyIdType,
   @required
   Plaintext: com.amazonaws.kms#PlaintextType
+}
+
+operation CallKMSGenerateDataKey {
+  input: CallKMSGenerateDataKeyInput,
+  output: CallKMSGenerateDataKeyOutput,
+}
+
+structure CallKMSGenerateDataKeyInput {
+  @required
+  kmsClient: KmsClientReference,
+  @required
+  keyId: com.amazonaws.kms#KeyIdType,
+  @required
+  numberOfBytesType: com.amazonaws.kms#NumberOfBytesType
+}
+
+structure CallKMSGenerateDataKeyOutput {
+  ciphertextType: com.amazonaws.kms#CiphertextType,
+  plaintext: com.amazonaws.kms#PlaintextType,
+  keyId: com.amazonaws.kms#KeyIdType
 }
 
 @error("client")

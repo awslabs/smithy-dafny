@@ -57,6 +57,8 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     var resFailure := client.CallDDBScan(SimpleCallingawssdkfromlocalservice.Types.CallDDBScanInput(ddbClient := ddbClient, tableArn := TABLE_ARN_FAILURE_CASE));
 
     expect resFailure.Failure?;
+    expect resFailure.error.ComAmazonawsDynamodb?;
+    expect resFailure.error.ComAmazonawsDynamodb.Opaque?;
   }
 
   method{:test} CallDDBGetItem(){
@@ -98,6 +100,8 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     var resFailure := client.CallDDBGetItem(SimpleCallingawssdkfromlocalservice.Types.CallDDBGetItemInput(ddbClient := ddbClient, tableArn := TABLE_ARN_FAILURE_CASE, key := Key2Get));
 
     expect resFailure.Failure?;
+    expect resFailure.error.ComAmazonawsDynamodb?;
+    expect resFailure.error.ComAmazonawsDynamodb.Opaque?;
   }
 
   method{:test} CallDDBPutItem(){
@@ -238,5 +242,41 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     expect resFailure.Failure?;
     expect resFailure.error.ComAmazonawsKms?;
     expect resFailure.error.ComAmazonawsKms.IncorrectKeyException?;
+  }
+
+  method{:test} CallKMSGenerateDataKey(){
+    var client :- expect SimpleCallingawssdkfromlocalservice.SimpleCallingawssdkfromlocalservice();
+    TestCallKMSGenerateDataKey_Success(client);
+    TestCallKMSGenerateDataKey_Failure(client);
+  }
+
+  method TestCallKMSGenerateDataKey_Success(client: ISimpleCallingAWSSDKFromLocalServiceClient)
+    requires client.ValidState()
+    modifies client.Modifies
+    ensures client.ValidState()
+  {
+    var kmsClient :- expect Kms.KMSClient();
+    var numberOfBytes := 32 as Kms.Types.NumberOfBytesType;
+    var resSuccess := client.CallKMSGenerateDataKey(SimpleCallingawssdkfromlocalservice.Types.CallKMSGenerateDataKeyInput(kmsClient := kmsClient, keyId := KEY_ID_SUCCESS_CASE, numberOfBytesType := numberOfBytes));
+
+    expect resSuccess.Success?;
+    expect resSuccess.value.ciphertextType.Some?;
+    expect resSuccess.value.plaintext.Some?;
+    expect resSuccess.value.keyId.Some?;
+    expect |resSuccess.value.plaintext.value| == numberOfBytes as nat;
+  }
+
+  method TestCallKMSGenerateDataKey_Failure(client: ISimpleCallingAWSSDKFromLocalServiceClient)
+    requires client.ValidState()
+    modifies client.Modifies
+    ensures client.ValidState()
+  {
+    var kmsClient :- expect Kms.KMSClient();
+    var numberOfBytes := 32 as Kms.Types.NumberOfBytesType;
+    var resFailure := client.CallKMSGenerateDataKey(SimpleCallingawssdkfromlocalservice.Types.CallKMSGenerateDataKeyInput(kmsClient := kmsClient, keyId := NONEXISTENT_KEY_ID, numberOfBytesType := numberOfBytes));
+
+    expect resFailure.Failure?;
+    expect resFailure.error.ComAmazonawsKms?;
+    expect resFailure.error.ComAmazonawsKms.NotFoundException?;
   }
 }
