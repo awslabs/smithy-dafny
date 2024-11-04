@@ -1076,14 +1076,11 @@ public class DafnyLocalServiceTypeConversionProtocol
       }
     }
     if (sdkDepFound) {
-      sdkErrHandler.append(
-        """
-        panic("Unhandled service exception");
-        """
-      );
-      sdkOpaqueErrHandler.append("""
-        panic("Unhandled service exception");
-      """);
+      final var createOpaqueError = """
+        return %s.Companion_Error_.Create_Opaque_(err, dafny.SeqOfChars([]dafny.Char(err.Error())...))
+        """.formatted(DafnyNameResolver.dafnyTypesNamespace(serviceShape));
+      sdkErrHandler.append(createOpaqueError);
+      sdkOpaqueErrHandler.append(createOpaqueError);
       w.write(sdkOpaqueErrHandler.toString());
       w.write(sdkErrHandler.toString());
     }
