@@ -717,10 +717,15 @@ public class DafnyAwsSdkClientTypeConversionProtocol
           writer.write(
             """
             func OpaqueError_Output_FromDafny(dafnyOutput $L.Error)(error) {
-                apiError := &smithy.GenericAPIError{
-                  Message: dafnyOutput.Dtor_obj().(*smithy.OperationError).Err.Error(),
+                responseSmithyOp, ok := dafnyOutput.Dtor_obj().(*smithy.OperationError)
+                if (ok){
+                  return responseSmithyOp
                 }
-                return apiError
+                responseGenericErr, ok := dafnyOutput.Dtor_obj().(error)
+                if (ok){
+                  return responseGenericErr
+                }
+                panic("Invalid Error")
             }""",
             DafnyNameResolver.dafnyTypesNamespace(serviceShape)
           );
