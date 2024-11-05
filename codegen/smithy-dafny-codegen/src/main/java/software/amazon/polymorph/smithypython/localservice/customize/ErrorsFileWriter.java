@@ -210,16 +210,17 @@ public class ErrorsFileWriter implements CustomFileWriter {
             class OpaqueWithTextError(ApiError[Literal["OpaqueWithTextError"]]):
                 code: Literal["OpaqueWithTextError"] = "OpaqueWithTextError"
                 obj: Any  # As an OpaqueWithTextError, type of obj is unknown
+                obj_message: str # obj_message is a message representing the details of obj
 
                 def __init__(
                     self,
                     *,
                     obj,
-                    objMessage
+                    obj_message
                 ):
                     super().__init__("")
                     self.obj = obj
-                    self.objMessage = objMessage
+                    self.obj_message = obj_message
 
                 def as_dict(self) -> Dict[str, Any]:
                     ""\"Converts the OpaqueError to a dictionary.
@@ -231,7 +232,7 @@ public class ErrorsFileWriter implements CustomFileWriter {
                         'message': self.message,
                         'code': self.code,
                         'obj': self.obj,
-                        'objMessage': self.objMessage,
+                        'obj_message': self.obj_message,
                     }
 
                 @staticmethod
@@ -244,7 +245,7 @@ public class ErrorsFileWriter implements CustomFileWriter {
                     kwargs: Dict[str, Any] = {
                         'message': d['message'],
                         'obj': d['obj'],
-                        'objMessage': d['objMessage']
+                        'obj_message': d['obj_message']
                     }
 
                     return OpaqueWithTextError(**kwargs)
@@ -255,7 +256,7 @@ public class ErrorsFileWriter implements CustomFileWriter {
                     if self.message is not None:
                         result += f"message={repr(self.message)}"
                     result += f'obj={self.obj}'
-                    result += f'objMessage={self.objMessage}'
+                    result += f'obj_message={self.obj_message}'
                     result += ")"
                     return result
 
@@ -472,6 +473,16 @@ public class ErrorsFileWriter implements CustomFileWriter {
       """
       if isinstance(e, OpaqueError):
           return $L.Error_Opaque(obj=e.obj)
+      """,
+      DafnyNameResolver.getDafnyPythonTypesModuleNameForShape(
+        serviceShape.getId(),
+        codegenContext
+      )
+    );
+    writer.write(
+      """
+      if isinstance(e, OpaqueWithTextError):
+          return $L.Error_OpaqueWithText(obj=e.obj, objMessage=e.obj_message)
       """,
       DafnyNameResolver.getDafnyPythonTypesModuleNameForShape(
         serviceShape.getId(),
