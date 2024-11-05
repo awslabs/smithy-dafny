@@ -14,3 +14,17 @@ pub fn to_opaque_error(value: String) ->
         },
     )
 }
+
+/// Wraps up an arbitrary Rust Error value as a Dafny Result<T, Error>.Failure
+pub fn to_opaque_error_result<T: ::dafny_runtime::DafnyType>(value: String) ->
+    ::std::rc::Rc<
+        crate::_Wrappers_Compile::Result<
+            T,
+            ::std::rc::Rc<crate::r#$dafnyTypesModuleName:L::Error>
+        >
+    >
+{
+    ::std::rc::Rc::new(crate::_Wrappers_Compile::Result::Failure {
+        error: to_opaque_error(value),
+    })
+}
