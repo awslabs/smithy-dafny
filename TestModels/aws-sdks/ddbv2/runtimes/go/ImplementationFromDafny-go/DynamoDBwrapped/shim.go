@@ -4,6 +4,7 @@ package DynamoDBwrapped
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/dafny-lang/DafnyRuntimeGo/v4/dafny"
@@ -275,6 +276,7 @@ func (shim *Shim) GetItem(input ComAmazonawsDynamodbTypes.GetItemInput) Wrappers
 	if native_error != nil {
 		return Wrappers.Companion_Result_.Create_Failure_(comamazonawsdynamodbsmithygenerated.Error_ToDafny(native_error))
 	}
+	fmt.Println(native_response.Item["create-time"])
 	return Wrappers.Companion_Result_.Create_Success_(comamazonawsdynamodbsmithygenerated.GetItemOutput_ToDafny(*native_response))
 }
 
