@@ -19,7 +19,7 @@ module  SimpleIntegerImplTest {
       modifies client.Modifies
       ensures client.ValidState()
     {
-        var ret :- expect client.GetInteger(SimpleInteger.Types.GetIntegerInput(value:= Some(1)));
+        var ret :- expect client.GetInteger(1);
         expect ret.value.UnwrapOr(0) == 1;
         print ret;
     }
