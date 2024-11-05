@@ -35,9 +35,6 @@ class GoTestModels extends TestModelTest {
     DISABLED_TESTS.add("MultipleModels");
     DISABLED_TESTS.add("LocalService");
 
-    //TODO: Pending PR Merge
-    DISABLED_TESTS.add("Positional");
-
     //V1 Tests are not supported in Go
     DISABLED_TESTS.add("aws-sdks/ddb");
     DISABLED_TESTS.add("aws-sdks/kms");
