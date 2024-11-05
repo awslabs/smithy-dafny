@@ -206,6 +206,69 @@ public class ErrorsFileWriter implements CustomFileWriter {
                         getattr(self, a) == getattr(other, a)
                         for a in attributes
                     )
+
+            class OpaqueWithTextError(ApiError[Literal["OpaqueWithTextError"]]):
+                code: Literal["OpaqueWithTextError"] = "OpaqueWithTextError"
+                obj: Any  # As an OpaqueWithTextError, type of obj is unknown
+
+                def __init__(
+                    self,
+                    *,
+                    obj,
+                    objMessage
+                ):
+                    super().__init__("")
+                    self.obj = obj
+                    self.objMessage = objMessage
+
+                def as_dict(self) -> Dict[str, Any]:
+                    ""\"Converts the OpaqueError to a dictionary.
+
+                    The dictionary uses the modeled shape names rather than the parameter names as
+                    keys to be mostly compatible with boto3.
+                    ""\"
+                    return {
+                        'message': self.message,
+                        'code': self.code,
+                        'obj': self.obj,
+                        'objMessage': self.objMessage,
+                    }
+
+                @staticmethod
+                def from_dict(d: Dict[str, Any]) -> "OpaqueError":
+                    ""\"Creates a OpaqueError from a dictionary.
+
+                    The dictionary is expected to use the modeled shape names rather than the
+                    parameter names as keys to be mostly compatible with boto3.
+                    ""\"
+                    kwargs: Dict[str, Any] = {
+                        'message': d['message'],
+                        'obj': d['obj'],
+                        'objMessage': d['objMessage']
+                    }
+
+                    return OpaqueWithTextError(**kwargs)
+
+                def __repr__(self) -> str:
+                    result = "OpaqueWithTextError("
+                    result += f'message={self.message},'
+                    if self.message is not None:
+                        result += f"message={repr(self.message)}"
+                    result += f'obj={self.obj}'
+                    result += f'objMessage={self.objMessage}'
+                    result += ")"
+                    return result
+
+                def __eq__(self, other: Any) -> bool:
+                    if not isinstance(other, OpaqueWithTextError):
+                        return False
+                    if not (self.obj == other.obj):
+                        return False
+                    attributes: list[str] = ['message','message']
+                    return all(
+                        getattr(self, a) == getattr(other, a)
+                        for a in attributes
+                    )
              """
           );
 
