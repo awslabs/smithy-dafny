@@ -471,7 +471,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
             }
             if (inputShape.hasTrait(PositionalTrait.class)) {
               writer.addImportFromModule(
-                "github.com/dafny-lang/DafnyRuntimeGo",
+                DAFNY_RUNTIME_GO_LIBRARY_MODULE,
                 "dafny"
               );
               Shape inputForPositional = model.expectShape(
@@ -491,9 +491,11 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 symbolForPositional
               );
               inputType = "input %s".formatted(dafnyType);
-              returnResponse = "(native_response)";
             } else {
               inputType = maybeInputType;
+            }
+            if (outputShape.hasTrait(PositionalTrait.class)) {
+              returnResponse = "(native_response)";
             }
 
             writer.write(
