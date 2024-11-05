@@ -262,7 +262,6 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 inputForPositional,
                 symbolForPositional
               );
-            outputType = "interface{},";
           } else {
             dafnyType =
               DafnyNameResolver.getDafnyType(
@@ -290,7 +289,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
           returnResponse = "return nil";
           returnError = "return";
         } else {
-          if (inputShape.hasTrait(PositionalTrait.class)) {
+          if (outputShape.hasTrait(PositionalTrait.class)) {
+            outputType = "interface{},";
             returnResponse =
               """
                   var native_response = dafny_response.Extract()
