@@ -4,7 +4,6 @@ package DynamoDBwrapped
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/dafny-lang/DafnyRuntimeGo/v4/dafny"
