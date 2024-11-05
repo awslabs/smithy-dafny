@@ -824,17 +824,28 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
 
   @Override
   public String timestampShape(final TimestampShape shape) {
-    // TODO: Figure out timestamp types when working on timestampShape
     writer.addImport("time");
-    if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
-      writer.addImportFromModule(
-        SmithyNameResolver.getGoModuleNameForSdkNamespace(
-          shape.getId().getNamespace()
-        ),
-        "types",
-        SmithyNameResolver.smithyTypesNamespace(shape)
-      );
-    }
-    return "nil";
+    return """
+    	return func() *time.Time {
+    	var s string
+
+    	for i := dafny.Iterate(%s.(dafny.Sequence)); ; {
+    		val, ok := i()
+    		if !ok {
+    			break
+    		} else {
+    			s = s + string(val.(dafny.Char))
+    		}
+    	}
+    	if len(s) == 0 {
+    		return nil
+    	} else {
+    		t, err := time.Parse("2006-01-02T15:04:05.999999Z", s)
+    		if err != nil {
+    			panic(err)
+    		}
+    		return &t
+    	}
+    }()""".formatted(dataSource);
   }
 }

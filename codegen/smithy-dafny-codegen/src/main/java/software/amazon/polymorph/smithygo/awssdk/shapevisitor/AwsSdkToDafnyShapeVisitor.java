@@ -652,11 +652,17 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
 
   @Override
   public String timestampShape(final TimestampShape shape) {
-    //TODO: This is a stub implementation and not working yet.
     writer.addImport("time");
+    writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+    var conversionCode =
+      "dafny.SeqOfChars([]dafny.Char(%s.Format(\"2006-01-02T15:04:05.999999Z\"))...)".formatted(
+          dataSource
+        );
     if (this.isOptional) {
-      return "Wrappers.Companion_Option_.Create_None_()";
+      return "Wrappers.Companion_Option_.Create_Some_(%s)".formatted(
+          conversionCode
+        );
     }
-    return "dafny.SeqOf()";
+    return conversionCode;
   }
 }

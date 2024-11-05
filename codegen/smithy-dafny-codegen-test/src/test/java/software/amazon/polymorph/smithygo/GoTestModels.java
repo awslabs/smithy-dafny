@@ -24,7 +24,6 @@ class GoTestModels extends TestModelTest {
     DISABLED_TESTS.add("SimpleTypes/SimpleByte");
     DISABLED_TESTS.add("SimpleTypes/SimpleFloat");
     DISABLED_TESTS.add("SimpleTypes/SimpleShort");
-    DISABLED_TESTS.add("SimpleTypes/SimpleTimestamp");
     DISABLED_TESTS.add("aws-sdks/ddb-lite");
     DISABLED_TESTS.add("aws-sdks/glue");
     DISABLED_TESTS.add("aws-sdks/lakeformation");
