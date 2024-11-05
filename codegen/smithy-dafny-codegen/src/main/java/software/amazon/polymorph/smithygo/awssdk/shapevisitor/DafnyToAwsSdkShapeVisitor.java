@@ -656,7 +656,7 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
   public String timestampShape(final TimestampShape shape) {
     writer.addImport("time");
     return """
-    	return func() *time.Time {
+    	func() *time.Time {
     	var s string
 
     	for i := dafny.Iterate(%s.(dafny.Sequence)); ; {
