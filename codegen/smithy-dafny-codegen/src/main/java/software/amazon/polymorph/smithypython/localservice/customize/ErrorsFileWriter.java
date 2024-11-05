@@ -223,7 +223,7 @@ public class ErrorsFileWriter implements CustomFileWriter {
                     self.obj_message = obj_message
 
                 def as_dict(self) -> Dict[str, Any]:
-                    ""\"Converts the OpaqueError to a dictionary.
+                    ""\"Converts the OpaqueWithTextError to a dictionary.
 
                     The dictionary uses the modeled shape names rather than the parameter names as
                     keys to be mostly compatible with boto3.
@@ -236,8 +236,8 @@ public class ErrorsFileWriter implements CustomFileWriter {
                     }
 
                 @staticmethod
-                def from_dict(d: Dict[str, Any]) -> "OpaqueError":
-                    ""\"Creates a OpaqueError from a dictionary.
+                def from_dict(d: Dict[str, Any]) -> "OpaqueWithTextError":
+                    ""\"Creates a OpaqueWithTextError from a dictionary.
 
                     The dictionary is expected to use the modeled shape names rather than the
                     parameter names as keys to be mostly compatible with boto3.
