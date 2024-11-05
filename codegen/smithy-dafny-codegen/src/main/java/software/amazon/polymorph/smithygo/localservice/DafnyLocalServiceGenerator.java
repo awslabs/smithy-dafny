@@ -245,7 +245,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
         } else {
           String dafnyType;
           if (inputShape.hasTrait(PositionalTrait.class)) {
-            // TODO: We can probably refactor this for better code quality. Like: inputForPositional could be redundant and we could use input itself. 
+            // TODO: We can probably refactor this for better code quality. Like: inputForPositional could be redundant and we could use input itself.
             Shape inputForPositional = model.expectShape(
               inputShape
                 .getAllMembers()
