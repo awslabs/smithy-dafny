@@ -47,4 +47,20 @@ module SimplePositionalImpl refines AbstractSimplePositionalOperations {
     // @positional allows use to return the result without the output structure
     return Success(resource);
   }
+
+  method GetIntegerInputPosition ( config: InternalConfig , input: int32 )
+    returns (output: Result<GetIntegerInputPositionOutput, Error>)
+
+  {
+    var res := GetIntegerInputPositionOutput(value := Some(input));
+    return Success(res);
+  }
+
+  method GetIntegerOutputPosition ( config: InternalConfig , input: GetIntegerOutputPositionInput )
+    returns (output: Result<int32, Error>)
+
+  {
+    expect input.value.Some?;
+    return Success(input.value.UnwrapOr(-1));
+  }
 }
