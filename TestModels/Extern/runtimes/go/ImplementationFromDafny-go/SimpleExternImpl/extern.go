@@ -1,7 +1,6 @@
 package SimpleExternImpl
 
 import (
-	"github.com/dafny-lang/DafnyRuntimeGo/v4/dafny"
 	"github.com/dafny-lang/DafnyStandardLibGo/Wrappers"
 	"github.com/smithy-lang/smithy-dafny/TestModels/Extern/SimpleDafnyExternTypes"
 )
@@ -17,5 +16,5 @@ func (CompanionStruct_Default___) GetExtern(c Config, input SimpleDafnyExternTyp
 func (CompanionStruct_Default___) ExternMustError(c Config, input SimpleDafnyExternTypes.ExternMustErrorInput) Wrappers.Result {
 	return Wrappers.Companion_Result_.Create_Failure_(
 		SimpleDafnyExternTypes.Companion_Error_.Create_Opaque_(
-			input.Dtor_value(), dafny.SeqOfChars([]dafny.Char("ExceptionMessage")...)))
+			input.Dtor_value()))
 }
