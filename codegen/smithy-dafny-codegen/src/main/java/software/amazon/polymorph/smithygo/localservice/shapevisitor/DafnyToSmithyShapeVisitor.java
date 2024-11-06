@@ -543,7 +543,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         return """
           return func () %s.%s {
           var u %s.%s
-        	inputEnum := %s
+        	inputEnum := %s.(%s)
         	index := -1;
         	for allEnums := dafny.Iterate(%s{}.AllSingletonConstructors()); ; {
         		enum, ok := allEnums()
@@ -562,6 +562,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
             SmithyNameResolver.smithyTypesNamespace(shape),
             context.symbolProvider().toSymbol(shape).getName(),
             dataSource,
+            context.symbolProvider().toSymbol(shape).getName(),
             DafnyNameResolver.getDafnyCompanionStructType(
               shape,
               context.symbolProvider().toSymbol(shape)
