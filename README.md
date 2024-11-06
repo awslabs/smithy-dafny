@@ -56,6 +56,21 @@ feel free to [cut us an issue](https://github.com/smithy-lang/smithy-dafny/issue
 
 See the [`codegen/smithy-dafny-codegen-cli`](codegen/smithy-dafny-codegen-cli) directory for further details and examples.
 
+## Setup
+
+1. You will need a JDK that supports at least Java 17.
+2. `smithy-dafny` depends on other Smithy code generators such as `smithy-rs`,
+   which at the time of writing this are not yet published.
+   Instead they are includes as submodules, so if you didn't populate them when cloning this repo
+   (or haven't updated in a while), run:
+   ```
+   git submodule update --init --recursive
+   ```
+3. To install the dependencies, and the latest version of the Smithy build plugin:
+   ```
+   make mvn_local_deploy_polymorph
+   ```
+
 ## Limitations
 
 ### Completeness

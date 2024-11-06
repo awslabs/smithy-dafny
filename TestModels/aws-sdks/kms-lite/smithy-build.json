@@ -18,7 +18,6 @@
         "dafny-client-codegen": {
           "edition": "2023",
           "service": "com.amazonaws.kms#TrentService",
-          "dafnyVersion": "${DAFNY_VERSION}",
           "targetLanguages": ["java", "dotnet", "rust"],
           "includeDafnyFile": "../../dafny-dependencies/StandardLibrary/src/Index.dfy"
         }

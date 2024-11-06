@@ -31,6 +31,6 @@ mvn_local_deploy_polymorph_python_dependencies:
 	cd codegen/smithy-dafny-codegen-modules/smithy-python/codegen; \
 	./gradlew :smithy-python-codegen:pTML
 
-mvn_local_deploy_polymorph:
+mvn_local_deploy_polymorph: mvn_local_deploy_polymorph_dependencies
 	cd codegen; \
 	./gradlew :smithy-dafny-codegen:pTML
