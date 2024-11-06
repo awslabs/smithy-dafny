@@ -224,7 +224,7 @@ func (shim *Shim) DescribeTimeToLive(input ComAmazonawsDynamodbTypes.DescribeTim
 	return Wrappers.Companion_Result_.Create_Success_(comamazonawsdynamodbsmithygenerated.DescribeTimeToLiveOutput_ToDafny(*native_response))
 }
 
-func (shim *Shim) DisableKinesisStreamingDestination(input ComAmazonawsDynamodbTypes.KinesisStreamingDestinationInput) Wrappers.Result {
+func (shim *Shim) DisableKinesisStreamingDestination(input ComAmazonawsDynamodbTypes.DisableKinesisStreamingDestinationInput) Wrappers.Result {
 	var native_request = comamazonawsdynamodbsmithygenerated.DisableKinesisStreamingDestinationInput_FromDafny(input)
 	var native_response, native_error = shim.Client.DisableKinesisStreamingDestination(context.Background(), &native_request)
 	if native_error != nil {
@@ -233,7 +233,7 @@ func (shim *Shim) DisableKinesisStreamingDestination(input ComAmazonawsDynamodbT
 	return Wrappers.Companion_Result_.Create_Success_(comamazonawsdynamodbsmithygenerated.DisableKinesisStreamingDestinationOutput_ToDafny(*native_response))
 }
 
-func (shim *Shim) EnableKinesisStreamingDestination(input ComAmazonawsDynamodbTypes.KinesisStreamingDestinationInput) Wrappers.Result {
+func (shim *Shim) EnableKinesisStreamingDestination(input ComAmazonawsDynamodbTypes.EnableKinesisStreamingDestinationInput) Wrappers.Result {
 	var native_request = comamazonawsdynamodbsmithygenerated.EnableKinesisStreamingDestinationInput_FromDafny(input)
 	var native_response, native_error = shim.Client.EnableKinesisStreamingDestination(context.Background(), &native_request)
 	if native_error != nil {

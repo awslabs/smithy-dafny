@@ -20,7 +20,7 @@ func (_static *CompanionStruct_Default___) WrappedSimpleLong(inputConfig SimpleT
 	var nativeConfig = simpletypessmithylongsmithygenerated.SimpleLongConfig_FromDafny(inputConfig)
 	var nativeClient, nativeError = simpletypessmithylongsmithygenerated.NewClient(nativeConfig)
 	if nativeError != nil {
-		return Wrappers.Companion_Result_.Create_Failure_(SimpleTypesSmithyLongTypes.Companion_Error_.Create_Opaque_(nativeError, dafny.SeqOfChars([]dafny.Char(nativeError.Error())...)))
+		return Wrappers.Companion_Result_.Create_Failure_(SimpleTypesSmithyLongTypes.Companion_Error_.Create_Opaque_(nativeError))
 	}
 	return Wrappers.Companion_Result_.Create_Success_(&Shim{client: nativeClient})
 }
