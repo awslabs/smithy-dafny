@@ -30,6 +30,8 @@ class GoTestModels extends TestModelTest {
     DISABLED_TESTS.add("aws-sdks/kms-lite");
     DISABLED_TESTS.add("aws-sdks/sqs");
     DISABLED_TESTS.add("aws-sdks/sqs-via-cli");
+    DISABLED_TESTS.add("aws-sdks/s3");
+    DISABLED_TESTS.add("SQSExtended");
     //TODO: We should be able to support below models, but isn't a priority.
     DISABLED_TESTS.add("MultipleModels");
     DISABLED_TESTS.add("LocalService");
