@@ -230,7 +230,9 @@ public class AwsSdkTypeConversionCodegen extends TypeConversionCodegen {
     final TokenTree handleBaseFromDafny = TokenTree
       .of(
         "case %1$s dafnyVal:".formatted(
-            DotNetNameResolver.dafnyUnknownErrorTypeForSdkShape(serviceShape)
+            DotNetNameResolver.dafnyUnknownWithTextErrorTypeForServiceShape(
+              serviceShape
+            )
           ),
         "return new SystemException(dafnyVal._obj.ToString());",
         "default:",

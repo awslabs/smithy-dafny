@@ -1607,7 +1607,9 @@ public class TypeConversionCodegen {
             DotNetNameResolver.baseClassForUnknownError()
           ),
         "case %1$s dafnyVal:".formatted(
-            DotNetNameResolver.dafnyUnknownErrorTypeForSdkShape(serviceShape)
+            DotNetNameResolver.dafnyUnknownWithTextErrorTypeForServiceShape(
+              serviceShape
+            )
           ),
         "return new %1$s(dafnyVal._obj, dafnyVal._obj.ToString());".formatted(
             DotNetNameResolver.baseClassForUnknownWithTextError()

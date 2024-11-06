@@ -189,7 +189,12 @@ public class ToNativeLibrary extends ToNative {
       "$L.obj($L.$L)",
       NATIVE_BUILDER,
       VAR_INPUT,
-      datatypeDeconstructor("obj"),
+      datatypeDeconstructor("obj")
+    );
+    method.addStatement(
+      "$L.objMessage(software.amazon.smithy.dafny.conversion.ToNative.Simple.String($L.$L))",
+      NATIVE_BUILDER,
+      VAR_INPUT,
       datatypeDeconstructor("objMessage")
     );
     // Build and Return

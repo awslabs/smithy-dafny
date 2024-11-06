@@ -985,7 +985,7 @@ public class DotNetNameResolver {
       );
   }
 
-  public static String dafnyUnknownErrorTypeForSdkShape(
+  public static String dafnyUnknownWithTextErrorTypeForServiceShape(
     final ServiceShape serviceShape
   ) {
     return "%s.Error_OpaqueWithText".formatted(
