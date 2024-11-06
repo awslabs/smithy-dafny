@@ -347,7 +347,7 @@ _polymorph_code_gen: OUTPUT_DOTNET=\
 _polymorph_code_gen: OUTPUT_JAVA=--output-java $(LIBRARY_ROOT)/runtimes/java/src/main/smithy-generated
 _polymorph_code_gen: OUTPUT_JAVA_TEST=--output-java-test $(LIBRARY_ROOT)/runtimes/java/src/test/smithy-generated
 _polymorph_code_gen: OUTPUT_PYTHON=--output-python $(LIBRARY_ROOT)/runtimes/python/src/$(PYTHON_MODULE_NAME)/smithygenerated
-# Omni-language targets for MODULE_NAME and DEPENDENCY_MODULE_NAMES break if generating multiple languages in one Polymorph invocation...
+# Omni-language targets ()MODULE_NAME and DEPENDENCY_MODULE_NAMES) don't work if generating multiple languages in one Polymorph invocation...
 _polymorph_code_gen: MODULE_NAME=--library-name $(PYTHON_MODULE_NAME)
 _polymorph_code_gen: DEPENDENCY_MODULE_NAMES=$(PYTHON_DEPENDENCY_MODULE_NAMES)
 _polymorph_code_gen: _polymorph
