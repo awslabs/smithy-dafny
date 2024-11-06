@@ -961,7 +961,7 @@ public class DafnyLocalServiceTypeConversionProtocol
             	return $L.Companion_Error_.Create_CollectionOfErrors_(dafny.SeqOf(e...), dafny.SeqOfChars([]dafny.Char(nativeInput.Message)...))
             }
             func OpaqueError_Input_ToDafny(nativeInput $L.OpaqueError)($L.Error) {
-            	return $L.Companion_Error_.Create_Opaque_(nativeInput.ErrObject, dafny.SeqOfChars([]dafny.Char(nativeInput.Error())...))
+            	return $L.Companion_Error_.Create_Opaque_(nativeInput.ErrObject)
             }""",
             SmithyNameResolver.smithyTypesNamespace(serviceShape),
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
@@ -1139,7 +1139,7 @@ public class DafnyLocalServiceTypeConversionProtocol
     if (sdkDepFound) {
       final var createOpaqueError =
         """
-        return %s.Companion_Error_.Create_Opaque_(err, dafny.SeqOfChars([]dafny.Char(err.Error())...))
+        return %s.Companion_Error_.Create_Opaque_(err)
         """.formatted(DafnyNameResolver.dafnyTypesNamespace(serviceShape));
       sdkErrHandler.append(createOpaqueError);
       sdkOpaqueErrHandler.append(createOpaqueError);
