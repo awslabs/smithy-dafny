@@ -26,6 +26,7 @@ import software.amazon.polymorph.smithyjava.nameresolver.Dafny;
 import software.amazon.polymorph.smithyjava.nameresolver.Native;
 import software.amazon.polymorph.smithyjava.unmodeled.CollectionOfErrors;
 import software.amazon.polymorph.smithyjava.unmodeled.OpaqueError;
+import software.amazon.polymorph.smithyjava.unmodeled.OpaqueWithTextError;
 import software.amazon.polymorph.traits.DafnyUtf8BytesTrait;
 import software.amazon.polymorph.traits.ExtendableTrait;
 import software.amazon.polymorph.traits.LocalServiceTrait;
@@ -84,6 +85,7 @@ public class ToNativeLibrary extends ToNative {
     ArrayList<MethodSpec> toNativeMethods = new ArrayList<>();
     // OpaqueError
     toNativeMethods.add(opaqueError());
+    toNativeMethods.add(opaqueWithTextError());
     // CollectionError
     toNativeMethods.add(collectionError());
     // Modeled exception classes
@@ -169,6 +171,31 @@ public class ToNativeLibrary extends ToNative {
     return super.buildAndReturn(method);
   }
 
+  MethodSpec opaqueWithTextError() {
+    ClassName inputType = subject.dafnyNameResolver.classForDatatypeConstructor(
+      "Error",
+      "OpaqueWithText"
+    );
+    ClassName returnType = OpaqueWithTextError.nativeClassName(
+      subject.modelPackageName
+    );
+    MethodSpec.Builder method = super.initializeErrorMethodSpec(
+      inputType,
+      returnType
+    );
+    method = super.createNativeBuilder(method, returnType);
+    // Set Value
+    method.addStatement(
+      "$L.obj($L.$L)",
+      NATIVE_BUILDER,
+      VAR_INPUT,
+      datatypeDeconstructor("obj"),
+      datatypeDeconstructor("objMessage")
+    );
+    // Build and Return
+    return super.buildAndReturn(method);
+  }
+
   MethodSpec collectionError() {
     ClassName inputType = subject.dafnyNameResolver.classForDatatypeConstructor(
       "Error",
@@ -229,6 +256,7 @@ public class ToNativeLibrary extends ToNative {
       .map(simpleName -> simpleName.replaceFirst("Error_", ""))
       .collect(Collectors.toCollection(ArrayList::new)); // We need a mutable list, so we can't use stream().toList()
     allDafnyErrorConstructors.add("Opaque");
+    allDafnyErrorConstructors.add("OpaqueWithText");
     allDafnyErrorConstructors.add("CollectionOfErrors");
     allDafnyErrorConstructors.forEach(constructorName ->
       method

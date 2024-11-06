@@ -93,7 +93,8 @@ public class OpaqueWithTextError {
         BuilderSpecs.BUILDER_VAR,
         BuilderSpecs.BUILDER_VAR
       )
-      .addStatement("this.obj = builder.obj()");
+      .addStatement("this.obj = builder.obj()")
+      .addStatement("this.objMessage = builder.objMessage()");
     return method.build();
   }
 
