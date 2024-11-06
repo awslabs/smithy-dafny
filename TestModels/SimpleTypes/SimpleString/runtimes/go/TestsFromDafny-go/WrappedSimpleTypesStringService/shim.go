@@ -20,7 +20,7 @@ func (_static *CompanionStruct_Default___) WrappedSimpleString(inputConfig Simpl
 	var nativeConfig = simpletypessmithystringsmithygenerated.SimpleStringConfig_FromDafny(inputConfig)
 	var nativeClient, nativeError = simpletypessmithystringsmithygenerated.NewClient(nativeConfig)
 	if nativeError != nil {
-		return Wrappers.Companion_Result_.Create_Failure_(SimpleTypesSmithyStringTypes.Companion_Error_.Create_Opaque_(nativeError, dafny.SeqOfChars([]dafny.Char(nativeError.Error())...)))
+		return Wrappers.Companion_Result_.Create_Failure_(SimpleTypesSmithyStringTypes.Companion_Error_.Create_Opaque_(nativeError))
 	}
 	return Wrappers.Companion_Result_.Create_Success_(&Shim{client: nativeClient})
 }

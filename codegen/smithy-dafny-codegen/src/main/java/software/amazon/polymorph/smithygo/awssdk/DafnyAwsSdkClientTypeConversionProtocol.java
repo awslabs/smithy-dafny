@@ -570,7 +570,7 @@ public class DafnyAwsSdkClientTypeConversionProtocol
           writer.write(
             """
             func OpaqueError_Input_ToDafny(nativeInput error)($L.Error) {
-            	return $L.Companion_Error_.Create_Opaque_(nativeInput, dafny.SeqOfChars([]dafny.Char(nativeInput.Error())...))
+            	return $L.Companion_Error_.Create_Opaque_(nativeInput)
             }""",
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
             DafnyNameResolver.dafnyTypesNamespace(serviceShape)

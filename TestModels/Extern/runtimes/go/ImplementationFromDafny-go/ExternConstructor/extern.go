@@ -25,7 +25,7 @@ func (CompanionStruct_ExternConstructorClass_) Build(input dafny.Sequence) Wrapp
 	if input.Equals(dafny.SeqOfChars([]dafny.Char("Error")...)) {
 		return Wrappers.Companion_Result_.Create_Failure_(
 			SimpleDafnyExternTypes.Companion_Error_.Create_Opaque_(
-				fmt.Errorf("Exception"), dafny.SeqOfChars([]dafny.Char("ExceptionMessage")...)),
+				fmt.Errorf("Exception")),
 		)
 	}
 	return Wrappers.Companion_Result_.Create_Success_(&ExternConstructorClass{func() *string {

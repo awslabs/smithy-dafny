@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import software.amazon.polymorph.TestModelTest;
-import software.amazon.polymorph.smithydafny.DafnyVersion;
 
 class DotnetTestModels extends TestModelTest {
 
@@ -27,11 +26,15 @@ class DotnetTestModels extends TestModelTest {
     DISABLED_TESTS.add("SimpleTypes/SimpleByte");
     DISABLED_TESTS.add("SimpleTypes/SimpleFloat");
     DISABLED_TESTS.add("SimpleTypes/SimpleShort");
+
     //TODO: Add support for Recursive shapes.
     DISABLED_TESTS.add("RecursiveShape");
     // V2 Models are not yet supported in Net.
     DISABLED_TESTS.add("aws-sdks/ddbv2");
     DISABLED_TESTS.add("aws-sdks/kmsv2");
+    DISABLED_TESTS.add("SQSExtended");
+    // S3 is not yet supported
+    DISABLED_TESTS.add("aws-sdks/s3");
   }
 
   @ParameterizedTest
