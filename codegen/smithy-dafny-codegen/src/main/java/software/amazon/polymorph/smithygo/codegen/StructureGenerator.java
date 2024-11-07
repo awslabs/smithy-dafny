@@ -168,7 +168,7 @@ public final class StructureGenerator implements Runnable {
             );
           }
         }
-        
+
         writer.write("$L $P", memberName, memberSymbol);
       });
     writer.closeBlock("}").write("");

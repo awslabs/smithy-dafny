@@ -153,31 +153,31 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       }
       if (serviceShape.hasTrait(ServiceTrait.class)) {
         writer.addImport(
-            SmithyNameResolver.getGoModuleNameForSdkNamespace(
-              serviceShape.getId().getNamespace()
+          SmithyNameResolver.getGoModuleNameForSdkNamespace(
+            serviceShape.getId().getNamespace()
+          )
+        );
+        return """
+        shim, ok := %1$s.(*%2$swrapped.Shim)
+        if !ok {
+            panic("Not able to convert client to native")
+        }
+        return shim.Client
+        """.formatted(
+            dataSource,
+            DafnyNameResolver.dafnyNamespace(
+              resourceOrService.expectTrait(ServiceTrait.class)
             )
           );
-          return """
-          shim, ok := %1$s.(*%2$swrapped.Shim)
-          if !ok {
-              panic("Not able to convert client to native")
-          }
-          return shim.Client
-          """.formatted(
-              dataSource,
-              DafnyNameResolver.dafnyNamespace(
-                resourceOrService.expectTrait(ServiceTrait.class)
-              )
-            );
       }
       if (!this.isOptional) {
-          return "return %1$s{%2$s}".formatted(
-              namespace.concat(
-                context.symbolProvider().toSymbol(serviceShape).getName()
-              ),
-              dataSource
-            );
-        }
+        return "return %1$s{%2$s}".formatted(
+            namespace.concat(
+              context.symbolProvider().toSymbol(serviceShape).getName()
+            ),
+            dataSource
+          );
+      }
       return """
       return func () *%s {
           if %s == nil {
