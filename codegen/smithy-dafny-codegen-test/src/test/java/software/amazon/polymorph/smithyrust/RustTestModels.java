@@ -41,6 +41,9 @@ class RustTestModels extends TestModelTest {
 
     //TODO: https://github.com/smithy-lang/smithy-dafny/issues/599
     DISABLED_TESTS.add("Positional");
+
+    //TODO: https://github.com/smithy-lang/smithy-dafny/issues/699
+    DISABLED_TESTS.add("SimpleTypes/SimpleTimestamp");
   }
 
   @ParameterizedTest
