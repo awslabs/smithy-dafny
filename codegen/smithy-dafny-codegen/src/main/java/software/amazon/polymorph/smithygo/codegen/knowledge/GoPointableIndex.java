@@ -20,7 +20,6 @@ package software.amazon.polymorph.smithygo.codegen.knowledge;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
-import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.knowledge.KnowledgeIndex;
 import software.amazon.smithy.model.knowledge.NeighborProviderIndex;
