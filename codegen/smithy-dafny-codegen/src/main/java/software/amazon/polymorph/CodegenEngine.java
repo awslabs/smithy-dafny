@@ -1023,8 +1023,8 @@ public class CodegenEngine {
     private Path libraryRoot;
     private Path patchFilesDir;
     private boolean updatePatchFiles = false;
-    private Map<String, String> dependencyLibraryNames;
-    private String libraryName;
+    private Map<String, String> dependencyPythonModuleNames;
+    private String pythonModuleName;
 
     public Builder() {}
 
@@ -1053,20 +1053,20 @@ public class CodegenEngine {
     }
 
     /**
-     * Sets the directories in which to search for dependent model file(s).
+     * Sets the Smithy namespace-to-Python module name map.
      */
-    public Builder withDependencyLibraryNames(
-      final Map<String, String> dependencyLibraryNames
+    public Builder withDependencyPythonModuleNames(
+      final Map<String, String> dependencyPythonModuleNames
     ) {
-      this.dependencyLibraryNames = dependencyLibraryNames;
+      this.dependencyPythonModuleNames = dependencyPythonModuleNames;
       return this;
     }
 
     /**
-     * Sets the Python module name for any generated Python code.
+     * Sets the Python module name for generated Python code.
      */
-    public Builder withLibraryName(final String libraryName) {
-      this.libraryName = libraryName;
+    public Builder withPythonModuleName(final String pythonModuleName) {
+      this.pythonModuleName = pythonModuleName;
       return this;
     }
 
@@ -1225,9 +1225,9 @@ public class CodegenEngine {
         : this.dependentModelPaths.clone();
 
       final Map<String, String> dependencyLibraryNames =
-        this.dependencyLibraryNames == null
+        this.dependencyPythonModuleNames == null
           ? new HashMap<>()
-          : this.dependencyLibraryNames;
+          : this.dependencyPythonModuleNames;
 
       final Map<TargetLanguage, Path> targetLangOutputDirsRaw =
         Objects.requireNonNull(this.targetLangOutputDirs);
@@ -1283,7 +1283,7 @@ public class CodegenEngine {
       }
 
       final Optional<String> libraryName = Optional.ofNullable(
-        this.libraryName
+        this.pythonModuleName
       );
 
       final Path libraryRoot = this.libraryRoot.toAbsolutePath().normalize();

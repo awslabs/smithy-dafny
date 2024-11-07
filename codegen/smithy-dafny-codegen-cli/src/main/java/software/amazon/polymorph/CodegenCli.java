@@ -126,7 +126,7 @@ public class CodegenCli {
       .withLibraryRoot(cliArguments.libraryRoot)
       .withServiceModel(serviceModel)
       .withDependentModelPaths(cliArguments.dependentModelPaths)
-      .withDependencyLibraryNames(cliArguments.dependencyLibraryNames)
+      .withDependencyPythonModuleNames(cliArguments.dependencyPythonModuleNames)
       .withNamespaces(cliArguments.namespaces)
       .withTargetLangOutputDirs(outputDirs)
       .withTargetLangTestOutputDirs(testOutputDirs)
@@ -156,7 +156,7 @@ public class CodegenCli {
     cliArguments.includeDafnyFile.ifPresent(
       engineBuilder::withIncludeDafnyFile
     );
-    cliArguments.libraryName.ifPresent(engineBuilder::withLibraryName);
+    cliArguments.pythonModuleName.ifPresent(engineBuilder::withPythonModuleName);
     cliArguments.patchFilesDir.ifPresent(engineBuilder::withPatchFilesDir);
     final CodegenEngine engine = engineBuilder.build();
     switch (cliArguments.command) {
@@ -199,10 +199,10 @@ public class CodegenCli {
       )
       .addOption(
         Option
-          .builder("dln")
-          .longOpt("dependency-library-name")
+          .builder("pdln")
+          .longOpt("python-dependency-module-name")
           .desc(
-            "namespace-to-library-name map entry for a dependency namespace"
+            "<optional> if using Python, a dependency namespace-to-Python module name map entry"
           )
           .hasArg()
           .build()
@@ -218,10 +218,10 @@ public class CodegenCli {
       )
       .addOption(
         Option
-          .builder("ln")
-          .longOpt("library-name")
+          .builder("pmn")
+          .longOpt("python-module-name")
           .desc(
-            "if generating for a language that uses library names (go, python), the name of the library in that language"
+            "<optional> if using Python, the intended Python module name for generated code"
           )
           .hasArg()
           .build()
@@ -461,9 +461,9 @@ public class CodegenCli {
     Path libraryRoot,
     Path modelPath,
     Path[] dependentModelPaths,
-    Map<String, String> dependencyLibraryNames,
+    Map<String, String> dependencyPythonModuleNames,
     Set<String> namespaces,
-    Optional<String> libraryName,
+    Optional<String> pythonModuleName,
     Optional<Path> outputDotnetDir,
     Optional<Path> outputJavaDir,
     Optional<Path> testOutputJavaDir,
@@ -526,10 +526,10 @@ public class CodegenCli {
       // ex. `dependency-library-name=aws.cryptography.materialproviders=aws_cryptographic_materialproviders`
       // maps the Smithy namespace `aws.cryptography.materialproviders` to a module name `aws_cryptographic_materialproviders`
       // via a map key of "aws.cryptography.materialproviders" and a value of "aws_cryptographic_materialproviders"
-      final Map<String, String> dependencyNamespacesToLibraryNamesMap =
-        commandLine.hasOption("dependency-library-name")
+      final Map<String, String> dependencyNamespacesToPythonModuleNamesMap =
+        commandLine.hasOption("python-dependency-module-name")
           ? Arrays
-            .stream(commandLine.getOptionValues("dln"))
+            .stream(commandLine.getOptionValues("pdmn"))
             .map(s -> s.split("="))
             .collect(Collectors.toMap(i -> i[0], i -> i[1]))
           : new HashMap<>();
@@ -539,8 +539,8 @@ public class CodegenCli {
         .<Set<String>>map(ns -> new HashSet<>(Arrays.asList(ns)))
         .orElse(Collections.emptySet());
 
-      final Optional<String> libraryName = Optional.ofNullable(
-        commandLine.getOptionValue("library-name")
+      final Optional<String> pythonModuleName = Optional.ofNullable(
+        commandLine.getOptionValue("python-module-name")
       );
 
       Optional<Path> outputDafnyDir = Optional
@@ -628,9 +628,9 @@ public class CodegenCli {
           libraryRoot,
           modelPath,
           dependentModelPaths,
-          dependencyNamespacesToLibraryNamesMap,
+          dependencyNamespacesToPythonModuleNamesMap,
           namespaces,
-          libraryName,
+          pythonModuleName,
           outputDotnetDir,
           outputJavaDir,
           testOutputJavaDir,

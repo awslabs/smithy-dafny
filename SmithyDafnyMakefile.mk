@@ -283,12 +283,12 @@ _polymorph:
 	$(OUTPUT_JAVA_TEST) \
 	$(OUTPUT_DOTNET) \
 	$(OUTPUT_PYTHON) \
-	$(MODULE_NAME) \
+    --python-module-name $(PYTHON_MODULE_NAME) \
+	$(PYTHON_DEPENDENCY_MODULE_NAMES) \
 	$(OUTPUT_RUST) \
 	--model $(if $(DIR_STRUCTURE_V2), $(LIBRARY_ROOT)/dafny/$(SERVICE)/Model, $(SMITHY_MODEL_ROOT)) \
 	--dependent-model $(PROJECT_ROOT)/$(SMITHY_DEPS) \
 	$(patsubst %, --dependent-model $(PROJECT_ROOT)/%/Model, $($(service_deps_var))) \
-	$(DEPENDENCY_MODULE_NAMES) \
 	$(patsubst %, --namespace %, $($(namespace_var))) \
 	$(OUTPUT_LOCAL_SERVICE_$(SERVICE)) \
 	$(AWS_SDK_CMD) \
@@ -307,12 +307,12 @@ _polymorph_wrapped:
 	$(OUTPUT_DOTNET_WRAPPED) \
 	$(OUTPUT_JAVA_WRAPPED) \
 	$(OUTPUT_PYTHON_WRAPPED) \
-	$(MODULE_NAME) \
 	$(OUTPUT_RUST_WRAPPED) \
 	--model $(if $(DIR_STRUCTURE_V2),$(LIBRARY_ROOT)/dafny/$(SERVICE)/Model,$(LIBRARY_ROOT)/Model) \
 	--dependent-model $(PROJECT_ROOT)/$(SMITHY_DEPS) \
 	$(patsubst %, --dependent-model $(PROJECT_ROOT)/%/Model, $($(service_deps_var))) \
-	$(DEPENDENCY_MODULE_NAMES) \
+    --python-module-name $(PYTHON_MODULE_NAME) \
+	$(PYTHON_DEPENDENCY_MODULE_NAMES) \
 	--namespace $($(namespace_var)) \
 	--local-service-test \
 	$(AWS_SDK_CMD) \
@@ -347,9 +347,6 @@ _polymorph_code_gen: OUTPUT_DOTNET=\
 _polymorph_code_gen: OUTPUT_JAVA=--output-java $(LIBRARY_ROOT)/runtimes/java/src/main/smithy-generated
 _polymorph_code_gen: OUTPUT_JAVA_TEST=--output-java-test $(LIBRARY_ROOT)/runtimes/java/src/test/smithy-generated
 _polymorph_code_gen: OUTPUT_PYTHON=--output-python $(LIBRARY_ROOT)/runtimes/python/src/$(PYTHON_MODULE_NAME)/smithygenerated
-# Omni-language targets (MODULE_NAME and DEPENDENCY_MODULE_NAMES) don't work if generating multiple languages in one Polymorph invocation...
-_polymorph_code_gen: MODULE_NAME=--library-name $(PYTHON_MODULE_NAME)
-_polymorph_code_gen: DEPENDENCY_MODULE_NAMES=$(PYTHON_DEPENDENCY_MODULE_NAMES)
 _polymorph_code_gen: _polymorph
 
 check_polymorph_diff:
@@ -422,10 +419,7 @@ polymorph_python:
 	done
 
 _polymorph_python: OUTPUT_PYTHON=--output-python $(LIBRARY_ROOT)/runtimes/python/src/$(PYTHON_MODULE_NAME)/smithygenerated
-# Defined per-Makefile
-_polymorph_python: MODULE_NAME=--library-name $(PYTHON_MODULE_NAME)
-# Defined per-Makefile
-_polymorph_python: DEPENDENCY_MODULE_NAMES=$(PYTHON_DEPENDENCY_MODULE_NAMES)
+_polymorph_python: PYTHON_MODULE_NAME=--python-module-name $(PYTHON_MODULE_NAME)
 _polymorph_python: _polymorph
 
 # Dependency for formatting generating Java code
