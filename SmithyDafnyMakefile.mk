@@ -284,7 +284,7 @@ _polymorph:
 	$(OUTPUT_DOTNET) \
 	$(OUTPUT_PYTHON) \
 	$(if $(strip $(PYTHON_MODULE_NAME)),--python-module-name $(PYTHON_MODULE_NAME),) \
-	$(if $(strip $(PYTHON_DEPENDENCY_MODULE_NAMES)),$(PYTHON_DEPENDENCY_MODULE_NAMES),) \
+	$(PYTHON_DEPENDENCY_MODULE_NAMES) \
 	$(OUTPUT_RUST) \
 	--model $(if $(DIR_STRUCTURE_V2), $(LIBRARY_ROOT)/dafny/$(SERVICE)/Model, $(SMITHY_MODEL_ROOT)) \
 	--dependent-model $(PROJECT_ROOT)/$(SMITHY_DEPS) \
@@ -307,12 +307,12 @@ _polymorph_wrapped:
 	$(OUTPUT_DOTNET_WRAPPED) \
 	$(OUTPUT_JAVA_WRAPPED) \
 	$(OUTPUT_PYTHON_WRAPPED) \
+	$(if $(strip $(PYTHON_MODULE_NAME)),--python-module-name $(PYTHON_MODULE_NAME),) \
+	$(PYTHON_DEPENDENCY_MODULE_NAMES) \
 	$(OUTPUT_RUST_WRAPPED) \
 	--model $(if $(DIR_STRUCTURE_V2),$(LIBRARY_ROOT)/dafny/$(SERVICE)/Model,$(LIBRARY_ROOT)/Model) \
 	--dependent-model $(PROJECT_ROOT)/$(SMITHY_DEPS) \
 	$(patsubst %, --dependent-model $(PROJECT_ROOT)/%/Model, $($(service_deps_var))) \
-	$(if $(strip $(PYTHON_MODULE_NAME)),--python-module-name $(PYTHON_MODULE_NAME),) \
-	$(if $(strip $(PYTHON_DEPENDENCY_MODULE_NAMES)),$(PYTHON_DEPENDENCY_MODULE_NAMES),) \
 	--namespace $($(namespace_var)) \
 	--local-service-test \
 	$(AWS_SDK_CMD) \
@@ -625,6 +625,9 @@ _clean:
 	rm -rf $(LIBRARY_ROOT)/TestResults
 	rm -rf $(LIBRARY_ROOT)/runtimes/net/Generated $(LIBRARY_ROOT)/runtimes/net/bin $(LIBRARY_ROOT)/runtimes/net/obj
 	rm -rf $(LIBRARY_ROOT)/runtimes/net/tests/bin $(LIBRARY_ROOT)/runtimes/net/tests/obj
+	rm -rf $(LIBRARY_ROOT)/runtimes/python/src/**/smithygenerated
+	rm -rf $(LIBRARY_ROOT)/runtimes/python/src/**/internaldafny/generated
+	rm -rf $(LIBRARY_ROOT)/runtimes/python/test/internaldafny/generated
 
 clean: _clean
 
@@ -641,7 +644,7 @@ setup_python: setup_smithy_dafny_python
 setup_python:
 	python3 -m pip install poetry
 
-net: polymorph_dafny transpile_python polymorph_python test_python
+python: polymorph_dafny transpile_python polymorph_python test_python
 
 # Python MUST transpile dependencies first to generate .dtr files
 transpile_python: $(if $(ENABLE_EXTERN_PROCESSING), _no_extern_pre_transpile, )
