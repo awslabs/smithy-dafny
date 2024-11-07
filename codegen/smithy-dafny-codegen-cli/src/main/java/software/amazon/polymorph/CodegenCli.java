@@ -199,7 +199,7 @@ public class CodegenCli {
       )
       .addOption(
         Option
-          .builder("pdln")
+          .builder("pdmn")
           .longOpt("python-dependency-module-name")
           .desc(
             "<optional> if using Python, a dependency namespace-to-Python module name map entry"
