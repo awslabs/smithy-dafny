@@ -831,13 +831,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                         $L
                         if (dafny_response.Is_Failure()) {
                             err := dafny_response.Dtor_error().($L.Error);
-                            ${C|}
-                            if err.Is_CollectionOfErrors() {
-                                $L CollectionOfErrors_Output_FromDafny(err)
-                            }
-                            if err.Is_Opaque() {
-                                $L OpaqueError_Output_FromDafny(err)
-                            }
+                            $L Error_FromDafny(err)
                         }
                         $L
                     }
@@ -848,27 +842,6 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   outputType,
                   baseClientCall,
                   DafnyNameResolver.dafnyTypesNamespace(service),
-                  writer.consumer(w -> {
-                    for (var errorShape : model.getShapesWithTrait(
-                      ErrorTrait.class
-                    )) {
-                      w.write(
-                        """
-                                               if err.Is_$L() {
-                                               $L $L(err)
-                                           }
-                        """,
-                        errorShape.toShapeId().getName(),
-                        returnError,
-                        SmithyNameResolver.getFromDafnyMethodName(
-                          service,
-                          errorShape,
-                          ""
-                        )
-                      );
-                    }
-                  }),
-                  returnError,
                   returnError,
                   returnResponse
                 );
@@ -991,13 +964,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     $L
                     $L = $L
                     if native_error != nil {
-                        switch native_error.(type) {
-                         ${C|}
-                         case $L.CollectionOfErrors:
-                             return Wrappers.Companion_Result_.Create_Failure_(CollectionOfErrors_Input_ToDafny(native_error.($L.CollectionOfErrors)))
-                         default:
-                             return Wrappers.Companion_Result_.Create_Failure_(OpaqueError_Input_ToDafny(native_error.($L.OpaqueError)))
-                         }
+                        return Wrappers.Companion_Result_.Create_Failure_(Error_ToDafny(native_error))
                     }
                     return Wrappers.Companion_Result_.Create_Success_($L)
                 }
@@ -1007,10 +974,6 @@ public class DafnyLocalServiceGenerator implements Runnable {
               typeConversion,
               clientResponse,
               clientCall,
-              writer.consumer(w -> resourceErrors(w)),
-              SmithyNameResolver.smithyTypesNamespace(service),
-              SmithyNameResolver.smithyTypesNamespace(service),
-              SmithyNameResolver.smithyTypesNamespace(service),
               returnResponse
             );
           });

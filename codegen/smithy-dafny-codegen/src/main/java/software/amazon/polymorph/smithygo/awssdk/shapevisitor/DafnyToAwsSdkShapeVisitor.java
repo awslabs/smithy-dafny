@@ -655,10 +655,25 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
   @Override
   public String timestampShape(final TimestampShape shape) {
     writer.addImport("time");
-    return """
-    	func() *time.Time {
-    	var s string
 
+    var nilCheck = "";
+    final String unAssertedDataSource = dataSource.startsWith("input.(")
+      ? "input"
+      : dataSource;
+    if (this.isOptional) {
+      if (this.isPointable) {
+        nilCheck =
+          "if %s == nil { return nil }".formatted(unAssertedDataSource);
+      } else {
+        nilCheck =
+          "if %s == nil { return time.Time}".formatted(unAssertedDataSource);
+      }
+    }
+
+    return """
+    	func() %stime.Time {
+    	var s string
+    	%s
     	for i := dafny.Iterate(%s.(dafny.Sequence)); ; {
     		val, ok := i()
     		if !ok {
@@ -668,14 +683,19 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
     		}
     	}
     	if len(s) == 0 {
-    		return nil
+    		panic("timestamp string is empty")
     	} else {
     		t, err := time.Parse("2006-01-02T15:04:05.999999Z", s)
     		if err != nil {
     			panic(err)
     		}
-    		return &t
+    		return %st
     	}
-    }()""".formatted(dataSource);
+    }()""".formatted(
+        this.isPointable ? "*" : "",
+        nilCheck,
+        dataSource,
+        this.isPointable ? "&" : ""
+      );
   }
 }

@@ -21,4 +21,12 @@ module SimpleTypesTimestampImpl refines AbstractSimpleTypesTimestampOperations {
     var res := GetTimestampOutput(value := input.value);
     return Success(res);
   }
+
+  method GetTimestampRequired ( config: InternalConfig , input: GetTimestampRequiredInput )
+    returns (output: Result<GetTimestampRequiredOutput, Error>)
+
+  {
+    var res := GetTimestampRequiredOutput(value := input.value);
+    return Success(res);
+  }
 }
