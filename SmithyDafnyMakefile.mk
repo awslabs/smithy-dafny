@@ -311,8 +311,8 @@ _polymorph_wrapped:
 	--model $(if $(DIR_STRUCTURE_V2),$(LIBRARY_ROOT)/dafny/$(SERVICE)/Model,$(LIBRARY_ROOT)/Model) \
 	--dependent-model $(PROJECT_ROOT)/$(SMITHY_DEPS) \
 	$(patsubst %, --dependent-model $(PROJECT_ROOT)/%/Model, $($(service_deps_var))) \
-	$(if $(PYTHON_MODULE_NAME),--python-module-name $(PYTHON_MODULE_NAME),) \
-	$(if $(PYTHON_DEPENDENCY_MODULE_NAMES),$(PYTHON_DEPENDENCY_MODULE_NAMES),) \
+	$(if $(strip $(PYTHON_MODULE_NAME)),--python-module-name $(PYTHON_MODULE_NAME),) \
+	$(if $(strip $(PYTHON_DEPENDENCY_MODULE_NAMES)),$(PYTHON_DEPENDENCY_MODULE_NAMES),) \
 	--namespace $($(namespace_var)) \
 	--local-service-test \
 	$(AWS_SDK_CMD) \
