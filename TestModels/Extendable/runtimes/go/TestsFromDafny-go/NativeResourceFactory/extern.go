@@ -10,5 +10,5 @@ import (
 func DafnyFactory() SimpleExtendableResourcesTypes.IExtendableResource {
 	extendableResource := ExtendableResource.New_ExtendableResource_()
 	extendableResource.OfName(dafny.SeqOfString("dafny-default"))
-	return &simpleextendableresourcessmithygenerated.NativeWrapper{Impl: simpleextendableresourcessmithygenerated.ExtendableResource_FromDafny(extendableResource)}
+	return &simpleextendableresourcessmithygenerated.ExtendableResourceNativeWrapper{Impl: simpleextendableresourcessmithygenerated.ExtendableResource_FromDafny(extendableResource)}
 }
