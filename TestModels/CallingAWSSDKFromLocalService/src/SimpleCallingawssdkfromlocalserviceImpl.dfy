@@ -45,7 +45,7 @@ module SimpleCallingawssdkfromlocalserviceImpl refines AbstractSimpleCallingawss
     var ScanInput := Dynamodb.Types.ScanInput(
       TableName := input.tableArn
     );
-    var retScan := input.ddbClient.Scan(ScanInput);
+    var retScan := input.ddbClient.value.Scan(ScanInput);
     if retScan.Success? {
       return Success(CallDDBScanOutput(itemOutput := retScan.value.Count));
     } else {

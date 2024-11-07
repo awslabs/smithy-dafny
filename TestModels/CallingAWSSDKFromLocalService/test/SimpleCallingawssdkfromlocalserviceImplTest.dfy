@@ -40,7 +40,7 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     ensures client.ValidState()
   {
     var ddbClient :- expect Dynamodb.DynamoDBClient();
-    var resSuccess := client.CallDDBScan(SimpleCallingawssdkfromlocalservice.Types.CallDDBScanInput(ddbClient := ddbClient, tableArn := TABLE_ARN_SUCCESS_CASE));
+    var resSuccess := client.CallDDBScan(SimpleCallingawssdkfromlocalservice.Types.CallDDBScanInput(ddbClient := Some(ddbClient), tableArn := TABLE_ARN_SUCCESS_CASE));
 
     expect resSuccess.Success?;
     expect resSuccess.value.itemOutput.Some?;
@@ -52,7 +52,7 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
     ensures client.ValidState()
   {
     var ddbClient :- expect Dynamodb.DynamoDBClient();
-    var resFailure := client.CallDDBScan(SimpleCallingawssdkfromlocalservice.Types.CallDDBScanInput(ddbClient := ddbClient, tableArn := TABLE_ARN_FAILURE_CASE));
+    var resFailure := client.CallDDBScan(SimpleCallingawssdkfromlocalservice.Types.CallDDBScanInput(ddbClient := Some(ddbClient), tableArn := TABLE_ARN_FAILURE_CASE));
 
     expect resFailure.Failure?;
     expect resFailure.error.ComAmazonawsDynamodb?;

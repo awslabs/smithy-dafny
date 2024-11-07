@@ -42,7 +42,6 @@ operation CallDDBScan {
 }
 
 structure CallDDBScanInput {
-  @required
   ddbClient: DdbClientReference,
   @required
   tableArn: com.amazonaws.dynamodb#TableArn
