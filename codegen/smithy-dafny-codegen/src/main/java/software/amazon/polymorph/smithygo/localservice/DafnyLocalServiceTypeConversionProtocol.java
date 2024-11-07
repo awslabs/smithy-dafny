@@ -335,8 +335,9 @@ public class DafnyLocalServiceTypeConversionProtocol
                       if ok {
                       	return val.Impl
                       }
-                      return %s{&NativeWrapper{Impl: nativeResource}}.Impl
+                      return %s{&%sNativeWrapper{Impl: nativeResource}}.Impl
                                                          """.formatted(
+                          resourceShape.getId().getName(),
                           resourceShape.getId().getName(),
                           resourceShape.getId().getName()
                         );
@@ -668,11 +669,11 @@ public class DafnyLocalServiceTypeConversionProtocol
                   if (resourceShape.hasTrait(ExtendableTrait.class)) {
                     extendableResourceWrapperCheck =
                       """
-                      val, ok := dafnyResource.(*NativeWrapper)
+                      val, ok := dafnyResource.(*%sNativeWrapper)
                       if ok {
                           return val.Impl
                       }
-                      """;
+                      """.formatted(resourceShape.getId().getName());
                   }
                   writer.write(
                     """

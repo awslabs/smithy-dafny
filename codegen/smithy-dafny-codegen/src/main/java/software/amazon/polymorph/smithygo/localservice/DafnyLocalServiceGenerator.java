@@ -863,8 +863,9 @@ public class DafnyLocalServiceGenerator implements Runnable {
     ResourceShape resourceShape
   ) {
     writerDelegator.useFileWriter(
-      "%s/NativeWrapper.go".formatted(
-          SmithyNameResolver.shapeNamespace(service)
+      "%s/%sNativeWrapper.go".formatted(
+          SmithyNameResolver.shapeNamespace(service),
+          resourceShape.getId().getName()
         ),
       SmithyNameResolver.shapeNamespace(service),
       writer -> {
@@ -885,11 +886,12 @@ public class DafnyLocalServiceGenerator implements Runnable {
 
         writer.write(
           """
-          type NativeWrapper struct {
+          type %sNativeWrapper struct {
               %s.I%s
               Impl %s.I%s
           }
           """.formatted(
+              resourceShape.getId().getName(),
               DafnyNameResolver.dafnyTypesNamespace(resourceShape),
               resourceShape.getId().getName(),
               SmithyNameResolver.smithyTypesNamespace(resourceShape),
@@ -964,7 +966,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
             }
             writer.write(
               """
-                func (this *NativeWrapper) $L($L) Wrappers.Result {
+                func (this *$LNativeWrapper) $L($L) Wrappers.Result {
                     $L
                     $L = $L
                     if native_error != nil {
@@ -973,6 +975,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     return Wrappers.Companion_Result_.Create_Success_($L)
                 }
               """,
+              resourceShape.getId().getName(),
               operationShape.getId().getName(),
               inputType,
               typeConversion,
