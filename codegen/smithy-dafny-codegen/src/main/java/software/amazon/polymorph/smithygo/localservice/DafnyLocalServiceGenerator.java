@@ -560,12 +560,12 @@ public class DafnyLocalServiceGenerator implements Runnable {
       writer.write(
         """
         case $L$L:
-             return Wrappers.Companion_Result_.Create_Failure_($L$L(native_error.($L$L)))
+             return Wrappers.Companion_Result_.Create_Failure_($L($Lnative_error.($L$L)))
         """,
         pointerReceiver,
         SmithyNameResolver.getSmithyType(error, symbolProvider.toSymbol(error)),
-        pointerReceiver,
         SmithyNameResolver.getToDafnyMethodName(service, error, ""),
+        pointerReceiver,
         pointerReceiver,
         SmithyNameResolver.getSmithyType(error, symbolProvider.toSymbol(error))
       );
