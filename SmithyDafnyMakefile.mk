@@ -312,7 +312,7 @@ _polymorph_wrapped:
 	--dependent-model $(PROJECT_ROOT)/$(SMITHY_DEPS) \
 	$(patsubst %, --dependent-model $(PROJECT_ROOT)/%/Model, $($(service_deps_var))) \
 	$(if $(PYTHON_MODULE_NAME),--python-module-name $(PYTHON_MODULE_NAME),) \
-	$(PYTHON_DEPENDENCY_MODULE_NAMES) \
+	$(if $(PYTHON_DEPENDENCY_MODULE_NAMES),$(PYTHON_DEPENDENCY_MODULE_NAMES),) \
 	--namespace $($(namespace_var)) \
 	--local-service-test \
 	$(AWS_SDK_CMD) \
