@@ -1548,13 +1548,13 @@ public class DafnyLocalServiceTypeConversionProtocol
                       .toSymbol(resourceOrService)
                       .getName()
                   );
-                  if (
-                    context
-                      .symbolProvider()
-                      .toSymbol(resourceOrService)
-                      .getProperty(POINTABLE, Boolean.class)
-                      .orElse(false)
-                  ) outputType = "*".concat(outputType);
+                if (
+                  context
+                    .symbolProvider()
+                    .toSymbol(resourceOrService)
+                    .getProperty(POINTABLE, Boolean.class)
+                    .orElse(false)
+                ) outputType = "*".concat(outputType);
               }
             }
           }
