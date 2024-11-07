@@ -263,7 +263,7 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
     return String.format(
       "%sMember%s",
       getDefaultShapeName(union),
-      getDefaultMemberName(member)
+      member.getMemberName()
     );
   }
 
