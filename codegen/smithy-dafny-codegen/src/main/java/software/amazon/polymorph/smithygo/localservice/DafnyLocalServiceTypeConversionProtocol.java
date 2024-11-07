@@ -1515,13 +1515,11 @@ public class DafnyLocalServiceTypeConversionProtocol
             visitingShape,
             true
           );
-          if (
-            context
-              .symbolProvider()
-              .toSymbol(visitingMemberShape)
-              .getProperty(POINTABLE, Boolean.class)
-              .orElse(false)
-          ) outputType = "*".concat(outputType);
+          Boolean isPointable = context
+            .symbolProvider()
+            .toSymbol(visitingMemberShape)
+            .getProperty(POINTABLE, Boolean.class)
+            .orElse(false);
           if (visitingShape.hasTrait(ReferenceTrait.class)) {
             final var referenceTrait = visitingShape.expectTrait(
               ReferenceTrait.class
@@ -1531,12 +1529,10 @@ public class DafnyLocalServiceTypeConversionProtocol
               .expectShape(referenceTrait.getReferentId());
             if (resourceOrService.isServiceShape()) {
               if (resourceOrService.hasTrait(ServiceTrait.class)) {
-                outputType =
-                  "*".concat(
-                      SmithyNameResolver.getAwsServiceClient(
-                        resourceOrService.expectTrait(ServiceTrait.class)
-                      )
-                    );
+                isPointable = true;
+                outputType = SmithyNameResolver.getAwsServiceClient(
+                  resourceOrService.expectTrait(ServiceTrait.class)
+                );
               } else {
                 final var namespace = SmithyNameResolver
                   .shapeNamespace(resourceOrService)
@@ -1548,15 +1544,16 @@ public class DafnyLocalServiceTypeConversionProtocol
                       .toSymbol(resourceOrService)
                       .getName()
                   );
-                if (
-                  context
+                isPointable = context
                     .symbolProvider()
                     .toSymbol(resourceOrService)
                     .getProperty(POINTABLE, Boolean.class)
-                    .orElse(false)
-                ) outputType = "*".concat(outputType);
+                    .orElse(false);
               }
             }
+          }
+          if (isPointable) {
+            outputType = "*".concat(outputType);
           }
           // TODO: we should be able to change input type to specific shape from interface {}
           writer.write(
