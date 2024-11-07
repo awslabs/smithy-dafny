@@ -545,13 +545,24 @@ public class DafnyLocalServiceGenerator implements Runnable {
 
   void resourceErrors(GoWriter writer) {
     for (final var error : model.getShapesWithTrait(ErrorTrait.class)) {
+      String pointerReceiver = "";
+      if (SmithyNameResolver.isShapeFromAWSSDK(error)) {
+        // All the shapes inside AWS SDK has pointer receiver for errors.
+        pointerReceiver = "*";
+        writer.addImportFromModule(
+            SmithyNameResolver.getGoModuleNameForSdkNamespace(
+              error.getId().getNamespace()
+            ),
+            "types",
+            SmithyNameResolver.smithyTypesNamespace(error)
+          );
+      }
       writer.write(
         """
-        case $L:
+        case $L$L:
              return Wrappers.Companion_Result_.Create_Failure_($L(native_error.($L)))
-
-
         """,
+        pointerReceiver,
         SmithyNameResolver.getSmithyType(error, symbolProvider.toSymbol(error)),
         SmithyNameResolver.getToDafnyMethodName(service, error, ""),
         SmithyNameResolver.getSmithyType(error, symbolProvider.toSymbol(error))
