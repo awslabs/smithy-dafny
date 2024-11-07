@@ -1529,11 +1529,11 @@ public class DafnyLocalServiceTypeConversionProtocol
               .expectShape(referenceTrait.getReferentId());
             if (resourceOrService.isServiceShape()) {
               isPointable =
-                  context
-                    .symbolProvider()
-                    .toSymbol(resourceOrService)
-                    .getProperty(POINTABLE, Boolean.class)
-                    .orElse(false);
+                context
+                  .symbolProvider()
+                  .toSymbol(resourceOrService)
+                  .getProperty(POINTABLE, Boolean.class)
+                  .orElse(false);
               if (resourceOrService.hasTrait(ServiceTrait.class)) {
                 outputType =
                   SmithyNameResolver.getAwsServiceClient(
