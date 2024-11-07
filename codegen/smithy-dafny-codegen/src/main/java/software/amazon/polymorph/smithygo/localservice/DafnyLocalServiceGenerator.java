@@ -689,13 +689,18 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       operation,
                       OperationShape.class
                     );
+                    final var input = model.expectShape(operationShape.getInputShape()).hasTrait(UnitTypeTrait.class) ? "" :
+                      operationShape.getInputShape().getName();
+                    final var output = model.expectShape(operationShape.getOutputShape()).hasTrait(UnitTypeTrait.class) ? "" :
+                      "*%s,".formatted(operationShape.getOutputShape().getName());
+
                     w.write(
                       """
-                      $L($L) (*$L, error)
+                      $L($L) ($L error)
                       """,
                       operationShape.getId().getName(),
-                      operationShape.getInputShape().getName(),
-                      operationShape.getOutputShape().getName()
+                      input,
+                      output
                     );
                   });
               })
