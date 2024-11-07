@@ -38,6 +38,12 @@ class RustTestModels extends TestModelTest {
     DISABLED_TESTS.add("aws-sdks/kmsv2");
     // S3 is not yet supported
     DISABLED_TESTS.add("aws-sdks/s3");
+
+    //TODO: https://github.com/smithy-lang/smithy-dafny/issues/599
+    DISABLED_TESTS.add("Positional");
+
+    //TODO: https://github.com/smithy-lang/smithy-dafny/issues/699
+    DISABLED_TESTS.add("SimpleTypes/SimpleTimestamp");
   }
 
   @ParameterizedTest

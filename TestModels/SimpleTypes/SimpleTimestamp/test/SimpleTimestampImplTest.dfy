@@ -38,7 +38,7 @@ module SimpleTimestampImplTest {
     print ret;
   }
 
-  method TestGetTimestampNoMillis(client: ISimpleTypesTimestampClient)
+  method TestGetTimestampNoMs(client: ISimpleTypesTimestampClient)
     requires client.ValidState()
     modifies client.Modifies
     ensures client.ValidState()
