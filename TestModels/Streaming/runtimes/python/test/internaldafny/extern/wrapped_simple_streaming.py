@@ -5,7 +5,7 @@
 from simple_streaming.smithygenerated.simple_streaming.client import SimpleStreaming
 from simple_streaming.smithygenerated.simple_streaming.shim import SimpleStreamingShim
 from simple_streaming.smithygenerated.simple_streaming.config import dafny_config_to_smithy_config
-import standard_library.internaldafny.generated.Wrappers as Wrappers
+import smithy_dafny_standard_library.internaldafny.generated.Wrappers as Wrappers
 
 # test imports, not qualified since this isn't in a package
 import WrappedSimpleStreamingService
