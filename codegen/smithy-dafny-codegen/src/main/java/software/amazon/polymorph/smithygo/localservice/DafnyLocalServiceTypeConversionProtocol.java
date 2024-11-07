@@ -1530,9 +1530,10 @@ public class DafnyLocalServiceTypeConversionProtocol
             if (resourceOrService.isServiceShape()) {
               if (resourceOrService.hasTrait(ServiceTrait.class)) {
                 isPointable = true;
-                outputType = SmithyNameResolver.getAwsServiceClient(
-                  resourceOrService.expectTrait(ServiceTrait.class)
-                );
+                outputType =
+                  SmithyNameResolver.getAwsServiceClient(
+                    resourceOrService.expectTrait(ServiceTrait.class)
+                  );
               } else {
                 final var namespace = SmithyNameResolver
                   .shapeNamespace(resourceOrService)
@@ -1544,7 +1545,8 @@ public class DafnyLocalServiceTypeConversionProtocol
                       .toSymbol(resourceOrService)
                       .getName()
                   );
-                isPointable = context
+                isPointable =
+                  context
                     .symbolProvider()
                     .toSymbol(resourceOrService)
                     .getProperty(POINTABLE, Boolean.class)
