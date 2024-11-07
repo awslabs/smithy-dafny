@@ -76,9 +76,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
     final var configSymbol = symbolProvider.toSymbol(
       model.expectShape(serviceTrait.getConfigId())
     );
-    System.out.println("service");
-    System.out.println("service");
-    System.out.println(service);
+
     writerDelegator.useFileWriter(
       "%s/types.go".formatted(SmithyNameResolver.smithyTypesNamespace(service)),
       SmithyNameResolver.smithyTypesNamespace(service),
