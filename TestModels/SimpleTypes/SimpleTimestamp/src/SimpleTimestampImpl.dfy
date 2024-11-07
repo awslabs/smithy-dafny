@@ -12,6 +12,9 @@ module SimpleTypesTimestampImpl refines AbstractSimpleTypesTimestampOperations {
   predicate GetTimestampEnsuresPublicly(input: GetTimestampInput , output: Result<GetTimestampOutput, Error>)
   {true}
 
+  predicate GetTimestampRequiredEnsuresPublicly(input: GetTimestampRequiredInput , output: Result<GetTimestampRequiredOutput, Error>)
+  {true}
+
 
 
   method GetTimestamp ( config: InternalConfig , input: GetTimestampInput )
