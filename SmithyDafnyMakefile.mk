@@ -283,8 +283,8 @@ _polymorph:
 	$(OUTPUT_JAVA_TEST) \
 	$(OUTPUT_DOTNET) \
 	$(OUTPUT_PYTHON) \
-	--python-module-name $(PYTHON_MODULE_NAME) \
-	$(PYTHON_DEPENDENCY_MODULE_NAMES) \
+	$(if $(strip $(PYTHON_MODULE_NAME)),--python-module-name $(PYTHON_MODULE_NAME),) \
+	$(if $(strip $(PYTHON_DEPENDENCY_MODULE_NAMES)),$(PYTHON_DEPENDENCY_MODULE_NAMES),) \
 	$(OUTPUT_RUST) \
 	--model $(if $(DIR_STRUCTURE_V2), $(LIBRARY_ROOT)/dafny/$(SERVICE)/Model, $(SMITHY_MODEL_ROOT)) \
 	--dependent-model $(PROJECT_ROOT)/$(SMITHY_DEPS) \
