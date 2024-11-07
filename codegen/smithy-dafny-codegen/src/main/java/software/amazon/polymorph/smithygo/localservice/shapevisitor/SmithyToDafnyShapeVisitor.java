@@ -148,7 +148,7 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
                 resourceOrService.expectTrait(ServiceTrait.class)
               )
             );
-        clientConversion = "&%s{Client: &%s}".formatted(shim, dataSource);
+        clientConversion = "&%s{Client: %s}".formatted(shim, dataSource);
       }
       if (!this.isOptional) {
         return clientConversion;

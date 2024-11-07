@@ -586,10 +586,13 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
         final var typeName = referredShape.hasTrait(ServiceTrait.class)
           ? getDefaultShapeName(referredShape)
           : "I".concat(getDefaultShapeName(referredShape));
+        final var isPointable = referredShape.hasTrait(ServiceTrait.class)
+          ? true
+          : false;
         builder.putProperty(
           "Referred",
           symbolBuilderFor(referredShape, typeName)
-            .putProperty(SymbolUtils.POINTABLE, false)
+            .putProperty(SymbolUtils.POINTABLE, isPointable)
             .build()
         );
       } else {

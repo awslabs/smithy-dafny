@@ -1515,6 +1515,11 @@ public class DafnyLocalServiceTypeConversionProtocol
             visitingShape,
             true
           );
+          Boolean isPointable = context
+            .symbolProvider()
+            .toSymbol(visitingMemberShape)
+            .getProperty(POINTABLE, Boolean.class)
+            .orElse(false);
           if (visitingShape.hasTrait(ReferenceTrait.class)) {
             final var referenceTrait = visitingShape.expectTrait(
               ReferenceTrait.class
@@ -1522,13 +1527,13 @@ public class DafnyLocalServiceTypeConversionProtocol
             final var resourceOrService = context
               .model()
               .expectShape(referenceTrait.getReferentId());
-            outputType =
-              GoCodegenUtils.getType(
-                context.symbolProvider().toSymbol(visitingShape),
-                visitingShape,
-                true
-              );
             if (resourceOrService.isServiceShape()) {
+              isPointable =
+                context
+                  .symbolProvider()
+                  .toSymbol(resourceOrService)
+                  .getProperty(POINTABLE, Boolean.class)
+                  .orElse(false);
               if (resourceOrService.hasTrait(ServiceTrait.class)) {
                 outputType =
                   SmithyNameResolver.getAwsServiceClient(
@@ -1548,13 +1553,9 @@ public class DafnyLocalServiceTypeConversionProtocol
               }
             }
           }
-          if (
-            context
-              .symbolProvider()
-              .toSymbol(visitingMemberShape)
-              .getProperty(POINTABLE, Boolean.class)
-              .orElse(false)
-          ) outputType = "*".concat(outputType);
+          if (isPointable) {
+            outputType = "*".concat(outputType);
+          }
           // TODO: we should be able to change input type to specific shape from interface {}
           writer.write(
             """

@@ -151,33 +151,32 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         namespace =
           SmithyNameResolver.shapeNamespace(resourceOrService).concat(".");
       }
-      if (!this.isOptional) {
-        if (serviceShape.hasTrait(ServiceTrait.class)) {
-          writer.addImport(
-            SmithyNameResolver.getGoModuleNameForSdkNamespace(
-              serviceShape.getId().getNamespace()
+      if (serviceShape.hasTrait(ServiceTrait.class)) {
+        writer.addImport(
+          SmithyNameResolver.getGoModuleNameForSdkNamespace(
+            serviceShape.getId().getNamespace()
+          )
+        );
+        return """
+        shim, ok := %1$s.(*%2$swrapped.Shim)
+        if !ok {
+            panic("Not able to convert client to native")
+        }
+        return shim.Client
+        """.formatted(
+            dataSource,
+            DafnyNameResolver.dafnyNamespace(
+              resourceOrService.expectTrait(ServiceTrait.class)
             )
           );
-          return """
-          shim, ok := %1$s.(*%2$swrapped.Shim)
-          if !ok {
-              panic("Not able to convert client to native")
-          }
-          return *shim.Client
-          """.formatted(
-              dataSource,
-              DafnyNameResolver.dafnyNamespace(
-                resourceOrService.expectTrait(ServiceTrait.class)
-              )
-            );
-        } else {
-          return "return %1$s{%2$s}".formatted(
-              namespace.concat(
-                context.symbolProvider().toSymbol(serviceShape).getName()
-              ),
-              dataSource
-            );
-        }
+      }
+      if (!this.isOptional) {
+        return "return %1$s{%2$s}".formatted(
+            namespace.concat(
+              context.symbolProvider().toSymbol(serviceShape).getName()
+            ),
+            dataSource
+          );
       }
       return """
       return func () *%s {
