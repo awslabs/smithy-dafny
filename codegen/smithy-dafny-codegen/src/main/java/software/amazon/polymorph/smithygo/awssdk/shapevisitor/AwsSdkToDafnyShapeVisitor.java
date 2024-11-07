@@ -654,15 +654,36 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
   public String timestampShape(final TimestampShape shape) {
     writer.addImport("time");
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
-    var conversionCode =
-      "dafny.SeqOfChars([]dafny.Char(%s.Format(\"2006-01-02T15:04:05.999999Z\"))...)".formatted(
-          dataSource
-        );
+
+    String nilWrapIfRequired = "dafny.SeqOf()";
+    String someWrapIfRequired = "%s";
+    String returnType = "dafny.Sequence";
     if (this.isOptional) {
-      return "Wrappers.Companion_Option_.Create_Some_(%s)".formatted(
-          conversionCode
-        );
+      nilWrapIfRequired = "Wrappers.Companion_Option_.Create_None_()";
+      someWrapIfRequired = "Wrappers.Companion_Option_.Create_Some_(%s)";
+      returnType = "Wrappers.Option";
     }
+
+    var nilCheck = "";
+    if (isPointerType) {
+      nilCheck =
+        "if %s == nil {return %s}".formatted(dataSource, nilWrapIfRequired);
+    }
+
+    var conversionCode =
+      """
+      func () %s {
+        %s
+        formattedTime := %s.Format(\"2006-01-02T15:04:05.999999Z\")
+        return %s
+      }()""".formatted(
+          returnType,
+          nilCheck,
+          dataSource,
+          someWrapIfRequired.formatted(
+            "dafny.SeqOfChars([]dafny.Char(formattedTime)...)"
+          )
+        );
     return conversionCode;
   }
 }
