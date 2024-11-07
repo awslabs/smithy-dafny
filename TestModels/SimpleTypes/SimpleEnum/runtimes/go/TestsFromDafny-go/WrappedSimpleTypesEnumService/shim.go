@@ -5,7 +5,6 @@ package WrappedSimpleTypesEnumService
 import (
 	"context"
 
-	"github.com/dafny-lang/DafnyRuntimeGo/v4/dafny"
 	"github.com/dafny-lang/DafnyStandardLibGo/Wrappers"
 	"github.com/smithy-lang/smithy-dafny/TestModels/SimpleTypes/SimpleEnum/SimpleTypesSmithyEnumTypes"
 	"github.com/smithy-lang/smithy-dafny/TestModels/SimpleTypes/SimpleEnum/simpletypessmithyenumsmithygenerated"

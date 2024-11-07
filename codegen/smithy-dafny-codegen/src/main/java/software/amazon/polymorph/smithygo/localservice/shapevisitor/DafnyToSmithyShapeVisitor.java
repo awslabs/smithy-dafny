@@ -562,7 +562,10 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
             SmithyNameResolver.smithyTypesNamespace(shape),
             context.symbolProvider().toSymbol(shape).getName(),
             dataSource,
-            context.symbolProvider().toSymbol(shape).getName(),
+            DafnyNameResolver.getDafnyType(
+              shape,
+              context.symbolProvider().toSymbol(shape)
+            ),
             DafnyNameResolver.getDafnyCompanionStructType(
               shape,
               context.symbolProvider().toSymbol(shape)
