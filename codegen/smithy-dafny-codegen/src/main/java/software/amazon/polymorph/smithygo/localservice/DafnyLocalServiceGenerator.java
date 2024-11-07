@@ -640,18 +640,22 @@ public class DafnyLocalServiceGenerator implements Runnable {
         operationShape.getInputShape(),
         StructureShape.class
       );
-      writerDelegator.useShapeWriter(
-        inputShape,
-        w -> new StructureGenerator(context, w, inputShape).run()
-      );
+      if (!inputShape.hasTrait(UnitTypeTrait.class)) {
+        writerDelegator.useShapeWriter(
+          inputShape,
+          w -> new StructureGenerator(context, w, inputShape).run()
+        );
+      }
       StructureShape outputShape = model.expectShape(
         operationShape.getOutputShape(),
         StructureShape.class
       );
-      writerDelegator.useShapeWriter(
-        outputShape,
-        w -> new StructureGenerator(context, w, outputShape).run()
-      );
+      if (!outputShape.hasTrait(UnitTypeTrait.class)) {
+        writerDelegator.useShapeWriter(
+          outputShape,
+          w -> new StructureGenerator(context, w, outputShape).run()
+        );
+      }
     }
   }
 
