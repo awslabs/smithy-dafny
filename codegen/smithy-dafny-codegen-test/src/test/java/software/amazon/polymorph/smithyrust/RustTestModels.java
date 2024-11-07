@@ -18,34 +18,25 @@ class RustTestModels extends TestModelTest {
   static {
     DISABLED_TESTS.add("AggregateReferences");
     DISABLED_TESTS.add("CodegenPatches");
-    DISABLED_TESTS.add("Constraints");
-    DISABLED_TESTS.add("Constructor");
     DISABLED_TESTS.add("Dependencies");
-    DISABLED_TESTS.add("Documentation");
-    DISABLED_TESTS.add("Errors");
-    DISABLED_TESTS.add("Extendable");
     DISABLED_TESTS.add("Extern");
-    DISABLED_TESTS.add("LanguageSpecificLogic");
-    DISABLED_TESTS.add("LocalService");
-    DISABLED_TESTS.add("MultipleModels");
-    DISABLED_TESTS.add("Positional");
     DISABLED_TESTS.add("SimpleTypes/BigDecimal");
     DISABLED_TESTS.add("SimpleTypes/BigInteger");
     DISABLED_TESTS.add("SimpleTypes/SimpleByte");
     DISABLED_TESTS.add("SimpleTypes/SimpleFloat");
     DISABLED_TESTS.add("SimpleTypes/SimpleShort");
-    DISABLED_TESTS.add("SimpleTypes/SimpleTimestamp");
-    DISABLED_TESTS.add("aws-sdks/ddb");
+    DISABLED_TESTS.add("SQSExtended");
     DISABLED_TESTS.add("aws-sdks/glue");
     DISABLED_TESTS.add("aws-sdks/lakeformation");
-    DISABLED_TESTS.add("aws-sdks/kms");
     DISABLED_TESTS.add("aws-sdks/sqs");
     DISABLED_TESTS.add("aws-sdks/sqs-via-cli");
+    // S3 is not yet supported
+    DISABLED_TESTS.add("aws-sdks/s3");
   }
 
   @ParameterizedTest
   @MethodSource("discoverTestModels")
-  void testModelsForDotnet(String relativeTestModelPath) {
+  void testModelsForRust(String relativeTestModelPath) {
     Assumptions.assumeFalse(DISABLED_TESTS.contains(relativeTestModelPath));
 
     Path testModelPath = getTestModelPath(relativeTestModelPath);
@@ -55,8 +46,8 @@ class RustTestModels extends TestModelTest {
     make(testModelPath, "transpile_rust");
     make(testModelPath, "polymorph_rust");
     make(testModelPath, "test_rust");
-    // Since we're checking in and patching code,
-    // make sure the patch files are up to date.
+    // Since we're checking in generated (or benerated) code,
+    // make sure the state matches what's checked in.
     make(testModelPath, "check_polymorph_diff");
   }
 }

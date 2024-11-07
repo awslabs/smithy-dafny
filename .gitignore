@@ -3,12 +3,16 @@
 /.history
 /.smithy.lsp.log
 *.pyc
-*/**/.idea
 
 */**/.idea
 /codegen/smithy-dafny-codegen/bin
 /codegen/smithy-dafny-codegen-cli/bin
 /smithy-dafny-conversion/bin
 
-# NPM
-**/node_modules
+.project
+.classpath
+.settings
+.class
+
+# Added by formatting tooling
+node_modules

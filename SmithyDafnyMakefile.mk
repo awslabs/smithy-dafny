@@ -39,7 +39,7 @@ VERIFY_TIMEOUT := 100
 
 # This evaluates to the path of the current working directory.
 # i.e. The specific library under consideration.
-LIBRARY_ROOT := $(shell pwd)
+LIBRARY_ROOT := $(CURDIR)
 # Smithy Dafny code gen needs to know
 # where the smithy model is.
 # This is generally in the same directory as the library.
@@ -56,14 +56,16 @@ SMITHY_MODEL_ROOT := $(LIBRARY_ROOT)/Model
 CODEGEN_CLI_ROOT := $(SMITHY_DAFNY_ROOT)/codegen/smithy-dafny-codegen-cli
 GRADLEW := $(SMITHY_DAFNY_ROOT)/codegen/gradlew
 
-########################## Dafny targets
+include $(SMITHY_DAFNY_ROOT)/SmithyDafnySedMakefile.mk
 
-# TODO: This target will not work for projects that use `replaceable` 
-#       module syntax with multiple language targets.
-# It will fail with error:
-# Error: modules 'A' and 'B' both have CompileName 'same.extern.name'
-# We need to come up with some way to verify files per-language.
-# Rewrite this as part of Java implementation of LanguageSpecificLogic TestModel.
+# This flag enables pre-processing on extern module names.
+# This pre-processing is required to compile to Python and Go.
+# This is disabled by default.
+# This should be enabled in each individual project's Makefile if that project compiles to Python or Go.
+# This can be enabled by setting this variable to any nonempty value (ex. true, 1)
+ENABLE_EXTERN_PROCESSING?=
+
+########################## Dafny targets
 
 # Proof of correctness for the math below
 #  function Z3_PROCESSES(cpus:nat): nat
@@ -80,47 +82,47 @@ GRADLEW := $(SMITHY_DAFNY_ROOT)/codegen/gradlew
 # Verify the entire project
 verify:Z3_PROCESSES=$(shell echo $$(( $(CORES) >= 3 ? 2 : 1 )))
 verify:DAFNY_PROCESSES=$(shell echo $$(( ($(CORES) - 1 ) / ($(CORES) >= 3 ? 2 : 1))))
+# TODO: remove dafny_options from all targets in the future
+# and leave it up to the UX to decide which options they want to add
+verify:DAFNY_OPTIONS=--allow-warnings
 verify:
-	find . -name '*.dfy' | xargs -n 1 -P $(DAFNY_PROCESSES) -I % dafny \
-		-vcsCores:$(Z3_PROCESSES) \
-		-compile:0 \
-		-definiteAssignment:3 \
-		-unicodeChar:0 \
-		-functionSyntax:3 \
-		-verificationLogger:csv \
-		-timeLimit:$(VERIFY_TIMEOUT) \
-		-rlimit:$(MAX_RESOURCE_COUNT) \
+	find . -name '*.dfy' | xargs -n 1 -P $(DAFNY_PROCESSES) -I % dafny verify \
+		--cores $(Z3_PROCESSES) \
+		--unicode-char false \
+		--function-syntax 3 \
+		--log-format csv \
+		--verification-time-limit $(VERIFY_TIMEOUT) \
+		--resource-limit $(MAX_RESOURCE_COUNT) \
 		$(DAFNY_OPTIONS) \
 		%
 
 # Verify single file FILE with text logger.
 # This is useful for debugging resource count usage within a file.
 # Use PROC to further scope the verification
+verify_single:DAFNY_OPTIONS=--allow-warnings
 verify_single:
-	dafny \
-		-vcsCores:$(CORES) \
-		-compile:0 \
-		-definiteAssignment:3 \
-		-unicodeChar:0 \
-		-functionSyntax:3 \
-		-verificationLogger:text \
-		-timeLimit:$(VERIFY_TIMEOUT) \
-		-rlimit:$(MAX_RESOURCE_COUNT) \
+	dafny verify \
+		--cores $(CORES) \
+		--unicode-char false \
+		--function-syntax 3 \
+		--log-format text \
+		--verification-time-limit $(VERIFY_TIMEOUT) \
+		--resource-limit $(MAX_RESOURCE_COUNT) \
 		$(DAFNY_OPTIONS) \
 		$(if ${PROC},-proc:*$(PROC)*,) \
 		$(FILE)
 
 #Verify only a specific namespace at env var $(SERVICE)
+verify_service:DAFNY_OPTIONS=--allow-warnings
 verify_service:
 	@: $(if ${SERVICE},,$(error You must pass the SERVICE to generate for));
-	dafny \
-		-vcsCores:$(CORES) \
-		-compile:0 \
-		-definiteAssignment:3 \
-		-unicodeChar:0 \
-		-functionSyntax:3 \
-		-verificationLogger:csv \
-		-timeLimit:$(VERIFY_TIMEOUT) \
+	dafny verify \
+		--cores $(CORES) \
+		--unicode-char false \
+		--function-syntax 3 \
+		--log-format text \
+		--verification-time-limit $(VERIFY_TIMEOUT) \
+		--resource-limit $(MAX_RESOURCE_COUNT) \
 		$(DAFNY_OPTIONS) \
 		`find ./dafny/$(SERVICE) -name '*.dfy'` \
 
@@ -155,7 +157,8 @@ clean-dafny-report:
 # For each index file listed in the project Makefile's PROJECT_INDEX variable,
 #   append a `-library:TestModels/$(PROJECT_INDEX) to the transpiliation target
 _transpile_implementation_all: TRANSPILE_DEPENDENCIES=$(patsubst %, --library:$(PROJECT_ROOT)/%, $(PROJECT_INDEX))
-_transpile_implementation_all: transpile_implementation
+_transpile_implementation_all: transpile_implementation 
+
 
 # The `$(OUT)` and $(TARGET) variables are problematic.
 # Ideally they are different for every target call.
@@ -180,12 +183,6 @@ _transpile_implementation_all: transpile_implementation
 # If this variable is not provided, assume the project does not have `replaceable` modules,
 #   and look for `Index.dfy` in the `src/` directory.
 transpile_implementation: SRC_INDEX_TRANSPILE=$(if $(SRC_INDEX),$(SRC_INDEX),src)
-transpile_implementation:
-	ifeq ($(TARGET), py)
-		COMPILE_SUFFIX_OPTION := -compileSuffix:0
-	else
-		COMPILE_SUFFIX_OPTION := -compileSuffix:1
-	endif
 # At this time it is *significatly* faster
 # to give Dafny a single file
 # that includes everything
@@ -202,13 +199,13 @@ transpile_implementation:
 		--optimize-erasable-datatype-wrapper:false \
 		--unicode-char:false \
 		--function-syntax:3 \
-		--allow-warnings \
 		--output $(OUT) \
+		$(DAFNY_OPTIONS) \
+		$(DAFNY_OTHER_FILES) \
 		$(TRANSPILE_MODULE_NAME) \
 		$(if $(strip $(STD_LIBRARY)) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/src/Index.dfy, ) \
 		$(TRANSLATION_RECORD) \
 		$(TRANSPILE_DEPENDENCIES)
-
 
 # If the project under transpilation uses `replaceable` modules,
 #   it MUST define a SRC_INDEX variable per language.
@@ -231,25 +228,18 @@ _transpile_test_all: TRANSPILE_DEPENDENCIES=$(if ${DIR_STRUCTURE_V2}, $(patsubst
 # Transpile the entire project's tests
 _transpile_test_all: transpile_test
 
-# `find` looks for tests in either V1 or V2-styled project directories (single vs. multiple model files).
-transpile_test:
-	ifeq ($(TARGET), py)
-		COMPILE_SUFFIX_OPTION := -compileSuffix:0
-	else
-		COMPILE_SUFFIX_OPTION := -compileSuffix:1
-	endif
 transpile_test:
 	find ./dafny/**/$(TEST_INDEX_TRANSPILE) ./$(TEST_INDEX_TRANSPILE) -name "*.dfy" -name '*.dfy' | sed -e 's/^/include "/' -e 's/$$/"/' | dafny \
 		translate $(TARGET) \
 		--stdin \
 		--no-verify \
 		--cores:$(CORES) \
-		--include-test-runner \
 		--optimize-erasable-datatype-wrapper:false \
 		--unicode-char:false \
 		--function-syntax:3 \
-		--allow-warnings \
 		--output $(OUT) \
+		$(DAFNY_OPTIONS) \
+		$(DAFNY_OTHER_FILES) \
 		$(if $(strip $(STD_LIBRARY)) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/src/Index.dfy, ) \
 		$(TRANSLATION_RECORD) \
 		$(SOURCE_TRANSLATION_RECORD) \
@@ -261,7 +251,14 @@ transpile_dependencies:
 	$(if $(strip $(STD_LIBRARY)), $(MAKE) -C $(PROJECT_ROOT)/$(STD_LIBRARY) transpile_implementation_$(LANG), )
 	$(patsubst %, $(MAKE) -C $(PROJECT_ROOT)/% transpile_implementation_$(LANG);, $(PROJECT_DEPENDENCIES))
 
+transpile_dependencies_test:
+	$(if $(strip $(STD_LIBRARY)), $(MAKE) -C $(PROJECT_ROOT)/$(STD_LIBRARY) transpile_test_$(LANG), )
+	$(patsubst %, $(MAKE) -C $(PROJECT_ROOT)/% transpile_test_$(LANG);, $(PROJECT_DEPENDENCIES))
+
 ########################## Code-Gen targets
+
+mvn_local_deploy_polymorph_dependencies:
+	$(MAKE) -C $(SMITHY_DAFNY_ROOT) mvn_local_deploy_polymorph_dependencies
 
 # The OUTPUT variables are created this way
 # so that it is possible to run _parts_ of polymorph.
@@ -273,10 +270,10 @@ transpile_dependencies:
 #   make polymorph_code_gen CODEGEN_CLI_ROOT=/path/to/smithy-dafny/codegen/smithy-dafny-codegen-cli
 # StandardLibrary is filtered out from dependent-model patsubst list;
 #   Its model is contained in $(LIBRARY_ROOT)/model, not $(LIBRARY_ROOT)/../StandardLibrary/Model.
+_polymorph: mvn_local_deploy_polymorph_dependencies
 _polymorph:
 	cd $(CODEGEN_CLI_ROOT); \
 	./../gradlew run --args="\
-	--dafny-version $(DAFNY_VERSION) \
 	--library-root $(LIBRARY_ROOT) \
 	--patch-files-dir $(if $(DIR_STRUCTURE_V2),$(LIBRARY_ROOT)/codegen-patches/$(SERVICE),$(LIBRARY_ROOT)/codegen-patches) \
 	--properties-file $(LIBRARY_ROOT)/project.properties \
@@ -292,17 +289,17 @@ _polymorph:
 	--dependent-model $(PROJECT_ROOT)/$(SMITHY_DEPS) \
 	$(patsubst %, --dependent-model $(PROJECT_ROOT)/%/Model, $($(service_deps_var))) \
 	$(DEPENDENCY_MODULE_NAMES) \
-	--namespace $($(namespace_var)) \
+	$(patsubst %, --namespace %, $($(namespace_var))) \
 	$(OUTPUT_LOCAL_SERVICE_$(SERVICE)) \
 	$(AWS_SDK_CMD) \
 	$(POLYMORPH_OPTIONS) \
 	";
 
+_polymorph_wrapped: mvn_local_deploy_polymorph_dependencies
 _polymorph_wrapped:
 	@: $(if ${CODEGEN_CLI_ROOT},,$(error You must pass the path CODEGEN_CLI_ROOT: CODEGEN_CLI_ROOT=/path/to/smithy-dafny/codegen/smithy-dafny-codegen-cli));
 	cd $(CODEGEN_CLI_ROOT); \
 	./../gradlew run --args="\
-	--dafny-version $(DAFNY_VERSION) \
 	--library-root $(LIBRARY_ROOT) \
 	--properties-file $(LIBRARY_ROOT)/project.properties \
 	$(INPUT_DAFNY) \
@@ -311,6 +308,7 @@ _polymorph_wrapped:
 	$(OUTPUT_JAVA_WRAPPED) \
 	$(OUTPUT_PYTHON_WRAPPED) \
 	$(MODULE_NAME) \
+	$(OUTPUT_RUST_WRAPPED) \
 	--model $(if $(DIR_STRUCTURE_V2),$(LIBRARY_ROOT)/dafny/$(SERVICE)/Model,$(LIBRARY_ROOT)/Model) \
 	--dependent-model $(PROJECT_ROOT)/$(SMITHY_DEPS) \
 	$(patsubst %, --dependent-model $(PROJECT_ROOT)/%/Model, $($(service_deps_var))) \
@@ -421,7 +419,7 @@ polymorph_python:
 
 _polymorph_python: OUTPUT_PYTHON=--output-python $(LIBRARY_ROOT)/runtimes/python/src/$(PYTHON_MODULE_NAME)/smithygenerated
 # Defined per-Makefile
-_polymorph_python: MODULE_NAME=--module-name $(PYTHON_MODULE_NAME)
+_polymorph_python: MODULE_NAME=--library-name $(PYTHON_MODULE_NAME)
 # Defined per-Makefile
 _polymorph_python: DEPENDENCY_MODULE_NAMES=$(PYTHON_DEPENDENCY_MODULE_NAMES)
 _polymorph_python: _polymorph
@@ -431,34 +429,38 @@ setup_prettier:
 	npm i --no-save prettier@3 prettier-plugin-java@2.5
 
 # Generates rust code for all namespaces in this project
-# Note that we rely on the patching feature of polymorph
-# to also patch the results of transpile_rust,
-# so we assume that is run first!
 .PHONY: polymorph_rust
-polymorph_rust: POLYMORPH_LANGUAGE_TARGET=rust
-polymorph_rust: _polymorph_dependencies
-polymorph_rust:
-	set -e; for service in $(PROJECT_SERVICES) ; do \
-		export service_deps_var=SERVICE_DEPS_$${service} ; \
-		export namespace_var=SERVICE_NAMESPACE_$${service} ; \
-		export SERVICE=$${service} ; \
-		$(MAKE) _polymorph_rust ; \
-	done
 
+polymorph_rust:
+	$(MAKE) _polymorph_rust
+
+_polymorph_rust: POLYMORPH_LANGUAGE_TARGET=rust
+_polymorph_rust: service_deps_var=SERVICE_DEPS_$(MAIN_SERVICE_FOR_RUST)
+_polymorph_rust: namespace_var=SERVICE_NAMESPACE_$(MAIN_SERVICE_FOR_RUST)
+_polymorph_rust: SERVICE=$(MAIN_SERVICE_FOR_RUST)
 _polymorph_rust: OUTPUT_RUST=--output-rust $(LIBRARY_ROOT)/runtimes/rust
-_polymorph_rust: _polymorph
+# For several TestModels we've just manually written the code generation target,
+# So we just want to ensure we can transpile and pass the tests in CI.
+# For those, make polymorph_rust should just be a no-op.
+_polymorph_rust: $(if $(RUST_BENERATED), , _polymorph)
 
 ########################## .NET targets
 
+net: polymorph_dafny transpile_net polymorph_dotnet test_net
+
+transpile_net: $(if $(ENABLE_EXTERN_PROCESSING), _with_extern_pre_transpile, )
 transpile_net: | transpile_implementation_net transpile_test_net transpile_dependencies_net
+transpile_net: $(if $(ENABLE_EXTERN_PROCESSING), _with_extern_post_transpile, )
 
 transpile_implementation_net: TARGET=cs
 transpile_implementation_net: OUT=runtimes/net/ImplementationFromDafny
+transpile_implementation_net: DAFNY_OPTIONS=--allow-warnings --include-test-runner --compile-suffix
 transpile_implementation_net: SRC_INDEX=$(NET_SRC_INDEX)
 transpile_implementation_net: _transpile_implementation_all
 
 transpile_test_net: SRC_INDEX=$(NET_SRC_INDEX)
 transpile_test_net: TEST_INDEX=$(NET_TEST_INDEX)
+transpile_test_net: DAFNY_OPTIONS=--allow-warnings --include-test-runner --compile-suffix
 transpile_test_net: TARGET=cs
 transpile_test_net: OUT=runtimes/net/tests/TestsFromDafny
 transpile_test_net: _transpile_test_all
@@ -495,16 +497,22 @@ format_net-check:
 
 ########################## Java targets
 
+java: polymorph_dafny transpile_java polymorph_java build_java test_java
+
 build_java: transpile_java mvn_local_deploy_dependencies
 	$(GRADLEW) -p runtimes/java build
 
+transpile_java: $(if $(ENABLE_EXTERN_PROCESSING), _with_extern_pre_transpile, )
 transpile_java: | transpile_implementation_java transpile_test_java transpile_dependencies_java
+transpile_java: $(if $(ENABLE_EXTERN_PROCESSING), _with_extern_post_transpile, )
 
 transpile_implementation_java: TARGET=java
+transpile_implementation_java: DAFNY_OPTIONS=--allow-warnings --include-test-runner --compile-suffix
 transpile_implementation_java: OUT=runtimes/java/ImplementationFromDafny
 transpile_implementation_java: _transpile_implementation_all _mv_implementation_java
 
 transpile_test_java: TARGET=java
+transpile_test_java: DAFNY_OPTIONS=--allow-warnings --include-test-runner --compile-suffix
 transpile_test_java: OUT=runtimes/java/TestsFromDafny
 transpile_test_java: _transpile_test_all _mv_test_java
 
@@ -513,6 +521,7 @@ transpile_test_java: _transpile_test_all _mv_test_java
 # To avoid `java/implementation-java` the code is generated and then moved.
 _mv_implementation_java:
 	rm -rf runtimes/java/src/main/dafny-generated
+	mkdir -p runtimes/java/src/main
 	mv runtimes/java/ImplementationFromDafny-java runtimes/java/src/main/dafny-generated
 _mv_test_java:
 	rm -rf runtimes/java/src/test/dafny-generated
@@ -545,45 +554,62 @@ test_java:
 
 ########################## Rust targets
 
-# TODO: Dafny test transpilation needs manual patching to work too,
-# which isn't a high priority at this stage,
-# so don't include transpile_test_rust for now.
-transpile_rust: | transpile_implementation_rust transpile_dependencies_rust
+rust: polymorph_dafny transpile_rust polymorph_rust test_rust
+
+# The Dafny Rust code generator only supports a single crate for everything,
+# so (among other consequences) we compile src and test code together.
+transpile_rust: | transpile_implementation_rust
 
 transpile_implementation_rust: TARGET=rs
 transpile_implementation_rust: OUT=implementation_from_dafny
 transpile_implementation_rust: SRC_INDEX=$(RUST_SRC_INDEX)
+transpile_implementation_rust: TEST_INDEX=$(RUST_TEST_INDEX)
 # The Dafny Rust code generator is not complete yet,
 # so we want to emit code even if there are unsupported features in the input.
-transpile_implementation_rust: DAFNY_OPTIONS=-emitUncompilableCode
-transpile_implementation_rust: _transpile_implementation_all _mv_implementation_rust
-
-transpile_test_rust: TARGET=rs
-transpile_test_rust: OUT=tests_from_dafny
-transpile_test_rust: SRC_INDEX=$(RUST_SRC_INDEX)
-transpile_test_rust: TEST_INDEX=$(RUST_TEST_INDEX)
-# The Dafny Rust code generator is not complete yet,
-# so we want to emit code even if there are unsupported features in the input.
-transpile_test_rust: DAFNY_OPTIONS=-emitUncompilableCode
-transpile_test_rust: _transpile_test_all _mv_test_rust
+transpile_implementation_rust: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix
+# The Dafny Rust code generator only supports a single crate for everything,
+# so we inline all dependencies by not passing `-library` to Dafny.
+transpile_implementation_rust: TRANSPILE_DEPENDENCIES=
+transpile_implementation_rust: STD_LIBRARY=
+transpile_implementation_rust: SRC_INDEX_TRANSPILE=$(if $(SRC_INDEX),$(SRC_INDEX),src)
+transpile_implementation_rust: TEST_INDEX_TRANSPILE=$(if $(TEST_INDEX),$(TEST_INDEX),test)
+transpile_implementation_rust: DAFNY_OTHER_FILES=$(RUST_OTHER_FILES)
+transpile_implementation_rust: $(if $(TRANSPILE_TESTS_IN_RUST), transpile_test, transpile_implementation) _mv_implementation_rust patch_after_transpile_rust
 
 transpile_dependencies_rust: LANG=rust
 transpile_dependencies_rust: transpile_dependencies
 
 _mv_implementation_rust:
-	rm -rf runtimes/rust/dafny_impl/src
-	mkdir -p runtimes/rust/dafny_impl/src
-# TODO: Currently need to insert an import of the the StandardLibrary.
-	python -c "import sys; data = sys.stdin.buffer.read(); sys.stdout.buffer.write(data.replace(b'\npub mod', b'\npub use dafny_standard_library::implementation_from_dafny::*;\n\npub mod', 1) if b'\npub mod' in data else data)" \
-	  < implementation_from_dafny-rust/src/implementation_from_dafny.rs > runtimes/rust/dafny_impl/src/implementation_from_dafny.rs
-	rustfmt runtimes/rust/dafny_impl/src/implementation_from_dafny.rs
+	mkdir -p runtimes/rust/src
+	mv implementation_from_dafny-rust/src/implementation_from_dafny.rs runtimes/rust/src/implementation_from_dafny.rs
+# rustfmt has a recurring bug where it leaves behind trailing spaces and then complains about it.
+# Pre-process the Dafny-generated Rust code to remove them.
+	sed -i -e 's/[[:space:]]*$$//' runtimes/rust/src/implementation_from_dafny.rs 
+	rm -f runtimes/rust/src/implementation_from_dafny.rs-e
+	rustfmt --edition 2021 runtimes/rust/src/implementation_from_dafny.rs
 	rm -rf implementation_from_dafny-rust
-_mv_test_rust:
-	rm -rf runtimes/rust/dafny_impl/tests
-	mkdir -p runtimes/rust/dafny_impl/tests
-	mv tests_from_dafny-rust/src/tests_from_dafny.rs runtimes/rust/dafny_impl/tests/tests_from_dafny.rs
-	rustfmt runtimes/rust/dafny_impl/tests/tests_from_dafny.rs
-	rm -rf tests_from_dafny-rust
+
+patch_after_transpile_rust:
+	export service_deps_var=SERVICE_DEPS_$(MAIN_SERVICE_FOR_RUST) ; \
+	export namespace_var=SERVICE_NAMESPACE_$(MAIN_SERVICE_FOR_RUST) ; \
+	export SERVICE=$(MAIN_SERVICE_FOR_RUST) ; \
+	$(MAKE) _patch_after_transpile_rust ; \
+
+_patch_after_transpile_rust: OUTPUT_RUST=--output-rust $(LIBRARY_ROOT)/runtimes/rust
+_patch_after_transpile_rust:
+	cd $(CODEGEN_CLI_ROOT); \
+	./../gradlew run --args="\
+	patch-after-transpile \
+	--library-root $(LIBRARY_ROOT) \
+	$(OUTPUT_RUST) \
+	--model $(if $(DIR_STRUCTURE_V2), $(LIBRARY_ROOT)/dafny/$(SERVICE)/Model, $(SMITHY_MODEL_ROOT)) \
+	--dependent-model $(PROJECT_ROOT)/$(SMITHY_DEPS) \
+	$(patsubst %, --dependent-model $(PROJECT_ROOT)/%/Model, $($(service_deps_var))) \
+	--namespace $($(namespace_var)) \
+	$(AWS_SDK_CMD) \
+	$(POLYMORPH_OPTIONS) \
+	$(if $(TRANSPILE_TESTS_IN_RUST), --local-service-test, ) \
+	";
 
 build_rust:
 	cd runtimes/rust; \
@@ -607,12 +633,35 @@ clean: _clean
 
 ########################## Python targets
 
-# Python MUST transpile dependencies first to generate .dtr files
-transpile_python: | transpile_dependencies_python transpile_implementation_python transpile_test_python
+# Install packages via `python3 -m pip`,
+# which is the syntax Smithy-Python and Smithy-Dafny Python use
+# to invoke these packages.
+# This helps ensure these packages are installed to the correct Python installation.
+setup_smithy_dafny_python:
+	python3 -m pip install docformatter black
 
+setup_python: setup_smithy_dafny_python
+setup_python:
+	python3 -m pip install poetry
+
+net: polymorph_dafny transpile_python polymorph_python test_python
+
+# Python MUST transpile dependencies first to generate .dtr files
+transpile_python: $(if $(ENABLE_EXTERN_PROCESSING), _no_extern_pre_transpile, )
+transpile_python: | transpile_dependencies_python transpile_implementation_python transpile_test_python
+transpile_python: $(if $(ENABLE_EXTERN_PROCESSING), _no_extern_post_transpile, )
+
+# This target should ONLY be used if you KNOW .dtr files are present.
+# This file will NOT transpile source code or source code dependencies,
+# so it will not re-generaate .dtr files.
+# The intended use case is to generate tests in release scripts without re-transpiling source code.
+transpile_only_test_python: $(if $(ENABLE_EXTERN_PROCESSING), _no_extern_pre_transpile, )
+transpile_only_test_python: transpile_test_python
+transpile_only_test_python: $(if $(ENABLE_EXTERN_PROCESSING), _no_extern_post_transpile, )
+
+transpile_implementation_python: DAFNY_OPTIONS=--allow-warnings --include-test-runner
 transpile_implementation_python: TARGET=py
 transpile_implementation_python: OUT=runtimes/python/dafny_src
-transpile_implementation_python: COMPILE_SUFFIX_OPTION=
 transpile_implementation_python: SRC_INDEX=$(PYTHON_SRC_INDEX)
 transpile_implementation_python: TRANSPILE_MODULE_NAME=--python-module-name=$(PYTHON_MODULE_NAME).internaldafny.generated
 transpile_implementation_python: TRANSLATION_RECORD=$(TRANSLATION_RECORD_PYTHON)
@@ -620,7 +669,7 @@ transpile_implementation_python: _transpile_implementation_all _mv_implementatio
 
 transpile_test_python: TARGET=py
 transpile_test_python: OUT=runtimes/python/dafny_test
-transpile_test_python: COMPILE_SUFFIX_OPTION=
+transpile_test_python: DAFNY_OPTIONS=--allow-warnings --include-test-runner
 transpile_test_python: SRC_INDEX=$(PYTHON_SRC_INDEX)
 transpile_test_python: TEST_INDEX=$(PYTHON_TEST_INDEX)
 transpile_test_python: TRANSLATION_RECORD=$(TRANSLATION_RECORD_PYTHON)
@@ -671,12 +720,28 @@ local_transpile_impl_net_single: TARGET=cs
 local_transpile_impl_net_single: OUT=runtimes/net/ImplementationFromDafny
 local_transpile_impl_net_single: local_transpile_impl_single
 
+local_transpile_impl_rust_single: TARGET=rs
+local_transpile_impl_rust_single: OUT=implementation_from_dafny
+local_transpile_impl_rust_single: SRC_INDEX=$(RUST_SRC_INDEX)
+local_transpile_impl_rust_single: TEST_INDEX=$(RUST_TEST_INDEX)
+local_transpile_impl_rust_single: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix
+local_transpile_impl_rust_single: TRANSPILE_DEPENDENCIES=
+local_transpile_impl_rust_single: STD_LIBRARY=
+local_transpile_impl_rust_single: SRC_INDEX_TRANSPILE=$(if $(SRC_INDEX),$(SRC_INDEX),src)
+local_transpile_impl_rust_single: TEST_INDEX_TRANSPILE=$(if $(TEST_INDEX),$(TEST_INDEX),test)
+local_transpile_impl_rust_single: DAFNY_OTHER_FILES=$(RUST_OTHER_FILES)
+local_transpile_impl_rust_single: deps_var=SERVICE_DEPS_$(SERVICE)
+local_transpile_impl_rust_single: service_deps_var=SERVICE_DEPS_$(SERVICE)
+local_transpile_impl_rust_single: namespace_var=SERVICE_NAMESPACE_$(SERVICE)
+local_transpile_impl_rust_single: $(if $(TRANSPILE_TESTS_IN_RUST), transpile_test, transpile_implementation) _mv_implementation_rust _patch_after_transpile_rust
+
+
 local_transpile_impl_single: deps_var=SERVICE_DEPS_$(SERVICE)
 local_transpile_impl_single: TRANSPILE_TARGETS=./dafny/$(SERVICE)/src/$(FILE)
 local_transpile_impl_single: TRANSPILE_DEPENDENCIES= \
-		$(patsubst %, -library:$(PROJECT_ROOT)/%/src/Index.dfy, $($(deps_var))) \
-		$(patsubst %, -library:$(PROJECT_ROOT)/%, $(PROJECT_INDEX)) \
-		-library:$(PROJECT_ROOT)/$(STD_LIBRARY)/src/Index.dfy
+		$(patsubst %, --library:$(PROJECT_ROOT)/%/src/Index.dfy, $($(deps_var))) \
+		$(patsubst %, --library:$(PROJECT_ROOT)/%, $(PROJECT_INDEX)) \
+		--library:$(PROJECT_ROOT)/$(STD_LIBRARY)/src/Index.dfy
 local_transpile_impl_single: transpile_implementation
 
 # Targets to transpile single local service for convenience.
@@ -700,3 +765,15 @@ local_transpile_test_single: TRANSPILE_DEPENDENCIES= \
 		$(patsubst %, -library:$(PROJECT_ROOT)/%, $(PROJECT_INDEX)) \
 		-library:$(PROJECT_ROOT)/$(STD_LIBRARY)/src/Index.dfy
 local_transpile_test_single: transpile_test
+
+# Targets to polymorph a single local service for convenience.
+# Specify the local service to build by passing a SERVICE env var.
+
+local_polymorph_rust_single: POLYMORPH_LANGUAGE_TARGET=rust
+local_polymorph_rust_single: OUTPUT_RUST=--output-rust $(LIBRARY_ROOT)/runtimes/rust
+local_polymorph_rust_single: local_polymorph_single
+
+local_polymorph_single: service_deps_var=SERVICE_DEPS_$(SERVICE)
+local_polymorph_single: namespace_var=SERVICE_NAMESPACE_$(SERVICE)
+local_polymorph_single: PROJECT_DEPENDENCIES=
+local_polymorph_single: _polymorph

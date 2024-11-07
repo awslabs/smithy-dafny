@@ -29,6 +29,7 @@ import software.amazon.smithy.model.shapes.StructureShape;
 import software.amazon.smithy.model.shapes.TimestampShape;
 import software.amazon.smithy.model.shapes.UnionShape;
 import software.amazon.smithy.model.traits.EnumTrait;
+import software.amazon.smithy.model.traits.StreamingTrait;
 import software.amazon.smithy.python.codegen.GenerationContext;
 import software.amazon.smithy.python.codegen.PythonWriter;
 
@@ -37,6 +38,7 @@ import software.amazon.smithy.python.codegen.PythonWriter;
  * kwarg-indexed dictionary to the corresponding Dafny shape's internal attributes.
  */
 public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
+
   private final GenerationContext context;
   private final PythonWriter writer;
   private final String dataSource;
@@ -49,7 +51,10 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
    *     from
    */
   public AwsSdkToDafnyShapeVisitor(
-      GenerationContext context, String dataSource, PythonWriter writer) {
+    GenerationContext context,
+    String dataSource,
+    PythonWriter writer
+  ) {
     this.context = context;
     this.dataSource = dataSource;
     this.writer = writer;
@@ -59,13 +64,21 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
   protected String getDefault(Shape shape) {
     String protocolName = context.protocolGenerator().getName();
     throw new CodegenException(
-        String.format(
-            "Unsupported conversion of %s to %s using the %s protocol",
-            shape, shape.getType(), protocolName));
+      String.format(
+        "Unsupported conversion of %s to %s using the %s protocol",
+        shape,
+        shape.getType(),
+        protocolName
+      )
+    );
   }
 
   @Override
   public String blobShape(BlobShape shape) {
+    // if it's a streaming blob, read it first
+    if (shape.hasTrait(StreamingTrait.class)) {
+      return "Seq(" + dataSource + ".read())";
+    }
     writer.addStdlibImport("_dafny", "Seq");
     return "Seq(" + dataSource + ")";
   }
@@ -79,25 +92,33 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
 
     // Conditionally write to/from conversion functions for structureShape
     AwsSdkToDafnyConversionFunctionWriter.writeConverterForShapeAndMembers(
-        structureShape, context, writer);
+      structureShape,
+      context,
+      writer
+    );
     DafnyToAwsSdkConversionFunctionWriter.writeConverterForShapeAndMembers(
-        structureShape, context, writer);
+      structureShape,
+      context,
+      writer
+    );
 
     // Import the conversion function module from where the ShapeVisitor was called
     String pythonModuleName =
-        SmithyNameResolver.getPythonModuleSmithygeneratedPathForSmithyNamespace(
-            structureShape.getId().getNamespace(), context);
+      SmithyNameResolver.getPythonModuleSmithygeneratedPathForSmithyNamespace(
+        structureShape.getId().getNamespace(),
+        context
+      );
     writer.addStdlibImport(pythonModuleName + ".aws_sdk_to_dafny");
 
     // Return a reference to the generated conversion method
     // ex. for shape example.namespace.ExampleShape
     // returns
     // `example_namespace.smithygenerated.aws_sdk_to_dafny.example_namespace_ExampleShape(input)`
-    return "%1$s.aws_sdk_to_dafny.%2$s(%3$s)"
-        .formatted(
-            pythonModuleName,
-            AwsSdkNameResolver.getAwsSdkToDafnyFunctionNameForShape(structureShape),
-            dataSource);
+    return "%1$s.aws_sdk_to_dafny.%2$s(%3$s)".formatted(
+        pythonModuleName,
+        AwsSdkNameResolver.getAwsSdkToDafnyFunctionNameForShape(structureShape),
+        dataSource
+      );
   }
 
   @Override
@@ -110,19 +131,25 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     // `Seq([`
     builder.append("Seq([");
     MemberShape memberShape = shape.getMember();
-    final Shape targetShape = context.model().expectShape(memberShape.getTarget());
+    final Shape targetShape = context
+      .model()
+      .expectShape(memberShape.getTarget());
 
     // Add converted list elements into the list:
     // `Seq([`SmithyToDafny(list_element)``
     builder.append(
-        "%1$s"
-            .formatted(
-                targetShape.accept(
-                    new AwsSdkToDafnyShapeVisitor(context, "list_element", writer))));
+      "%1$s".formatted(
+          targetShape.accept(
+            new AwsSdkToDafnyShapeVisitor(context, "list_element", writer)
+          )
+        )
+    );
 
     // Close structure
     // `Seq([`SmithyToDafny(list_element)` for list_element in `dataSource`])``
-    return builder.append(" for list_element in %1$s])".formatted(dataSource)).toString();
+    return builder
+      .append(" for list_element in %1$s])".formatted(dataSource))
+      .toString();
   }
 
   @Override
@@ -135,27 +162,39 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     // `Map({`
     builder.append("Map({");
     MemberShape keyMemberShape = shape.getKey();
-    final Shape keyTargetShape = context.model().expectShape(keyMemberShape.getTarget());
+    final Shape keyTargetShape = context
+      .model()
+      .expectShape(keyMemberShape.getTarget());
     MemberShape valueMemberShape = shape.getValue();
-    final Shape valueTargetShape = context.model().expectShape(valueMemberShape.getTarget());
+    final Shape valueTargetShape = context
+      .model()
+      .expectShape(valueMemberShape.getTarget());
 
     // Write converted map keys into the map:
     // `{`SmithyToDafny(key)`:`
     builder.append(
-        "%1$s: "
-            .formatted(
-                keyTargetShape.accept(new AwsSdkToDafnyShapeVisitor(context, "key", writer))));
+      "%1$s: ".formatted(
+          keyTargetShape.accept(
+            new AwsSdkToDafnyShapeVisitor(context, "key", writer)
+          )
+        )
+    );
 
     // Write converted map values into the map:
     // `{`SmithyToDafny(key)`: `SmithyToDafny(value)``
     builder.append(
-        "%1$s"
-            .formatted(
-                valueTargetShape.accept(new AwsSdkToDafnyShapeVisitor(context, "value", writer))));
+      "%1$s".formatted(
+          valueTargetShape.accept(
+            new AwsSdkToDafnyShapeVisitor(context, "value", writer)
+          )
+        )
+    );
 
     // Complete map comprehension and close map
     // `{`SmithyToDafny(key)`: `SmithyToDafny(value)`` for (key, value) in `dataSource`.items() }`
-    return builder.append(" for (key, value) in %1$s.items() })".formatted(dataSource)).toString();
+    return builder
+      .append(" for (key, value) in %1$s.items() })".formatted(dataSource))
+      .toString();
   }
 
   @Override
@@ -169,12 +208,15 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
 
     // String shapes with the enum trait are treated as EnumShapes
     if (shape.hasTrait(EnumTrait.class)) {
-      return enumShape(
-        EnumShape.fromStringShape(shape).get()
-      );
+      return enumShape(EnumShape.fromStringShape(shape).get());
     }
 
-    return "Seq(" + dataSource + ")";
+    // Convert native Python string to Dafny Seq of UTF-16 characters
+    // TODO: This is a long conversion that is used often in generated code, since this is written for *all* strings.
+    // This should be refactored into the conversionwriter package.
+    return "Seq(''.join([chr(int.from_bytes(pair, 'big')) for pair in zip(*[iter(%1$s.encode('utf-16-be'))]*2)]))".formatted(
+        dataSource
+      );
   }
 
   @Override
@@ -220,58 +262,72 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
   @Override
   public String enumShape(EnumShape shape) {
     DafnyToAwsSdkConversionFunctionWriter.writeConverterForShapeAndMembers(
-            shape, context, writer);
+      shape,
+      context,
+      writer
+    );
     AwsSdkToDafnyConversionFunctionWriter.writeConverterForShapeAndMembers(
-            shape, context, writer);
+      shape,
+      context,
+      writer
+    );
 
     // Import the dafny_to_aws_sdk converter from where the ShapeVisitor was called
     String pythonModuleSmithygeneratedPath =
-            SmithyNameResolver.getPythonModuleSmithygeneratedPathForSmithyNamespace(
-                    shape.getId().getNamespace(), context);
-    writer.addStdlibImport(pythonModuleSmithygeneratedPath + ".aws_sdk_to_dafny");
+      SmithyNameResolver.getPythonModuleSmithygeneratedPathForSmithyNamespace(
+        shape.getId().getNamespace(),
+        context
+      );
+    writer.addStdlibImport(
+      pythonModuleSmithygeneratedPath + ".aws_sdk_to_dafny"
+    );
 
     // Return a reference to the generated conversion method
     // ex. for shape example.namespace.ExampleShape
     // returns
     // `example_namespace.smithygenerated.dafny_to_aws_sdk.DafnyToAwsSdk_example_namespace_ExampleShape(input)`
-    return "%1$s.aws_sdk_to_dafny.%2$s(%3$s)"
-            .formatted(
-                    pythonModuleSmithygeneratedPath,
-                    AwsSdkNameResolver.getAwsSdkToDafnyFunctionNameForShape(shape),
-                    dataSource);
-}
+    return "%1$s.aws_sdk_to_dafny.%2$s(%3$s)".formatted(
+        pythonModuleSmithygeneratedPath,
+        AwsSdkNameResolver.getAwsSdkToDafnyFunctionNameForShape(shape),
+        dataSource
+      );
+  }
 
   @Override
   public String timestampShape(TimestampShape shape) {
-    // TODO-Python: This lets code generate, but will fail when code uses it.
-    // This is currently not needed for the Crypto Tools ESDK.
-    // The ESDK's integration with the MPL does not call any DDB/KMS APIs that use TimestampShapes.
-    // However, this is needed for the Crypto Tools DBESDK, which does call APIs that use TimestampShapes.
-    // This will need to be implemented as part of DBESDK, or some other use case.
-    return "TypeError(\"TimestampShape not supported\")";
+    writer.addStdlibImport("_dafny");
+    return "_dafny.Seq(%1$s.isoformat())".formatted(dataSource);
   }
 
   @Override
   public String unionShape(UnionShape unionShape) {
     DafnyToAwsSdkConversionFunctionWriter.writeConverterForShapeAndMembers(
-        unionShape, context, writer);
+      unionShape,
+      context,
+      writer
+    );
     AwsSdkToDafnyConversionFunctionWriter.writeConverterForShapeAndMembers(
-        unionShape, context, writer);
+      unionShape,
+      context,
+      writer
+    );
 
     // Import the converter from where the ShapeVisitor was called
     String pythonModuleName =
-        SmithyNameResolver.getPythonModuleSmithygeneratedPathForSmithyNamespace(
-            unionShape.getId().getNamespace(), context);
+      SmithyNameResolver.getPythonModuleSmithygeneratedPathForSmithyNamespace(
+        unionShape.getId().getNamespace(),
+        context
+      );
     writer.addStdlibImport(pythonModuleName + ".aws_sdk_to_dafny");
 
     // Return a reference to the generated conversion method
     // ex. for shape example.namespace.ExampleShape
     // returns
     // `example_namespace.smithygenerated.aws_sdk_to_dafny.example_namespace_ExampleShape(input)`
-    return "%1$s.aws_sdk_to_dafny.%2$s(%3$s)"
-        .formatted(
-            pythonModuleName,
-            AwsSdkNameResolver.getAwsSdkToDafnyFunctionNameForShape(unionShape),
-            dataSource);
+    return "%1$s.aws_sdk_to_dafny.%2$s(%3$s)".formatted(
+        pythonModuleName,
+        AwsSdkNameResolver.getAwsSdkToDafnyFunctionNameForShape(unionShape),
+        dataSource
+      );
   }
 }

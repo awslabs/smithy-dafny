@@ -1,18 +1,18 @@
 [tool.poetry]
-name = "standard-library"
+name = "smithy-dafny-standard-library"
 version = "0.1.0"
 description = ""
 authors = ["AWS <aws-arg-dafny@amazon.com>"]
 packages = [
-    { include = "standard_library", from = "src" },
+    { include = "smithy_dafny_standard_library", from = "src" },
 ]
 # Include all of the following .gitignored files in package distributions,
 # even though it is not included in version control
-include = ["**/smithygenerated/**/*.py", "**/internaldafny/generated/*.py"]
+include = ["**/internaldafny/generated/*.py"]
 
 [tool.poetry.dependencies]
 python = "^3.11.0"
-DafnyRuntimePython = "^4.4.0"
+DafnyRuntimePython = "^4.7.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.0"

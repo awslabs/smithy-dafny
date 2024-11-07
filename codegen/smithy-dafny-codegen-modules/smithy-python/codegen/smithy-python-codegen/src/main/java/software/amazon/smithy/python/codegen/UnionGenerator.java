@@ -26,14 +26,16 @@ import software.amazon.smithy.model.shapes.UnionShape;
 import software.amazon.smithy.model.traits.DocumentationTrait;
 import software.amazon.smithy.utils.StringUtils;
 
+import static java.lang.String.format;
+
 /**
  * Renders unions.
  */
-public final class UnionGenerator implements Runnable {
+public class UnionGenerator implements Runnable {
 
-    private final Model model;
-    private final SymbolProvider symbolProvider;
-    private final PythonWriter writer;
+    protected final Model model;
+    protected final SymbolProvider symbolProvider;
+    protected final PythonWriter writer;
     private final UnionShape shape;
     private final Set<Shape> recursiveShapes;
 
@@ -49,6 +51,41 @@ public final class UnionGenerator implements Runnable {
         this.writer = writer;
         this.shape = shape;
         this.recursiveShapes = recursiveShapes;
+    }
+
+    protected void writeInitMethodConstraintsChecksForMember(MemberShape member, String memberName) {
+        // Stub method that can be overridden by other codegens.
+    }
+
+    protected void writeInitMethodForMember(MemberShape member, Symbol memberSymbol, Shape targetShape, Symbol targetSymbol) {
+        String formatString = format("def __init__(self, value: %s):", getTargetFormat(member));
+        writer.openBlock(formatString,
+            "",
+            targetSymbol,
+            () -> {
+                writeInitMethodConstraintsChecksForMember(member, memberSymbol.getName());
+                writer.write("self.value = value");
+        });
+    }
+
+    protected void writeFromDictMethod(MemberShape member, Symbol memberSymbol, Shape target, Symbol targetSymbol) {
+      writer.write("@staticmethod");
+      writer.openBlock("def from_dict(d: Dict[str, Any]) -> $S:", "", memberSymbol.getName(), () -> {
+        writer.write("""
+          if (len(d) != 1):
+              raise TypeError(f"Unions may have exactly 1 value, but found {len(d)}")
+          """);
+        if (target.isStructureShape()) {
+          writer.write("return $T($T.from_dict(d[$S]))", memberSymbol, targetSymbol,
+            member.getMemberName());
+        } else if (targetSymbol.getProperty("fromDict").isPresent()) {
+          var targetFromDictSymbol = targetSymbol.expectProperty("fromDict", Symbol.class);
+          writer.write("return $T($T(d[$S]))",
+            memberSymbol, targetFromDictSymbol, member.getMemberName());
+        } else {
+          writer.write("return $T(d[$S])", memberSymbol, member.getMemberName());
+        }
+      });
     }
 
     @Override
@@ -69,9 +106,8 @@ public final class UnionGenerator implements Runnable {
                 member.getMemberTrait(model, DocumentationTrait.class).ifPresent(trait -> {
                     writer.writeDocs(trait.getValue());
                 });
-                writer.openBlock("def __init__(self, value: $T):", "", targetSymbol, () -> {
-                    writer.write("self.value = value");
-                });
+
+                writeInitMethodForMember(member, memberSymbol, target, targetSymbol);
 
                 writer.openBlock("def as_dict(self) -> Dict[str, Any]:", "", () -> {
                     if (target.isStructureShape() || target.isUnionShape()) {
@@ -84,23 +120,7 @@ public final class UnionGenerator implements Runnable {
                     }
                 });
 
-                writer.write("@staticmethod");
-                writer.openBlock("def from_dict(d: Dict[str, Any]) -> $S:", "", memberSymbol.getName(), () -> {
-                    writer.write("""
-                            if (len(d) != 1):
-                                raise TypeError(f"Unions may have exactly 1 value, but found {len(d)}")
-                            """);
-                    if (target.isStructureShape()) {
-                        writer.write("return $T($T.from_dict(d[$S]))", memberSymbol, targetSymbol,
-                                member.getMemberName());
-                    } else if (targetSymbol.getProperty("fromDict").isPresent()) {
-                        var targetFromDictSymbol = targetSymbol.expectProperty("fromDict", Symbol.class);
-                        writer.write("return $T($T(d[$S]))",
-                            memberSymbol, targetFromDictSymbol, member.getMemberName());
-                    } else {
-                        writer.write("return $T(d[$S])", memberSymbol, member.getMemberName());
-                    }
-                });
+                writeFromDictMethod(member, memberSymbol, target, targetSymbol);
 
                 writer.write("""
                     def __repr__(self) -> str:
@@ -122,6 +142,7 @@ public final class UnionGenerator implements Runnable {
         // Since the underlying value is unknown and un-comparable, that is the only
         // realistic implementation.
         var unknownSymbol = symbolProvider.toSymbol(shape).expectProperty("unknown", Symbol.class);
+        String unknownSymbolName = unknownSymbol.getName() + "Unknown";
         writer.write("""
                 class $1L():
                     \"""Represents an unknown variant.
@@ -146,14 +167,25 @@ public final class UnionGenerator implements Runnable {
 
                     def __repr__(self) -> str:
                         return f"$1L(tag={self.tag})"
-                """, unknownSymbol.getName());
-        memberNames.add(unknownSymbol.getName());
+                """, unknownSymbolName);
+        memberNames.add(unknownSymbolName);
 
         shape.getTrait(DocumentationTrait.class).ifPresent(trait -> writer.writeComment(trait.getValue()));
         writer.addStdlibImport("typing", "Union");
         writer.write("$L = Union[$L]", parentName, String.join(", ", memberNames));
 
         writeGlobalFromDict();
+    }
+
+    private String getTargetFormat(MemberShape member) {
+        Shape target = model.expectShape(member.getTarget());
+        // Recursive shapes may be referenced before they're defined even with
+        // a topological sort. So forward references need to be used when
+        // referencing them.
+        if (recursiveShapes.contains(target)) {
+            return "'$T'";
+        }
+        return "$T";
     }
 
     private void writeGlobalFromDict() {

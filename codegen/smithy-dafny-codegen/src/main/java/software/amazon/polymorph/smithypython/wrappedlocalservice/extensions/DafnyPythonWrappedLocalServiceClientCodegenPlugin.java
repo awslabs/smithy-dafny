@@ -3,10 +3,12 @@
 
 package software.amazon.polymorph.smithypython.wrappedlocalservice.extensions;
 
+import static software.amazon.polymorph.smithypython.localservice.extensions.DafnyPythonLocalServiceClientCodegenPlugin.transformStringEnumShapesToEnumShapes;
+
 import java.util.Map;
 import software.amazon.polymorph.smithypython.common.nameresolver.SmithyNameResolver;
-import software.amazon.polymorph.traits.WrappedLocalServiceTrait;
 import software.amazon.polymorph.traits.LocalServiceTrait;
+import software.amazon.polymorph.traits.WrappedLocalServiceTrait;
 import software.amazon.smithy.build.PluginContext;
 import software.amazon.smithy.build.SmithyBuildPlugin;
 import software.amazon.smithy.codegen.core.directed.CodegenDirector;
@@ -29,13 +31,33 @@ import software.amazon.smithy.utils.SmithyUnstableApi;
  * generation, so that we can identify this from within code generation.
  */
 @SmithyUnstableApi
-public final class DafnyPythonWrappedLocalServiceClientCodegenPlugin implements SmithyBuildPlugin {
+public final class DafnyPythonWrappedLocalServiceClientCodegenPlugin
+  implements SmithyBuildPlugin {
 
   public DafnyPythonWrappedLocalServiceClientCodegenPlugin(
-      Map<String, String> smithyNamespaceToPythonModuleNameMap) {
+    Map<String, String> smithyNamespaceToPythonModuleNameMap
+  ) {
     super();
     SmithyNameResolver.setSmithyNamespaceToPythonModuleNameMap(
-        smithyNamespaceToPythonModuleNameMap);
+      smithyNamespaceToPythonModuleNameMap
+    );
+  }
+
+  /**
+   * Perform all transformations on the model before running wrapped localService codegen.
+   * @param model
+   * @param serviceShape
+   * @return
+   */
+  public static Model transformModelForWrappedLocalService(
+    Model model,
+    ServiceShape serviceShape
+  ) {
+    Model transformedModel = model;
+    transformedModel =
+      addWrappedLocalServiceTrait(transformedModel, serviceShape);
+    transformedModel = transformStringEnumShapesToEnumShapes(transformedModel);
+    return transformedModel;
   }
 
   /**
@@ -46,24 +68,31 @@ public final class DafnyPythonWrappedLocalServiceClientCodegenPlugin implements 
    * @param serviceShape
    * @return
    */
-  public static Model addWrappedLocalServiceTrait(Model model, ServiceShape serviceShape) {
-    return ModelTransformer.create()
-        .mapShapes(
-            model,
-            shape -> {
-              if (shape.equals(serviceShape)) {
-                if (!shape.hasTrait(LocalServiceTrait.class)) {
-                  throw new IllegalArgumentException(
-                      "ServiceShape for LocalService test MUST have a LocalServiceTrait: "
-                          + serviceShape);
-                }
-                return serviceShape.toBuilder()
-                    .addTrait(WrappedLocalServiceTrait.builder().build())
-                    .build();
-              } else {
-                return shape;
-              }
-            });
+  public static Model addWrappedLocalServiceTrait(
+    Model model,
+    ServiceShape serviceShape
+  ) {
+    return ModelTransformer
+      .create()
+      .mapShapes(
+        model,
+        shape -> {
+          if (shape.equals(serviceShape)) {
+            if (!shape.hasTrait(LocalServiceTrait.class)) {
+              throw new IllegalArgumentException(
+                "ServiceShape for LocalService test MUST have a LocalServiceTrait: " +
+                serviceShape
+              );
+            }
+            return serviceShape
+              .toBuilder()
+              .addTrait(WrappedLocalServiceTrait.builder().build())
+              .build();
+          } else {
+            return shape;
+          }
+        }
+      );
   }
 
   @Override
@@ -73,8 +102,12 @@ public final class DafnyPythonWrappedLocalServiceClientCodegenPlugin implements 
 
   @Override
   public void execute(PluginContext context) {
-    CodegenDirector<PythonWriter, PythonIntegration, GenerationContext, PythonSettings> runner =
-        new CodegenDirector<>();
+    CodegenDirector<
+      PythonWriter,
+      PythonIntegration,
+      GenerationContext,
+      PythonSettings
+    > runner = new CodegenDirector<>();
 
     PythonSettings settings = PythonSettings.from(context.getSettings());
     settings.setProtocol(WrappedLocalServiceTrait.ID);
@@ -86,9 +119,15 @@ public final class DafnyPythonWrappedLocalServiceClientCodegenPlugin implements 
 
     // Add a WrappedLocalServiceTrait to the serviceShape to indicate to codegen
     // to generate for a wrapped LocalService
-    ServiceShape serviceShape =
-        context.getModel().expectShape(settings.getService()).asServiceShape().get();
-    Model transformedModel = addWrappedLocalServiceTrait(context.getModel(), serviceShape);
+    ServiceShape serviceShape = context
+      .getModel()
+      .expectShape(settings.getService())
+      .asServiceShape()
+      .get();
+    Model transformedModel = transformModelForWrappedLocalService(
+      context.getModel(),
+      serviceShape
+    );
     runner.model(transformedModel);
 
     runner.run();

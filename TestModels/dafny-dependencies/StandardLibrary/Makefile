@@ -3,10 +3,12 @@
 
 CORES=2
 
+TRANSPILE_TESTS_IN_RUST=true
+
 include ../../SharedMakefile.mk
 
 MAX_RESOURCE_COUNT=500000000
-PYTHON_MODULE_NAME=standard_library
+PYTHON_MODULE_NAME=smithy_dafny_standard_library
 LIBRARIES :=
 
 # define standard colors
@@ -24,7 +26,6 @@ endif
 polymorph_dafny :
 	cd $(CODEGEN_CLI_ROOT); \
 	$(GRADLEW) run --args="\
-	--dafny-version $(DAFNY_VERSION) \
 	--library-root $(LIBRARY_ROOT) \
 	--properties-file $(PROJECT_ROOT)/$(STD_LIBRARY)/project.properties \
 	--model $(PROJECT_ROOT)/$(STD_LIBRARY)/Model \
@@ -32,30 +33,20 @@ polymorph_dafny :
 	--dependent-model $(PROJECT_ROOT)/$(STD_LIBRARY)/../Model \
 	";
 
-polymorph_dotnet :
+polymorph_dotnet:
 	echo "Skipping polymorph_dotnet for StandardLibrary"
 
-polymorph_java :
+polymorph_java:
 	echo "Skipping polymorph_java for StandardLibrary"
 
-polymorph_python :
+polymorph_python:
 	echo "Skipping polymorph_python for StandardLibrary"
 
-# Using this target for the side-effect of maintaining patches,
-# Since Dafny Rust code generation is incomplete and also needs to be patched.
-# That only works if you run transpile_rust first.
-polymorph_rust :
-	cd $(CODEGEN_CLI_ROOT); \
-	$(GRADLEW) run --args="\
-	--dafny-version $(DAFNY_VERSION) \
-	--library-root $(LIBRARY_ROOT) \
-	--patch-files-dir $(if $(DIR_STRUCTURE_V2),$(LIBRARY_ROOT)/codegen-patches/$(SERVICE),$(LIBRARY_ROOT)/codegen-patches) \
-	--output-rust $(LIBRARY_ROOT)/runtimes/rust \
-	--model $(PROJECT_ROOT)/$(STD_LIBRARY)/Model \
-	--namespace aws.polymorph \
-	--dependent-model $(PROJECT_ROOT)/$(STD_LIBRARY)/../Model \
-	$(POLYMORPH_OPTIONS) \
-	";
+polymorph_rust:
+	echo "Skipping polymorph_rust for StandardLibrary"
+
+patch_after_transpile_rust:
+	echo "Skipping patch_after_transpile_rust for StandardLibrary"
 
 _polymorph_dependencies: 
 	echo "Skipping _polymorph_dependencies for StandardLibrary"
@@ -72,39 +63,24 @@ transpile_java: | transpile_implementation_java transpile_test_java
 # StandardLibrary as a dependency
 transpile_python: | transpile_implementation_python transpile_test_python
 
-# Hacky workaround until Dafny supports per-language extern names.
-# Replaces `.`s with `_`s in strings like `{:extern ".*"}`.
-# This is flawed logic and should be removed, but is a reasonable band-aid for now.
-# TODO: Once Dafny supports per-language extern names, remove and replace with Pythonic extern names.
-# This may require new Smithy-Dafny logic to generate Pythonic extern names.
-_python_underscore_extern_names:
-	find src -regex ".*\.dfy" -type f -exec sed -i $(SED_PARAMETER) '/module {:extern \".*\"/s/\./_/g' {} \;
-	echo "Skipping Model modification for StandardLibrary"
-	find test -regex ".*\.dfy" -type f -exec sed -i $(SED_PARAMETER) '/module {:extern \".*\"/s/\./_/g' {} \;
-
-_python_revert_underscore_extern_names:
-	find src -regex ".*\.dfy" -type f -exec sed -i $(SED_PARAMETER) '/module {:extern \".*\"/s/_/\./g' {} \;
-	echo "Skipping Model modification for StandardLibrary"
-	find test -regex ".*\.dfy" -type f -exec sed -i $(SED_PARAMETER) '/module {:extern \".*\"/s/_/\./g' {} \;
-
 ########################## Rust targets
 # Override SharedMakefile's transpile_java to not transpile
 # StandardLibrary as a dependency
 transpile_rust: | transpile_implementation_rust
 
-RUST_TEST_INDEX=test_for_rust
+RUST_OTHER_FILES=runtimes/rust/src/conversion.rs runtimes/rust/src/UTF8_externs.rs
 
-# Override the targets to relocate translated Rust code directly into the main crate,
-# instead of the dafny_impl sub-crate.
-# We also don't want to delete the src directory since we have an extern in there too.
+# These are necessary just for the patch_after_transpile_rust target
+MAIN_SERVICE_FOR_RUST := StandardLibrary
+SERVICE_NAMESPACE_StandardLibrary=aws.polymorph
+SERVICE_DEPS_StandardLibrary :=
+SMITHY_DEPS=dafny-dependencies/Model/traits.smithy
+
+# Override this target to not insert a dependency on the standard library.
 _mv_implementation_rust:
 	mv implementation_from_dafny-rust/src/implementation_from_dafny.rs runtimes/rust/src/implementation_from_dafny.rs
 	rustfmt runtimes/rust/src/implementation_from_dafny.rs
 	rm -rf implementation_from_dafny-rust
-_mv_test_rust:
-	mv tests_from_dafny-rust/src/tests_from_dafny.rs runtimes/rust/tests/tests_from_dafny.rs
-	rustfmt runtimes/rust/tests/tests_from_dafny.rs
-	rm -rf tests_from_dafny-rust
 
 transpile_dependencies:
 	echo "Skipping transpile_dependencies for StandardLibrary"
@@ -121,8 +97,9 @@ transpile_implementation:
 		--optimize-erasable-datatype-wrapper:false \
 		--unicode-char:false \
 		--function-syntax:3 \
-		--allow-warnings \
 		--output $(OUT) \
+		$(DAFNY_OPTIONS) \
+		$(DAFNY_OTHER_FILES) \
 		$(TRANSPILE_MODULE_NAME)
 
 # Override SharedMakefile's build_java to not install

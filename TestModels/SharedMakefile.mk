@@ -31,7 +31,7 @@ _polymorph_code_gen: OUTPUT_DOTNET_WRAPPED=\
 _polymorph_code_gen: _polymorph_wrapped
 
 # Override this to make polymorph_dafny on the standard library,
-# which generated the project.properties file.
+# which generates the project.properties file.
 polymorph_dafny: POLYMORPH_LANGUAGE_TARGET=dafny
 polymorph_dafny: _polymorph_dependencies
 polymorph_dafny:
@@ -71,7 +71,16 @@ _polymorph_dotnet: OUTPUT_DOTNET_WRAPPED=\
 _polymorph_dotnet: _polymorph_wrapped
 
 _polymorph_python: OUTPUT_PYTHON=--output-python $(LIBRARY_ROOT)/runtimes/python/src/$(PYTHON_MODULE_NAME)/smithygenerated
-_polymorph_python: MODULE_NAME=--module-name $(PYTHON_MODULE_NAME)
+_polymorph_python: MODULE_NAME=--library-name $(PYTHON_MODULE_NAME)
 _polymorph_python: _polymorph
 _polymorph_python: OUTPUT_PYTHON_WRAPPED=--output-python $(LIBRARY_ROOT)/runtimes/python/src/$(PYTHON_MODULE_NAME)/smithygenerated
 _polymorph_python: _polymorph_wrapped
+
+_polymorph_rust: OUTPUT_RUST_WRAPPED=--output-rust $(LIBRARY_ROOT)/runtimes/rust
+_polymorph_rust: INPUT_DAFNY=\
+		--include-dafny $(PROJECT_ROOT)/$(STD_LIBRARY)/src/Index.dfy
+# For several TestModels we've just manually written the code generation target,
+# So we just want to ensure we can transpile and pass the tests in CI.
+# For those, make polymorph_rust should just be a no-op.
+# We call _polymorph_wrapped directly because Rust builds everything at once.
+_polymorph_rust: $(if $(RUST_BENERATED), , _polymorph_wrapped)

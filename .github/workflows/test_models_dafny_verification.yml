@@ -43,14 +43,9 @@ jobs:
         run: |
           git config --global core.longpaths true
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
         with:
           submodules: recursive
-
-      - uses: actions/setup-java@v3
-        with:
-          distribution: 'corretto'
-          java-version: '17'
 
       - name: Setup Dafny
         uses: dafny-lang/setup-dafny-action@v1.7.0
@@ -62,6 +57,15 @@ jobs:
         with:
           distribution: "corretto"
           java-version: "17"
+
+      - name: Install Smithy-Dafny codegen dependencies
+        uses: ./.github/actions/install_smithy_dafny_codegen_dependencies
+
+      - name: Install smithy-dafny-codegen locally
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: :smithy-dafny-codegen:pTML
+          build-root-directory: codegen
 
       - name: Execute smithy-dafny-codegen-test tests
         uses: gradle/gradle-build-action@v2

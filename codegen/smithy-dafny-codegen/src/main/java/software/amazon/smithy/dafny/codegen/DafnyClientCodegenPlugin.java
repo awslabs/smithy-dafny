@@ -5,6 +5,7 @@ package software.amazon.smithy.dafny.codegen;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,11 +47,21 @@ public final class DafnyClientCodegenPlugin implements SmithyBuildPlugin {
       manifest.resolvePath(Paths.get("Model"))
     );
     settings.targetLanguages.forEach(lang -> {
-      final Path dir = Paths.get(
-        "runtimes",
-        lang.name().toLowerCase(),
-        "Generated"
-      );
+      final Path dir =
+        switch (lang) {
+          case DOTNET -> Paths.get("runtimes", "net", "Generated");
+          case JAVA -> Paths.get(
+            "runtimes",
+            lang.name().toLowerCase(),
+            "src",
+            "main",
+            "smithy-generated"
+          );
+          case RUST -> Paths.get("runtimes", "rust");
+          default -> throw new UnsupportedOperationException(
+            lang + " is not yet supported"
+          );
+        };
       outputDirs.put(lang, manifest.resolvePath(dir));
     });
     final Path propertiesFile = manifest.resolvePath(
@@ -69,7 +80,7 @@ public final class DafnyClientCodegenPlugin implements SmithyBuildPlugin {
       .withLibraryRoot(manifest.getBaseDir())
       .withServiceModel(model)
       // TODO generate code based on service closure, not namespace
-      .withNamespace(settings.serviceId.getNamespace())
+      .withNamespaces(Collections.singleton(settings.serviceId.getNamespace()))
       .withDafnyVersion(settings.dafnyVersion)
       .withPropertiesFile(propertiesFile)
       .withTargetLangOutputDirs(outputDirs)
