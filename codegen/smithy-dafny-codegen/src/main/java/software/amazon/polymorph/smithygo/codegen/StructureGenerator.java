@@ -168,10 +168,6 @@ public final class StructureGenerator implements Runnable {
             );
           }
         }
-        // System.out.println(memberSymbol.getProperty(SymbolUtils.POINTABLE, Boolean.class)
-        // .orElse(false));
-        // System.out.println(memberSymbol);
-        // System.out.println(memberSymbol.getProperty(SymbolUtils.POINTABLE, Boolean.class));
         writer.write("$L $P", memberName, memberSymbol);
       });
     writer.closeBlock("}").write("");
