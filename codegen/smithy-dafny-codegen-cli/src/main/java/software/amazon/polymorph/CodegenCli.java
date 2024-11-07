@@ -156,7 +156,9 @@ public class CodegenCli {
     cliArguments.includeDafnyFile.ifPresent(
       engineBuilder::withIncludeDafnyFile
     );
-    cliArguments.pythonModuleName.ifPresent(engineBuilder::withPythonModuleName);
+    cliArguments.pythonModuleName.ifPresent(
+      engineBuilder::withPythonModuleName
+    );
     cliArguments.patchFilesDir.ifPresent(engineBuilder::withPatchFilesDir);
     final CodegenEngine engine = engineBuilder.build();
     switch (cliArguments.command) {
