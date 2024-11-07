@@ -56,7 +56,7 @@ public class DafnyNameResolver {
     }
     switch (type) {
       case INTEGER, LONG, BOOLEAN:
-        return symbol.getName();
+        return dafnyCompilesExtra_(symbol.getName());
       case MAP:
         return "dafny.Map";
       // TODO: Figure out the dafny type for TIMESTAMP
@@ -69,7 +69,7 @@ public class DafnyNameResolver {
         return DafnyNameResolver
           .dafnyTypesNamespace(shape)
           .concat(DOT)
-          .concat(symbol.getName());
+          .concat(dafnyCompilesExtra_(symbol.getName()));
     }
   }
 
@@ -80,7 +80,7 @@ public class DafnyNameResolver {
     return DafnyNameResolver
       .getDafnyBaseErrorType(shape)
       .concat("_")
-      .concat(symbol.getName());
+      .concat(dafnyCompilesExtra_(symbol.getName()));
   }
 
   public static String getDafnyBaseErrorType(final Shape shape) {
@@ -97,7 +97,7 @@ public class DafnyNameResolver {
     return DafnyNameResolver
       .dafnyTypesNamespace(shape)
       .concat(DOT)
-      .concat("Companion_%s_".formatted(symbol.getName()));
+      .concat("Companion_%s_".formatted(dafnyCompilesExtra_(symbol.getName())));
   }
 
   public static String getDafnyErrorCompanion(final Shape shape) {
@@ -114,7 +114,7 @@ public class DafnyNameResolver {
     return DafnyNameResolver
       .getDafnyErrorCompanion(shape)
       .concat(DOT)
-      .concat("Create_%s_".formatted(symbol.getName()));
+      .concat("Create_%s_".formatted(dafnyCompilesExtra_(symbol.getName())));
   }
 
   public static String getDafnyCompanionStructType(
@@ -124,7 +124,9 @@ public class DafnyNameResolver {
     return DafnyNameResolver
       .dafnyTypesNamespace(shape)
       .concat(DOT)
-      .concat("CompanionStruct_%s_".formatted(symbol.getName()));
+      .concat(
+        "CompanionStruct_%s_".formatted(dafnyCompilesExtra_(symbol.getName()))
+      );
   }
 
   public static String getDafnyCompanionTypeCreate(
@@ -134,7 +136,7 @@ public class DafnyNameResolver {
     return DafnyNameResolver
       .getDafnyCompanionType(shape, symbol)
       .concat(DOT)
-      .concat("Create_%s_".formatted(symbol.getName()));
+      .concat("Create_%s_".formatted(dafnyCompilesExtra_(symbol.getName())));
   }
 
   /**
@@ -199,5 +201,9 @@ public class DafnyNameResolver {
       .concat(".Companion_Default___")
       .concat(DOT)
       .concat(sdkId);
+  }
+
+  private static String dafnyCompilesExtra_(final String name) {
+    return name.replace("_", "__");
   }
 }
