@@ -197,6 +197,7 @@ public class ValidationGenerator {
         break;
       case STRUCTURE:
         if (!currentShape.hasTrait(ReferenceTrait.class)) {
+          //TODO: This will fail if the shape is from a different namespace
           final var funcCall = dataSource.concat(".Validate()");
           validationCode.append(
             CHECK_AND_RETURN_ERROR.formatted(funcCall, funcCall)
@@ -687,18 +688,8 @@ public class ValidationGenerator {
             """.formatted(dataSourceForUnion)
       );
       for (final var memberInUnion : currentShape.getAllMembers().values()) {
-        final var targetShape = model.expectShape(memberInUnion.getTarget());
-        final var currMemberNamespace = SmithyNameResolver.smithyTypesNamespace(
-          model.expectShape(targetShape.getId())
-        );
-        final Boolean isExternalShape =
-          !currServiceShapeNamespace.equals(currMemberNamespace) &&
-          !currMemberNamespace.startsWith("smithy");
-        final var unionMemberName = isExternalShape
-          ? currMemberNamespace
-            .concat(".")
-            .concat(symbolProvider.toMemberName(memberInUnion))
-          : symbolProvider.toMemberName(memberInUnion);
+        // Union members are always generated in the namespace so doesn't need fqn.
+        final var unionMemberName = symbolProvider.toMemberName(memberInUnion);
         unionValidation.append(
           """
           case *%s:
