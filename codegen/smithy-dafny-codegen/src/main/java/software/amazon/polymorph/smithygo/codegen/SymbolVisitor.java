@@ -531,9 +531,7 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
       return symbolBuilderFor(
         shape,
         name,
-        SmithyNameResolver.smithyTypesNamespace(
-          SmithyNameResolver.smithyTypesNamespace(shape)
-        )
+        SmithyNameResolver.smithyTypesNamespace(shape)
       )
         .definitionFile(
           "./%s/enums.go".formatted(
