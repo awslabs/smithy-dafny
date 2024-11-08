@@ -8,7 +8,6 @@ pub enum Error {
     ValidationError(ValidationError),
     Opaque {
         obj: ::dafny_runtime::Object<dyn ::std::any::Any>,
-	alt_text : ::std::string::String
     },
 }
 
@@ -18,7 +17,6 @@ impl ::std::fmt::Display for Error {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         match self {
             Self::ValidationError(err) => ::std::fmt::Display::fmt(err, f),
-            Self::Opaque{obj, alt_text} => ::std::fmt::Debug::fmt(alt_text, f),
             _ => ::std::fmt::Debug::fmt(self, f),
         }
     }
