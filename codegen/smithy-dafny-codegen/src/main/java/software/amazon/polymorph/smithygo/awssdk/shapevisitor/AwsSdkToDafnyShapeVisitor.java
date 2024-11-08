@@ -561,11 +561,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
       .asServiceShape()
       .get();
 
-    final var internalDafnyType = DafnyNameResolver.getDafnyType(
-      shape,
-      context.symbolProvider().toSymbol(shape)
-    );
-
     var returnType = DafnyNameResolver.getDafnyType(
       shape,
       context.symbolProvider().toSymbol(shape)
@@ -583,7 +578,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
 
     final var eachMemberInUnion = new StringBuilder();
     for (final var member : shape.getAllMembers().values()) {
-      final var memberName = context.symbolProvider().toMemberName(member);
       final var targetShape = context.model().expectShape(member.getTarget());
       final var baseType = DafnyNameResolver.getDafnyType(
         targetShape,
@@ -603,7 +597,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
       eachMemberInUnion.append(
         """
         case *%s.%s:
-            var companion = %s
             var inputToConversion = %s
             return %s
         """.formatted(
@@ -612,10 +605,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
               true
             ),
             context.symbolProvider().toMemberName(member),
-            internalDafnyType.replace(
-              shape.getId().getName(),
-              "CompanionStruct_".concat(shape.getId().getName()).concat("_{}")
-            ),
             ShapeVisitorHelper.toDafnyShapeVisitorWriter(
               member,
               context,
@@ -628,7 +617,7 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
             someWrapIfRequired.formatted(
               DafnyNameResolver.getDafnyCreateFuncForUnionMemberShape(
                 shape,
-                memberName
+                member.getMemberName()
               ),
               "inputToConversion.UnwrapOr(nil)%s".formatted(
                   !baseType.isEmpty() ? ".(".concat(baseType).concat(")") : ""

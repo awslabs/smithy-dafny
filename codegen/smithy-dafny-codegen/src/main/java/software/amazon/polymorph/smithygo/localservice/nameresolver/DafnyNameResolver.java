@@ -1,7 +1,5 @@
 package software.amazon.polymorph.smithygo.localservice.nameresolver;
 
-import static software.amazon.polymorph.smithygo.localservice.nameresolver.Constants.BLANK;
-import static software.amazon.polymorph.smithygo.localservice.nameresolver.Constants.DAFNY_TYPES;
 import static software.amazon.polymorph.smithygo.localservice.nameresolver.Constants.DOT;
 
 import software.amazon.polymorph.traits.LocalServiceTrait;
@@ -129,6 +127,16 @@ public class DafnyNameResolver {
       );
   }
 
+  public static String getDafnyCompanionStructType(
+    final Shape shape,
+    final String memberName
+  ) {
+    return DafnyNameResolver
+      .dafnyTypesNamespace(shape)
+      .concat(DOT)
+      .concat("CompanionStruct_%s_".formatted(dafnyCompilesExtra_(memberName)));
+  }
+
   public static String getDafnyCompanionTypeCreate(
     final Shape shape,
     final Symbol symbol
@@ -149,11 +157,10 @@ public class DafnyNameResolver {
     final UnionShape unionShape,
     final String memberName
   ) {
-    return "companion".concat(DOT)
-      .concat(
-        memberName.replace(unionShape.getId().getName() + "Member", "Create_")
-      )
-      .concat("_");
+    return DafnyNameResolver
+      .getDafnyUnionBaseStructType(unionShape, unionShape.getId().getName())
+      .concat(DOT)
+      .concat("Create_%s_".formatted(dafnyCompilesExtra_(memberName)));
   }
 
   public static String getDafnyClient(final String sdkId) {
@@ -201,6 +208,15 @@ public class DafnyNameResolver {
       .concat(".Companion_Default___")
       .concat(DOT)
       .concat(sdkId);
+  }
+
+  public static String getDafnyUnionBaseStructType(
+    final Shape shape,
+    final String memberName
+  ) {
+    return DafnyNameResolver
+      .getDafnyCompanionStructType(shape, memberName)
+      .concat("{}");
   }
 
   private static String dafnyCompilesExtra_(final String name) {

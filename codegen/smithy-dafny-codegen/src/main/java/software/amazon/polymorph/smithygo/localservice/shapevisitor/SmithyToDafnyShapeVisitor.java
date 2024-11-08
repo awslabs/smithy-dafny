@@ -660,10 +660,6 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
 
   @Override
   public String unionShape(final UnionShape shape) {
-    final String internalDafnyType = DafnyNameResolver.getDafnyType(
-      shape,
-      context.symbolProvider().toSymbol(shape)
-    );
     String someWrapIfRequired = "%s(%s)";
     String returnType = DafnyNameResolver.getDafnyType(
       shape,
@@ -680,7 +676,6 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
           switch %s.(type) {""".formatted(returnType, dataSource);
     final StringBuilder eachMemberInUnion = new StringBuilder();
     for (final var member : shape.getAllMembers().values()) {
-      final String memberName = context.symbolProvider().toMemberName(member);
       final Shape targetShape = context.model().expectShape(member.getTarget());
       final var refShape = targetShape.hasTrait(ReferenceTrait.class)
         ? targetShape.expectTrait(ReferenceTrait.class).getReferentId()
@@ -701,16 +696,11 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
       eachMemberInUnion.append(
         """
         case *%s.%s:
-            var companion = %s
             var inputToConversion = %s
             return %s
             """.formatted(
             SmithyNameResolver.smithyTypesNamespace(shape),
             context.symbolProvider().toMemberName(member),
-            internalDafnyType.replace(
-              shape.getId().getName(),
-              "CompanionStruct_".concat(shape.getId().getName()).concat("_{}")
-            ),
             ShapeVisitorHelper.toDafnyShapeVisitorWriter(
               member,
               context,
@@ -728,7 +718,7 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
             someWrapIfRequired.formatted(
               DafnyNameResolver.getDafnyCreateFuncForUnionMemberShape(
                 shape,
-                memberName
+                member.getMemberName()
               ),
               "inputToConversion.UnwrapOr(nil).(%s)".formatted(baseType)
             )
