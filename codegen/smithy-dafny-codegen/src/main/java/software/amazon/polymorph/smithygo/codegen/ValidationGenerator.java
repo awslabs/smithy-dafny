@@ -686,9 +686,17 @@ public class ValidationGenerator {
             """.formatted(dataSourceForUnion)
       );
       for (final var memberInUnion : currentShape.getAllMembers().values()) {
-        // Union don't need to handle external namespace because union member is always defined inside the same namespace.
-        // External shapes is inside union members not inside union
-        final var unionMemberName = symbolProvider.toMemberName(memberInUnion);
+        final var currMemberNamespace = SmithyNameResolver.smithyTypesNamespace(
+          currentShape
+        );
+        final Boolean isExternalShape =
+          !currServiceShapeNamespace.equals(currMemberNamespace) &&
+          !currMemberNamespace.startsWith("smithy");
+        final var unionMemberName = isExternalShape
+          ? currMemberNamespace
+            .concat(".")
+            .concat(symbolProvider.toMemberName(memberInUnion))
+          : symbolProvider.toMemberName(memberInUnion);
         unionValidation.append(
           """
           case *%s:
