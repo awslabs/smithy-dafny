@@ -777,17 +777,17 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       // unwrap union type, assert it then convert it to its member type with Dtor_ (example: Dtor_BlobValue()). unionDataSource is not a wrapper object until now.
       String unionDataSource =
         rawUnionDataSource +
-        ".Dtor_" +
-        memberName.replace(shape.getId().getName().concat("Member"), "") +
-        "()";
+        ".Dtor_%s()".formatted(
+            DafnyNameResolver.dafnyCompilesExtra_(member.getMemberName())
+          );
       final boolean isMemberShapePointable =
         (GoPointableIndex.of(context.model()).isPointable(member)) &&
         !targetShape.isStructureShape();
       final String pointerForPointableShape = isMemberShapePointable ? "*" : "";
       final String isMemberCheck =
-        "if ((%s).%s()) {".formatted(
+        "if ((%s).Is_%s()) {".formatted(
             rawUnionDataSource,
-            memberName.replace(shape.getId().getName().concat("Member"), "Is_")
+            DafnyNameResolver.dafnyCompilesExtra_(member.getMemberName())
           );
       String wrappedDataSource = "";
       boolean requireAssertion = true;
