@@ -20,6 +20,12 @@ public class DafnyNameResolver {
     );
   }
 
+  public static String dafnyDependentErrorName(final Shape shape) {
+    return software.amazon.polymorph.smithydafny.DafnyNameResolver.dafnyBaseModuleName(
+      shape.toShapeId().getNamespace()
+    );
+  }
+
   public static String dafnyNamespace(final Shape shape) {
     return software.amazon.polymorph.smithydafny.DafnyNameResolver.dafnyBaseModuleName(
       shape.toShapeId().getNamespace()
