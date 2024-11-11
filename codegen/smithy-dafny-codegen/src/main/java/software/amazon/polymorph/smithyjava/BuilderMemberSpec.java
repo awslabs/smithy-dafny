@@ -59,6 +59,21 @@ public class BuilderMemberSpec {
       " but that is not guaranteed."
     )
   );
+  public static final List<BuilderMemberSpec> OPAQUE_WITH_TEXT_ARGS = List.of(
+    _MESSAGE,
+    _CAUSE,
+    new BuilderMemberSpec(
+      TypeName.get(Object.class),
+      "obj",
+      "The unexpected object encountered. It MIGHT BE an Exception," +
+      " but that is not guaranteed."
+    ),
+    new BuilderMemberSpec(
+      TypeName.get(String.class),
+      "objMessage",
+      "The text equivalent of obj."
+    )
+  );
   public static final List<BuilderMemberSpec> COLLECTION_ARGS = List.of(
     _MESSAGE,
     _CAUSE,
