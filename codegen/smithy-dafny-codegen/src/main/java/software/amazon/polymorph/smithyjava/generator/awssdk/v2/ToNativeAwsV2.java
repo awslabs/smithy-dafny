@@ -578,11 +578,11 @@ public class ToNativeAwsV2 extends ToNative {
         """
           return new RuntimeException(
             String.format(
-              "Unknown error thrown while calling AWS Key Management Service. %s",
+              "Unknown error thrown while calling AWS. %s",
               dafnyValue.dtor_obj()
             ),
             (Throwable) dafnyValue.dtor_obj()
-          );
+          )
         """
       )
       .endControlFlow()
@@ -650,11 +650,11 @@ public class ToNativeAwsV2 extends ToNative {
         """
           return new RuntimeException(
             String.format(
-              "Unknown error thrown while calling AWS Key Management Service. %s",
+              "Unknown error thrown while calling AWS. %s",
               dafnyValue.dtor_obj()
             ),
             (Throwable) dafnyValue.dtor_obj()
-          );
+          )
         """
       )
       .endControlFlow()
