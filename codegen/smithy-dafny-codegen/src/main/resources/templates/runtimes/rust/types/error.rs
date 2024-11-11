@@ -9,6 +9,10 @@ pub enum Error {
     Opaque {
         obj: ::dafny_runtime::Object<dyn ::std::any::Any>,
     },
+    OpaqueWithText {
+        obj: ::dafny_runtime::Object<dyn ::std::any::Any>,
+        objMessage: ::std::string::String,
+    },
 }
 
 impl ::std::cmp::Eq for Error {}
