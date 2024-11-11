@@ -12,7 +12,6 @@ import software.amazon.polymorph.smithygo.utils.Constants;
 import software.amazon.polymorph.smithygo.utils.GoCodegenUtils;
 import software.amazon.polymorph.traits.DafnyUtf8BytesTrait;
 import software.amazon.polymorph.traits.ReferenceTrait;
-import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.codegen.core.SymbolProvider;
 import software.amazon.smithy.model.Model;
@@ -687,9 +686,8 @@ public class ValidationGenerator {
             """.formatted(dataSourceForUnion)
       );
       for (final var memberInUnion : currentShape.getAllMembers().values()) {
-        final var targetShape = model.expectShape(memberInUnion.getTarget());
         final var currMemberNamespace = SmithyNameResolver.smithyTypesNamespace(
-          model.expectShape(targetShape.getId())
+          currentShape
         );
         final Boolean isExternalShape =
           !currServiceShapeNamespace.equals(currMemberNamespace) &&
