@@ -298,26 +298,34 @@ public class DafnyLocalServiceGenerator implements Runnable {
               .findFirst()
               .get();
             outputShape = model.expectShape(postionalMemShape.getTarget());
+            // We use different function name in conversion layer for memberShape and Shape. 
+            String fromDafnyConvMethodName = Constants.funcNameGenerator(
+              postionalMemShape,
+              "FromDafny"
+            );
+            outputType = SmithyNameResolver.getSmithyType(postionalMemShape, symbolProvider.toSymbol(postionalMemShape)).concat(",");
             if (outputShape.hasTrait(ReferenceTrait.class)) {
               outputShape = model.expectShape(outputShape.expectTrait(ReferenceTrait.class)
                 .getReferentId());
+              outputType = SmithyNameResolver.getSmithyType(outputShape, symbolProvider.toSymbol(outputShape)).concat(",");
+              fromDafnyConvMethodName = SmithyNameResolver.getFromDafnyMethodName(
+                service,
+                outputShape,
+                ""
+              );
             }
-            outputType = SmithyNameResolver.getSmithyType(postionalMemShape, symbolProvider.toSymbol(postionalMemShape)).concat(",");
             returnResponse =
               """
               var native_response = %s(dafny_response.Extract().(%s))
               return native_response, nil
               """.formatted(
-                Constants.funcNameGenerator(
-                    postionalMemShape,
-                    "FromDafny"
-                  ),
+                  fromDafnyConvMethodName,
                   DafnyNameResolver.getDafnyType(
                     outputShape,
                     symbolProvider.toSymbol(outputShape)
                   )
                 );
-            final var defaultRetType = Constants.getDefaultValueForType(SmithyNameResolver.getSmithyType(outputShape, symbolProvider.toSymbol(outputShape)));
+            final var defaultRetType = Constants.getDefaultValueForSmithyType(SmithyNameResolver.getSmithyType(outputShape, symbolProvider.toSymbol(outputShape)));
             returnError = "return %s,".formatted(defaultRetType);
             validationCheck += "return %s, opaqueErr }".formatted(defaultRetType);
           } else {
