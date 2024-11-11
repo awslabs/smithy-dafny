@@ -104,7 +104,7 @@ public class SmithyNameResolver {
         .smithyTypesNamespace(shape)
         .concat(DOT)
         .concat("I")
-        .concat(symbol.getName());
+        .concat(shape.toShapeId().getName());
     }
     // TODO: Figure out the type of timestamp
     if (shape.isTimestampShape()) {
