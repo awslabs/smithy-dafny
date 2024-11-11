@@ -1,5 +1,6 @@
 package software.amazon.polymorph.smithygo.localservice;
 
+import java.util.Set;
 import java.util.logging.Logger;
 import software.amazon.polymorph.smithygo.codegen.EnumGenerator;
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
@@ -20,6 +21,7 @@ import software.amazon.smithy.codegen.core.directed.GenerateIntEnumDirective;
 import software.amazon.smithy.codegen.core.directed.GenerateServiceDirective;
 import software.amazon.smithy.codegen.core.directed.GenerateStructureDirective;
 import software.amazon.smithy.codegen.core.directed.GenerateUnionDirective;
+import software.amazon.smithy.model.shapes.ShapeType;
 import software.amazon.smithy.model.shapes.StructureShape;
 
 public class DafnyLocalServiceDirectedCodegen
@@ -198,6 +200,14 @@ public class DafnyLocalServiceDirectedCodegen
         directive.shape(),
         directive.model()
       );
+    // Either these shapes are already generated as part of LocalService or doesn't need generation for simple types
+    final var shapesToSkip = Set.of(
+      ShapeType.OPERATION,
+      ShapeType.RESOURCE,
+      ShapeType.INTEGER,
+      ShapeType.UNION,
+      ShapeType.STRING
+    );
 
     for (final var shapeToGenerate : orderedShapes) {
       if (shapeToGenerate.isStructureShape()) {
@@ -205,6 +215,12 @@ public class DafnyLocalServiceDirectedCodegen
           .asStructureShape()
           .orElseThrow();
         writeStructure(directive.context(), structureShape);
+      } else if (shapesToSkip.contains(shapeToGenerate.getType())) {
+        LOGGER.info(
+          "Orphan shape %s is skipped due to configuration.".formatted(
+              shapeToGenerate
+            )
+        );
       } else {
         // Add more as needed...
         throw new ClassCastException(

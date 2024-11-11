@@ -5,13 +5,10 @@ package software.amazon.polymorph.smithygo.localservice;
 
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
 
-import java.util.Collection;
-import java.util.stream.Collectors;
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoDelegator;
 import software.amazon.polymorph.smithygo.codegen.GoWriter;
 import software.amazon.polymorph.smithygo.codegen.SmithyGoDependency;
-import software.amazon.polymorph.smithygo.codegen.StructureGenerator;
 import software.amazon.polymorph.smithygo.codegen.UnionGenerator;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
@@ -19,7 +16,6 @@ import software.amazon.polymorph.traits.ExtendableTrait;
 import software.amazon.polymorph.traits.LocalServiceTrait;
 import software.amazon.polymorph.traits.PositionalTrait;
 import software.amazon.polymorph.traits.ReferenceTrait;
-import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.codegen.core.SymbolProvider;
 import software.amazon.smithy.model.Model;
@@ -28,7 +24,6 @@ import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.ResourceShape;
 import software.amazon.smithy.model.shapes.ServiceShape;
 import software.amazon.smithy.model.shapes.Shape;
-import software.amazon.smithy.model.shapes.StructureShape;
 import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.UnitTypeTrait;
 
@@ -63,7 +58,6 @@ public class DafnyLocalServiceGenerator implements Runnable {
       generateClient(writer);
       generateUnmodelledErrors(context);
       generateReferencedResources(context);
-      generateUnboundedStructures(context);
     }
     generateShim();
   }
@@ -81,12 +75,6 @@ public class DafnyLocalServiceGenerator implements Runnable {
       "%s/types.go".formatted(SmithyNameResolver.smithyTypesNamespace(service)),
       SmithyNameResolver.smithyTypesNamespace(service),
       writer1 -> {
-        new StructureGenerator(
-          context,
-          writer1,
-          model.expectShape(serviceTrait.getConfigId()).asStructureShape().get()
-        )
-          .run();
         model
           .getUnionShapes()
           .stream()
@@ -610,51 +598,6 @@ public class DafnyLocalServiceGenerator implements Runnable {
         );
       }
     );
-  }
-
-  void generateUnboundedStructures(GenerationContext context) {
-    final var serviceOperationShapes = model
-      .getServiceShapes()
-      .stream()
-      .map(topDownIndex::getContainedOperations)
-      .flatMap(Collection::stream)
-      .map(OperationShape::toShapeId)
-      .collect(Collectors.toSet());
-    final var nonServiceOperationShapes = model
-      .getOperationShapes()
-      .stream()
-      .map(Shape::getId)
-      .filter(operationShapeId ->
-        operationShapeId.getNamespace().equals(service.getId().getNamespace())
-      )
-      .collect(Collectors.toSet());
-    nonServiceOperationShapes.removeAll(serviceOperationShapes);
-    for (final var operationShapeId : nonServiceOperationShapes) {
-      OperationShape operationShape = model.expectShape(
-        operationShapeId,
-        OperationShape.class
-      );
-      StructureShape inputShape = model.expectShape(
-        operationShape.getInputShape(),
-        StructureShape.class
-      );
-      if (!inputShape.hasTrait(UnitTypeTrait.class)) {
-        writerDelegator.useShapeWriter(
-          inputShape,
-          w -> new StructureGenerator(context, w, inputShape).run()
-        );
-      }
-      StructureShape outputShape = model.expectShape(
-        operationShape.getOutputShape(),
-        StructureShape.class
-      );
-      if (!outputShape.hasTrait(UnitTypeTrait.class)) {
-        writerDelegator.useShapeWriter(
-          outputShape,
-          w -> new StructureGenerator(context, w, outputShape).run()
-        );
-      }
-    }
   }
 
   void generateReferencedResources(GenerationContext context) {
