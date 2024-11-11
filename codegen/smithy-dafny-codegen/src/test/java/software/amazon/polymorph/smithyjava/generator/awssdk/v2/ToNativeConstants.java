@@ -150,14 +150,8 @@ public class ToNativeConstants {
           return (KmsException) dafnyValue.dtor_obj();
         } else if (dafnyValue.dtor_obj() instanceof RuntimeException) {
           return (RuntimeException) dafnyValue.dtor_obj();
-         } else if (dafnyValue.dtor_obj() instanceof Throwable) {
-           return new RuntimeException(
-               String.format(
-                 "Unknown error thrown while calling AWS. %%s",
-                 dafnyValue.dtor_obj()
-               ),
-               (Throwable) dafnyValue.dtor_obj()
-             );
+        } else if (dafnyValue.dtor_obj() instanceof Throwable) {
+          return new RuntimeException(String.format("Unknown error thrown while calling AWS. %%s", (Throwable) dafnyValue.dtor_obj()));
         }
         return new IllegalStateException(String.format(%s, dafnyValue));
       }
@@ -173,13 +167,7 @@ public class ToNativeConstants {
          } else if (dafnyValue.dtor_obj() instanceof RuntimeException) {
            return (RuntimeException) dafnyValue.dtor_obj();
          } else if (dafnyValue.dtor_obj() instanceof Throwable) {
-           return new RuntimeException(
-               String.format(
-                 "Unknown error thrown while calling AWS. %%s",
-                 dafnyValue.dtor_obj()
-               ),
-               (Throwable) dafnyValue.dtor_obj()
-             );
+           return new RuntimeException(String.format("Unknown error thrown while calling AWS. %%s", (Throwable) dafnyValue.dtor_obj()));
          }
          return new IllegalStateException(String.format(%s, dafnyValue));
        }

@@ -575,15 +575,10 @@ public class ToNativeAwsV2 extends ToNative {
         Throwable.class
       )
       .addStatement(
-        """
-          return new RuntimeException(
-            String.format(
-              "Unknown error thrown while calling AWS. %s",
-              dafnyValue.dtor_obj()
-            ),
-            (Throwable) dafnyValue.dtor_obj()
-          )
-        """
+        "return new RuntimeException(String.format($S, (Throwable) dafnyValue.dtor_obj()))",
+        "Unknown error thrown while calling " +
+        AwsSdkNativeV2.titleForService(subject.serviceShape) +
+        ". %s"
       )
       .endControlFlow()
       // If obj is not ANY exception and String is not set, Give Up with IllegalStateException
@@ -647,15 +642,10 @@ public class ToNativeAwsV2 extends ToNative {
         Throwable.class
       )
       .addStatement(
-        """
-          return new RuntimeException(
-            String.format(
-              "Unknown error thrown while calling AWS. %s",
-              dafnyValue.dtor_obj()
-            ),
-            (Throwable) dafnyValue.dtor_obj()
-          )
-        """
+        "return new RuntimeException(String.format($S, (Throwable) dafnyValue.dtor_obj()))",
+        "Unknown error thrown while calling " +
+        AwsSdkNativeV2.titleForService(subject.serviceShape) +
+        ". %s"
       )
       .endControlFlow()
       // If obj is not ANY exception and String is not set, Give Up with IllegalStateException
