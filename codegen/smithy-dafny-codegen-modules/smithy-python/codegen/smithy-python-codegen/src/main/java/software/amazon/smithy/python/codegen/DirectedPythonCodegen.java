@@ -346,8 +346,7 @@ public class DirectedPythonCodegen implements DirectedCodegen<GenerationContext,
         try {
             CodegenUtils.runCommand("python3 -m black -h", fileManifest.getBaseDir());
         } catch (CodegenException e) {
-            LOGGER.warning("Unable to find the python package black. Skipping formatting.");
-            return;
+            throw new CodegenException("Unable to find the python package black. Run `make setup_python` and ensure `python3 -m black` has the package.");
         }
         LOGGER.info("Running code formatter on generated code");
         CodegenUtils.runCommand("python3 -m black . --exclude \"\"", fileManifest.getBaseDir());
@@ -357,7 +356,7 @@ public class DirectedPythonCodegen implements DirectedCodegen<GenerationContext,
         try {
             CodegenUtils.runCommand("python3 -m docformatter -h", fileManifest.getBaseDir());
         } catch (CodegenException e) {
-            LOGGER.warning("Unable to find the python package docformatter. Skipping formatting.");
+            LOGGER.warning("Unable to find the python package docformatter. Run `make setup_python` and ensure `python3 -m black` has the package.");
             return;
         }
         LOGGER.info("Running docformatter on generated code");
