@@ -357,7 +357,6 @@ public class DirectedPythonCodegen implements DirectedCodegen<GenerationContext,
             CodegenUtils.runCommand("python3 -m docformatter -h", fileManifest.getBaseDir());
         } catch (CodegenException e) {
             throw new CodegenException("Unable to find the python package docformatter. Run `make setup_python` and ensure `python3 -m black` has the package.", e);
-            return;
         }
         LOGGER.info("Running docformatter on generated code");
         // docformatter exit codes:
