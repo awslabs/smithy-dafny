@@ -15,6 +15,7 @@ import software.amazon.polymorph.smithygo.codegen.StructureGenerator;
 import software.amazon.polymorph.smithygo.codegen.UnionGenerator;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
+import software.amazon.polymorph.smithygo.utils.Constants;
 import software.amazon.polymorph.traits.ExtendableTrait;
 import software.amazon.polymorph.traits.LocalServiceTrait;
 import software.amazon.polymorph.traits.PositionalTrait;
@@ -24,6 +25,7 @@ import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.codegen.core.SymbolProvider;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.knowledge.TopDownIndex;
+import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.ResourceShape;
 import software.amazon.smithy.model.shapes.ServiceShape;
@@ -186,7 +188,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
             SmithyNameResolver.shapeNamespace(inputShape)
           );
         }
-        final var outputShape = model.expectShape(
+        var outputShape = model.expectShape(
           operationShape.getOutputShape()
         );
         writer.addImportFromModule(
@@ -230,11 +232,6 @@ public class DafnyLocalServiceGenerator implements Runnable {
                         ErrObject: err,
                     }
             """.formatted(SmithyNameResolver.smithyTypesNamespace(inputShape));
-          if (outputType.equals("")) {
-            validationCheck += "return opaqueErr }";
-          } else {
-            validationCheck += "return nil, opaqueErr }";
-          }
         }
         String baseClientCall;
         if (inputShape.hasTrait(UnitTypeTrait.class)) {
@@ -291,14 +288,38 @@ public class DafnyLocalServiceGenerator implements Runnable {
         if (outputShape.hasTrait(UnitTypeTrait.class)) {
           returnResponse = "return nil";
           returnError = "return";
+          validationCheck += "return opaqueErr }";
         } else {
           if (outputShape.hasTrait(PositionalTrait.class)) {
-            outputType = "interface{},";
+            MemberShape postionalMemShape = outputShape
+              .getAllMembers()
+              .values()
+              .stream()
+              .findFirst()
+              .get();
+            outputShape = model.expectShape(postionalMemShape.getTarget());
+            if (outputShape.hasTrait(ReferenceTrait.class)) {
+              outputShape = model.expectShape(outputShape.expectTrait(ReferenceTrait.class)
+                .getReferentId());
+            }
+            outputType = SmithyNameResolver.getSmithyType(postionalMemShape, symbolProvider.toSymbol(postionalMemShape)).concat(",");
             returnResponse =
               """
-                  var native_response = dafny_response.Extract()
-                  return native_response, nil
-              """;
+              var native_response = %s(dafny_response.Extract().(%s))
+              return native_response, nil
+              """.formatted(
+                Constants.funcNameGenerator(
+                    postionalMemShape,
+                    "FromDafny"
+                  ),
+                  DafnyNameResolver.getDafnyType(
+                    outputShape,
+                    symbolProvider.toSymbol(outputShape)
+                  )
+                );
+            final var defaultRetType = Constants.getDefaultValueForType(SmithyNameResolver.getSmithyType(outputShape, symbolProvider.toSymbol(outputShape)));
+            returnError = "return %s,".formatted(defaultRetType);
+            validationCheck += "return %s, opaqueErr }".formatted(defaultRetType);
           } else {
             returnResponse =
               """
@@ -315,8 +336,9 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     symbolProvider.toSymbol(outputShape)
                   )
                 );
+              returnError = "return nil,";
+              validationCheck += "return nil, opaqueErr }";
           }
-          returnError = "return nil,";
         }
 
         writer.write(
@@ -430,7 +452,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
             final var inputShape = model.expectShape(
               operationShape.getInputShape()
             );
-            final var outputShape = model.expectShape(
+            var outputShape = model.expectShape(
               operationShape.getOutputShape()
             );
             // this is maybe because positional trait can change this
