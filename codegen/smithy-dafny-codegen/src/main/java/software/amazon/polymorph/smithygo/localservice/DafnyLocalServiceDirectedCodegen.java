@@ -9,6 +9,7 @@ import software.amazon.polymorph.smithygo.codegen.IntEnumGenerator;
 import software.amazon.polymorph.smithygo.codegen.StructureGenerator;
 import software.amazon.polymorph.smithygo.codegen.SymbolVisitor;
 import software.amazon.polymorph.smithygo.codegen.integration.GoIntegration;
+import software.amazon.polymorph.utils.ModelUtils;
 import software.amazon.smithy.codegen.core.SymbolProvider;
 import software.amazon.smithy.codegen.core.directed.CreateContextDirective;
 import software.amazon.smithy.codegen.core.directed.CreateSymbolProviderDirective;
@@ -16,10 +17,10 @@ import software.amazon.smithy.codegen.core.directed.DirectedCodegen;
 import software.amazon.smithy.codegen.core.directed.GenerateEnumDirective;
 import software.amazon.smithy.codegen.core.directed.GenerateErrorDirective;
 import software.amazon.smithy.codegen.core.directed.GenerateIntEnumDirective;
-import software.amazon.smithy.codegen.core.directed.GenerateResourceDirective;
 import software.amazon.smithy.codegen.core.directed.GenerateServiceDirective;
 import software.amazon.smithy.codegen.core.directed.GenerateStructureDirective;
 import software.amazon.smithy.codegen.core.directed.GenerateUnionDirective;
+import software.amazon.smithy.model.shapes.StructureShape;
 
 public class DafnyLocalServiceDirectedCodegen
   implements DirectedCodegen<GenerationContext, GoSettings, GoIntegration> {
@@ -66,6 +67,7 @@ public class DafnyLocalServiceDirectedCodegen
     ) {
       return;
     }
+    generateOrphanedShapesForService(directive);
     new DafnyLocalServiceGenerator(directive.context(), directive.service())
       .run();
 
@@ -83,58 +85,40 @@ public class DafnyLocalServiceDirectedCodegen
   public void generateStructure(
     GenerateStructureDirective<GenerationContext, GoSettings> directive
   ) {
-    if (
-      !directive
-        .shape()
-        .getId()
-        .getNamespace()
-        .equals(directive.context().settings().getService().getNamespace())
-    ) {
-      return;
-    }
-    directive
-      .context()
-      .writerDelegator()
-      .useShapeWriter(
-        directive.shape(),
-        writer -> {
-          StructureGenerator generator = new StructureGenerator(
-            directive.context(),
-            writer,
-            directive.shape()
-          );
-          generator.run();
-        }
-      );
+    writeStructure(directive.context(), directive.shape());
   }
 
   @Override
   public void generateError(
     GenerateErrorDirective<GenerationContext, GoSettings> directive
   ) {
+    writeStructure(directive.context(), directive.shape());
+  }
+
+  public void writeStructure(
+    final GenerationContext context,
+    final StructureShape shape
+  ) {
     if (
-      !directive
-        .shape()
+      shape
         .getId()
         .getNamespace()
-        .equals(directive.context().settings().getService().getNamespace())
+        .equals(context.settings().getService().getNamespace())
     ) {
-      return;
+      context
+        .writerDelegator()
+        .useShapeWriter(
+          shape,
+          writer -> {
+            final var generator = new StructureGenerator(
+              context,
+              writer,
+              shape
+            );
+            generator.run();
+          }
+        );
     }
-    directive
-      .context()
-      .writerDelegator()
-      .useShapeWriter(
-        directive.shape(),
-        writer -> {
-          StructureGenerator generator = new StructureGenerator(
-            directive.context(),
-            writer,
-            directive.shape()
-          );
-          generator.run();
-        }
-      );
   }
 
   @Override
@@ -200,12 +184,33 @@ public class DafnyLocalServiceDirectedCodegen
       );
   }
 
-  @Override
-  public void generateResource(
-    GenerateResourceDirective<GenerationContext, GoSettings> directive
+  /**
+   * This MUST run after code generation for non-orphaned shapes.
+   * Orphaned shapes may topologically depend on non-orphaned shapes, but not vice versa.
+   *
+   * @param directive
+   */
+  protected void generateOrphanedShapesForService(
+    final GenerateServiceDirective<GenerationContext, GoSettings> directive
   ) {
-    //        System.out.println("##############" + directive.shape());
-    //        directive.context().writerDelegator().useShapeWriter(directive.shape(), writer -> {
-    //        });
+    final var orderedShapes =
+      ModelUtils.getTopologicallyOrderedOrphanedShapesForService(
+        directive.shape(),
+        directive.model()
+      );
+
+    for (final var shapeToGenerate : orderedShapes) {
+      if (shapeToGenerate.isStructureShape()) {
+        final var structureShape = shapeToGenerate
+          .asStructureShape()
+          .orElseThrow();
+        writeStructure(directive.context(), structureShape);
+      } else {
+        // Add more as needed...
+        throw new ClassCastException(
+          "Unsupported class for orphaned shape " + shapeToGenerate
+        );
+      }
+    }
   }
 }
