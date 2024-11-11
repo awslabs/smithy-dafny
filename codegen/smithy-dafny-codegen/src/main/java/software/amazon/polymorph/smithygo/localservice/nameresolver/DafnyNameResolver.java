@@ -219,7 +219,7 @@ public class DafnyNameResolver {
       .concat("{}");
   }
 
-  private static String dafnyCompilesExtra_(final String name) {
+  public static String dafnyCompilesExtra_(final String name) {
     return name.replace("_", "__");
   }
 }

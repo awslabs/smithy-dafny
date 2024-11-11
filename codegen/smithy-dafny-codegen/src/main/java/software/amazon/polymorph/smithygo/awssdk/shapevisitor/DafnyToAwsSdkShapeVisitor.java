@@ -591,21 +591,19 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
       final var targetShape = context.model().expectShape(member.getTarget());
       final var memberName = context.symbolProvider().toMemberName(member);
       // unwrap union type, assert it then convert it to its member type with Dtor_ (example: Dtor_BlobValue()). unionDataSource is not a wrapper object until now.
-      var unionDataSource = dataSource
-        .concat(".Dtor_")
-        .concat(
-          memberName.replace(shape.getId().getName().concat("Member"), "")
-        )
-        .concat("()");
+      var unionDataSource = dataSource.concat(
+        ".Dtor_%s()".formatted(
+            DafnyNameResolver.dafnyCompilesExtra_(member.getMemberName())
+          )
+      );
       final var isMemberShapePointable = awsSdkGoPointableIndex.isPointable(
         member
       );
       final var pointerForPointableShape = isMemberShapePointable ? "*" : "";
       final var isMemberCheck =
-        """
-        if ((%s).%s()) {""".formatted(
+        "if ((%s).Is_%s()) {".formatted(
             dataSource,
-            memberName.replace(shape.getId().getName().concat("Member"), "Is_")
+            DafnyNameResolver.dafnyCompilesExtra_(member.getMemberName())
           );
       var wrappedDataSource = "";
       var requiresAssertion = true;
