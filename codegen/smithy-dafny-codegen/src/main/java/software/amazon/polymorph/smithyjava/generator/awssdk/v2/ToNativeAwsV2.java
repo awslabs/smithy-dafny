@@ -554,18 +554,31 @@ public class ToNativeAwsV2 extends ToNative {
         VAR_INPUT,
         Dafny.datatypeDeconstructor("obj")
       )
-      // If obj is ANY Exception
+      // If obj is A RuntimeException
       .nextControlFlow(
         "else if ($L.$L instanceof $T)",
         VAR_INPUT,
         Dafny.datatypeDeconstructor("obj"),
-        Exception.class
+        RuntimeException.class
       )
       .addStatement(
         "return ($T) $L.$L",
         RuntimeException.class,
         VAR_INPUT,
         Dafny.datatypeDeconstructor("obj")
+      )
+      // If obj is A Throwable
+      .nextControlFlow(
+        "else if ($L.$L instanceof $T)",
+        VAR_INPUT,
+        Dafny.datatypeDeconstructor("obj"),
+        Throwable.class
+      )
+      .addStatement(
+        "return new RuntimeException(String.format($S, (Throwable) dafnyValue.dtor_obj()))",
+        "Unknown error thrown while calling " +
+        AwsSdkNativeV2.titleForService(subject.serviceShape) +
+        ". %s"
       )
       .endControlFlow()
       // If obj is not ANY exception and String is not set, Give Up with IllegalStateException
@@ -608,18 +621,31 @@ public class ToNativeAwsV2 extends ToNative {
         VAR_INPUT,
         Dafny.datatypeDeconstructor("obj")
       )
-      // If obj is ANY Exception
+      // If obj is A RuntimeException
       .nextControlFlow(
         "else if ($L.$L instanceof $T)",
         VAR_INPUT,
         Dafny.datatypeDeconstructor("obj"),
-        Exception.class
+        RuntimeException.class
       )
       .addStatement(
         "return ($T) $L.$L",
         RuntimeException.class,
         VAR_INPUT,
         Dafny.datatypeDeconstructor("obj")
+      )
+      // If obj is A Throwable
+      .nextControlFlow(
+        "else if ($L.$L instanceof $T)",
+        VAR_INPUT,
+        Dafny.datatypeDeconstructor("obj"),
+        Throwable.class
+      )
+      .addStatement(
+        "return new RuntimeException(String.format($S, (Throwable) dafnyValue.dtor_obj()))",
+        "Unknown error thrown while calling " +
+        AwsSdkNativeV2.titleForService(subject.serviceShape) +
+        ". %s"
       )
       .endControlFlow()
       // If obj is not ANY exception and String is not set, Give Up with IllegalStateException
