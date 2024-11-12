@@ -26,7 +26,9 @@ public class Constants {
     final String suffix,
     final Model model
   ) {
-    StringBuilder funcName = new StringBuilder(funcNameGenerator(memberShape, suffix));
+    StringBuilder funcName = new StringBuilder(
+      funcNameGenerator(memberShape, suffix)
+    );
     Shape containerShape = model.expectShape(memberShape.getContainer());
     // membershape inside a container shape with positional trait has to be exposed.
     if (containerShape.hasTrait(PositionalTrait.class)) {
