@@ -463,6 +463,32 @@ public class DafnyLocalServiceGenerator implements Runnable {
             var outputShape = model.expectShape(
               operationShape.getOutputShape()
             );
+            var isMemberShapePointable = true;
+            String toDafnyConvMethodName = SmithyNameResolver.getToDafnyMethodName(outputShape, "");
+            if (outputShape.hasTrait(PositionalTrait.class)) {
+              // Shape with positional shape MUST have only one membershape which is always required.
+              isMemberShapePointable = false;
+              MemberShape postionalMemShape = outputShape
+              .getAllMembers()
+              .values()
+              .stream()
+              .findFirst()
+              .get();
+              outputShape = model.expectShape(postionalMemShape.getTarget());
+              // We use different function name in conversion layer for memberShape and Shape. 
+              toDafnyConvMethodName = SmithyNameResolver
+              .shapeNamespace(postionalMemShape).concat(".").concat(Constants.funcNameGenerator(
+                postionalMemShape,
+                "ToDafny"
+              ));
+              if (outputShape.hasTrait(ReferenceTrait.class)) {
+                outputShape = model.expectShape(outputShape.expectTrait(ReferenceTrait.class)
+                .getReferentId());
+                System.out.println(outputShape);
+                System.out.println(service);
+                toDafnyConvMethodName = SmithyNameResolver.getToDafnyMethodName(outputShape, "");
+              }
+            }
             // this is maybe because positional trait can change this
             final var maybeInputType = inputShape.hasTrait(UnitTypeTrait.class)
               ? ""
@@ -498,8 +524,9 @@ public class DafnyLocalServiceGenerator implements Runnable {
             } else {
               clientResponse = "var native_response, native_error";
               returnResponse =
-                "%s(*native_response)".formatted(
-                    SmithyNameResolver.getToDafnyMethodName(outputShape, "")
+                "%s(%snative_response)".formatted(
+                    toDafnyConvMethodName,
+                    isMemberShapePointable ? "*" : ""
                   );
             }
             if (inputShape.hasTrait(PositionalTrait.class)) {
@@ -527,10 +554,6 @@ public class DafnyLocalServiceGenerator implements Runnable {
             } else {
               inputType = maybeInputType;
             }
-            if (outputShape.hasTrait(PositionalTrait.class)) {
-              returnResponse = "(native_response)";
-            }
-
             writer.write(
               """
                 func (shim *Shim) $L($L) Wrappers.Result {
