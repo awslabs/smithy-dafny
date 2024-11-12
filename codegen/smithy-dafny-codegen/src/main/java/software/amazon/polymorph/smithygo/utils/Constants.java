@@ -8,14 +8,20 @@ public class Constants {
 
   public static final String DAFNY_RUNTIME_GO_LIBRARY_MODULE =
     "github.com/dafny-lang/DafnyRuntimeGo/v4";
-  
+
   private static final Map<String, String> DEFAULT_VALUES = Map.of(
-    "int32", "0",
-    "string", "",
-    "[]byte", "[0]",
-    "int64", "0",
-    "float64", "0",
-    "bool", "false"
+    "int32",
+    "0",
+    "string",
+    "",
+    "[]byte",
+    "[0]",
+    "int64",
+    "0",
+    "float64",
+    "0",
+    "bool",
+    "false"
   );
 
   /**
@@ -40,9 +46,9 @@ public class Constants {
     final MemberShape memberShape,
     final String suffix
   ) {
-    String funcNameWithOutSuffix = CaseUtils.toPascalCase(memberShape.getId().toString().replaceAll("[.$#]", "_"));
-    return funcNameWithOutSuffix
-      .concat("_")
-      .concat(suffix);
+    String funcNameWithOutSuffix = CaseUtils.toPascalCase(
+      memberShape.getId().toString().replaceAll("[.$#]", "_")
+    );
+    return funcNameWithOutSuffix.concat("_").concat(suffix);
   }
 }

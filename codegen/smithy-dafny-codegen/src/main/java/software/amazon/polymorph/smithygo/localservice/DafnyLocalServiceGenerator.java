@@ -188,9 +188,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
             SmithyNameResolver.shapeNamespace(inputShape)
           );
         }
-        var outputShape = model.expectShape(
-          operationShape.getOutputShape()
-        );
+        var outputShape = model.expectShape(operationShape.getOutputShape());
         writer.addImportFromModule(
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
             outputShape.toShapeId().getNamespace()
@@ -298,21 +296,36 @@ public class DafnyLocalServiceGenerator implements Runnable {
               .findFirst()
               .get();
             outputShape = model.expectShape(postionalMemShape.getTarget());
-            // We use different function name in conversion layer for memberShape and Shape. 
+            // We use different function name in conversion layer for memberShape and Shape.
             String fromDafnyConvMethodName = Constants.funcNameGenerator(
               postionalMemShape,
               "FromDafny"
             );
-            outputType = SmithyNameResolver.getSmithyType(postionalMemShape, symbolProvider.toSymbol(postionalMemShape)).concat(",");
+            outputType =
+              SmithyNameResolver
+                .getSmithyType(
+                  postionalMemShape,
+                  symbolProvider.toSymbol(postionalMemShape)
+                )
+                .concat(",");
             if (outputShape.hasTrait(ReferenceTrait.class)) {
-              outputShape = model.expectShape(outputShape.expectTrait(ReferenceTrait.class)
-                .getReferentId());
-              outputType = SmithyNameResolver.getSmithyType(outputShape, symbolProvider.toSymbol(outputShape)).concat(",");
-              fromDafnyConvMethodName = SmithyNameResolver.getFromDafnyMethodName(
-                service,
-                outputShape,
-                ""
-              );
+              outputShape =
+                model.expectShape(
+                  outputShape.expectTrait(ReferenceTrait.class).getReferentId()
+                );
+              outputType =
+                SmithyNameResolver
+                  .getSmithyType(
+                    outputShape,
+                    symbolProvider.toSymbol(outputShape)
+                  )
+                  .concat(",");
+              fromDafnyConvMethodName =
+                SmithyNameResolver.getFromDafnyMethodName(
+                  service,
+                  outputShape,
+                  ""
+                );
             }
             returnResponse =
               """
@@ -325,9 +338,15 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     symbolProvider.toSymbol(outputShape)
                   )
                 );
-            final var defaultRetType = Constants.getDefaultValueForSmithyType(SmithyNameResolver.getSmithyType(outputShape, symbolProvider.toSymbol(outputShape)));
+            final var defaultRetType = Constants.getDefaultValueForSmithyType(
+              SmithyNameResolver.getSmithyType(
+                outputShape,
+                symbolProvider.toSymbol(outputShape)
+              )
+            );
             returnError = "return %s,".formatted(defaultRetType);
-            validationCheck += "return %s, opaqueErr }".formatted(defaultRetType);
+            validationCheck +=
+            "return %s, opaqueErr }".formatted(defaultRetType);
           } else {
             returnResponse =
               """
@@ -344,8 +363,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     symbolProvider.toSymbol(outputShape)
                   )
                 );
-              returnError = "return nil,";
-              validationCheck += "return nil, opaqueErr }";
+            returnError = "return nil,";
+            validationCheck += "return nil, opaqueErr }";
           }
         }
 
@@ -464,29 +483,37 @@ public class DafnyLocalServiceGenerator implements Runnable {
               operationShape.getOutputShape()
             );
             var isMemberShapePointable = true;
-            String toDafnyConvMethodName = SmithyNameResolver.getToDafnyMethodName(outputShape, "");
+            String toDafnyConvMethodName =
+              SmithyNameResolver.getToDafnyMethodName(outputShape, "");
             if (outputShape.hasTrait(PositionalTrait.class)) {
               // Shape with positional shape MUST have only one membershape which is always required.
               isMemberShapePointable = false;
               MemberShape postionalMemShape = outputShape
-              .getAllMembers()
-              .values()
-              .stream()
-              .findFirst()
-              .get();
+                .getAllMembers()
+                .values()
+                .stream()
+                .findFirst()
+                .get();
               outputShape = model.expectShape(postionalMemShape.getTarget());
-              // We use different function name in conversion layer for memberShape and Shape. 
-              toDafnyConvMethodName = SmithyNameResolver
-              .shapeNamespace(postionalMemShape).concat(".").concat(Constants.funcNameGenerator(
-                postionalMemShape,
-                "ToDafny"
-              ));
+              // We use different function name in conversion layer for memberShape and Shape.
+              toDafnyConvMethodName =
+                SmithyNameResolver
+                  .shapeNamespace(postionalMemShape)
+                  .concat(".")
+                  .concat(
+                    Constants.funcNameGenerator(postionalMemShape, "ToDafny")
+                  );
               if (outputShape.hasTrait(ReferenceTrait.class)) {
-                outputShape = model.expectShape(outputShape.expectTrait(ReferenceTrait.class)
-                .getReferentId());
+                outputShape =
+                  model.expectShape(
+                    outputShape
+                      .expectTrait(ReferenceTrait.class)
+                      .getReferentId()
+                  );
                 System.out.println(outputShape);
                 System.out.println(service);
-                toDafnyConvMethodName = SmithyNameResolver.getToDafnyMethodName(outputShape, "");
+                toDafnyConvMethodName =
+                  SmithyNameResolver.getToDafnyMethodName(outputShape, "");
               }
             }
             // this is maybe because positional trait can change this

@@ -139,9 +139,7 @@ public class DafnyLocalServiceTypeConversionProtocol
         }
 
         final var output = model.expectShape(operation.getOutputShape());
-        if (
-          !alreadyVisited.contains(output.toShapeId())
-        ) {
+        if (!alreadyVisited.contains(output.toShapeId())) {
           alreadyVisited.add(output.toShapeId());
           if (
             !output.hasTrait(UnitTypeTrait.class) &&
@@ -475,9 +473,7 @@ public class DafnyLocalServiceTypeConversionProtocol
         final var output = context
           .model()
           .expectShape(operation.getOutputShape());
-        if (
-          !alreadyVisited.contains(output.toShapeId())
-        ) {
+        if (!alreadyVisited.contains(output.toShapeId())) {
           alreadyVisited.add(output.toShapeId());
           if (
             !output.hasTrait(UnitTypeTrait.class) &&
@@ -503,10 +499,14 @@ public class DafnyLocalServiceTypeConversionProtocol
               writer -> {
                 if (output.hasTrait(PositionalTrait.class)) {
                   output.accept(
-                    new DafnyToSmithyShapeVisitor(context, "dafnyOutput", writer, false)
+                    new DafnyToSmithyShapeVisitor(
+                      context,
+                      "dafnyOutput",
+                      writer,
+                      false
+                    )
                   );
-                }
-                else {
+                } else {
                   writer.addImportFromModule(
                     SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                       output.toShapeId().getNamespace()
