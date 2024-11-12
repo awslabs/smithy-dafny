@@ -13,7 +13,7 @@ public class Constants {
 
   // TODO: Is it possible to make this function name shorter and in camelCase?
   /**
-   * Generates a function name for shape visitors for AWS SDK and localservice.
+   * Generates a function name for memberShapes.
    * Generates private function for all shape excepts memberShape whose containerShape has positional trait
    *
    * @param memberShape The visiting MemberShape
@@ -36,7 +36,7 @@ public class Constants {
   }
 
   /**
-   * Generates a function name for shape visitors for AWS SDK and localservice.
+   * Generates a function name for memberShapes.
    * Always generates private function for all shape
    *
    * @param memberShape The visiting MemberShape
