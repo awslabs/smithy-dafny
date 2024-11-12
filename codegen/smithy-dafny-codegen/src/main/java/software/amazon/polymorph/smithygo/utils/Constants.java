@@ -3,6 +3,7 @@ package software.amazon.polymorph.smithygo.utils;
 import software.amazon.polymorph.traits.PositionalTrait;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.shapes.MemberShape;
+import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.utils.CaseUtils;
 
 public class Constants {
@@ -25,7 +26,8 @@ public class Constants {
     final Model model
   ) {
     String funcNameWithOutSuffix = memberShape.getId().toString().replaceAll("[.$#]", "_");
-    if ((model.expectShape(memberShape.getContainer())).hasTrait(PositionalTrait.class)) {
+    Shape containerShape = model.expectShape(memberShape.getContainer());
+    if (containerShape.hasTrait(PositionalTrait.class)) {
       funcNameWithOutSuffix = CaseUtils.toPascalCase(
         funcNameWithOutSuffix
       );
