@@ -85,7 +85,7 @@ public class ValidationGenerator {
       writer.openBlock(
         "func (input $L) $L($L) (error) {",
         symbol.getName(),
-        Constants.funcNameGenerator(key, "Validate"),
+        Constants.funcNameGenerator(key, "Validate", context.model()),
         inputType
       );
       writer.write(validationFuncMap.get(key));
@@ -474,7 +474,8 @@ public class ValidationGenerator {
     ) {
       final String funcName = Constants.funcNameGenerator(
         memberShape,
-        "Validate"
+        "Validate",
+        context.model()
       );
       final String funcInput = dataSource.startsWith("input") ? "" : dataSource;
       if (!funcInput.isEmpty()) {
@@ -568,7 +569,7 @@ public class ValidationGenerator {
       !validationFuncMap.containsKey(memberShape) &&
       (!keyValidation.isEmpty() || !valueValidation.isEmpty())
     ) {
-      final var funcName = Constants.funcNameGenerator(memberShape, "Validate");
+      final var funcName = Constants.funcNameGenerator(memberShape, "Validate", context.model());
       final var funcInput = dataSource.startsWith("input") ? "" : dataSource;
       if (!funcInput.isEmpty()) {
         final var currServiceShapeNamespace = SmithyNameResolver.shapeNamespace(
@@ -635,7 +636,7 @@ public class ValidationGenerator {
     final StringBuilder validationCode,
     final String dataSource
   ) {
-    final var funcName = Constants.funcNameGenerator(memberShape, "Validate");
+    final var funcName = Constants.funcNameGenerator(memberShape, "Validate", context.model());
     final var funcInput = dataSource.startsWith("input") ? "" : dataSource;
     var dataSourceForUnion = dataSource;
     final var currServiceShapeNamespace =

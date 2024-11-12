@@ -1473,7 +1473,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                 return $L
             }
             """,
-            Constants.funcNameGenerator(visitingMemberShape, "ToDafny"),
+            Constants.funcNameGenerator(visitingMemberShape, "ToDafny", context.model()),
             inputType,
             outputType,
             SmithyToDafnyShapeVisitor.getConversionFunc(visitingMemberShape)
@@ -1563,7 +1563,7 @@ public class DafnyLocalServiceTypeConversionProtocol
             func $L(input interface{})($L) {
                 $L
             }""",
-            Constants.funcNameGenerator(visitingMemberShape, "FromDafny"),
+            Constants.funcNameGenerator(visitingMemberShape, "FromDafny", context.model()),
             outputType,
             DafnyToSmithyShapeVisitor.getConversionFunc(visitingMemberShape)
           );
