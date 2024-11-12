@@ -58,6 +58,7 @@ GRADLEW := $(SMITHY_DAFNY_ROOT)/codegen/gradlew
 
 include $(SMITHY_DAFNY_ROOT)/SmithyDafnySedMakefile.mk
 
+
 # This flag enables pre-processing on extern module names.
 # This pre-processing is required to compile to Python and Go.
 # This is disabled by default.
@@ -78,6 +79,7 @@ ENABLE_EXTERN_PROCESSING?=
 #  lemma Correct(cpus:nat)
 #    ensures DAFNY_PROCESSES(cpus) * Z3_PROCESSES(cpus) <= cpus
 #  {}
+
 
 # Verify the entire project
 verify:Z3_PROCESSES=$(shell echo $$(( $(CORES) >= 3 ? 2 : 1 )))
@@ -558,7 +560,10 @@ rust: polymorph_dafny transpile_rust polymorph_rust test_rust
 
 # The Dafny Rust code generator only supports a single crate for everything,
 # so (among other consequences) we compile src and test code together.
-transpile_rust: | transpile_implementation_rust
+transpile_rust: copy_rust_externs transpile_implementation_rust
+
+copy_rust_externs:
+	runtimes/rust/copy_externs.sh || true
 
 transpile_implementation_rust: TARGET=rs
 transpile_implementation_rust: OUT=implementation_from_dafny
