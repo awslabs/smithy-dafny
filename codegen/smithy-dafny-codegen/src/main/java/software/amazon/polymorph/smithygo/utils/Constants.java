@@ -27,6 +27,7 @@ public class Constants {
   ) {
     String funcNameWithOutSuffix = memberShape.getId().toString().replaceAll("[.$#]", "_");
     Shape containerShape = model.expectShape(memberShape.getContainer());
+    // membershape inside a container shape with positional trait has to be exposed.
     if (containerShape.hasTrait(PositionalTrait.class)) {
       funcNameWithOutSuffix = CaseUtils.toPascalCase(
         funcNameWithOutSuffix
