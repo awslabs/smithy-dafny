@@ -97,9 +97,9 @@ public class ToNativeConstants {
     """
     package software.amazon.cryptography.services.kms.internaldafny;
 
-     import java.lang.Exception;
      import java.lang.IllegalStateException;
      import java.lang.RuntimeException;
+     import java.lang.Throwable;
      import software.amazon.awssdk.services.kms.KmsClient;
      import software.amazon.awssdk.services.kms.model.DependencyTimeoutException;
      import software.amazon.awssdk.services.kms.model.DoSomethingRequest;
@@ -148,10 +148,12 @@ public class ToNativeConstants {
         // Which would allow Dafny developers to treat the two differently.
         if (dafnyValue.dtor_obj() instanceof KmsException) {
           return (KmsException) dafnyValue.dtor_obj();
-        } else if (dafnyValue.dtor_obj() instanceof Exception) {
+        } else if (dafnyValue.dtor_obj() instanceof RuntimeException) {
           return (RuntimeException) dafnyValue.dtor_obj();
+        } else if (dafnyValue.dtor_obj() instanceof Throwable) {
+          return new RuntimeException(String.format("Unknown error thrown while calling AWS. %%s", (Throwable) dafnyValue.dtor_obj()));
         }
-         return new IllegalStateException(String.format(%s, dafnyValue));
+        return new IllegalStateException(String.format(%s, dafnyValue));
       }
 
        public static RuntimeException Error(Error_OpaqueWithText dafnyValue) {
@@ -162,8 +164,10 @@ public class ToNativeConstants {
          // Which would allow Dafny developers to treat the two differently.
          if (dafnyValue.dtor_obj() instanceof KmsException) {
            return (KmsException) dafnyValue.dtor_obj();
-         } else if (dafnyValue.dtor_obj() instanceof Exception) {
+         } else if (dafnyValue.dtor_obj() instanceof RuntimeException) {
            return (RuntimeException) dafnyValue.dtor_obj();
+         } else if (dafnyValue.dtor_obj() instanceof Throwable) {
+           return new RuntimeException(String.format("Unknown error thrown while calling AWS. %%s", (Throwable) dafnyValue.dtor_obj()));
          }
          return new IllegalStateException(String.format(%s, dafnyValue));
        }
