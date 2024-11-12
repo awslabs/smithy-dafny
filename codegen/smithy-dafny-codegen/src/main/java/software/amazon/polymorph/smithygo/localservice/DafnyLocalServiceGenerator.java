@@ -1009,7 +1009,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
               ? ""
               : "input %s".formatted(
                   DafnyNameResolver.getDafnyType(
-                    resourceShape,
+                    inputShape,
                     symbolProvider.toSymbol(inputShape)
                   )
                 );
