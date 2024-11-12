@@ -97,9 +97,9 @@ public class ToNativeConstants {
     """
     package software.amazon.cryptography.services.kms.internaldafny;
 
-     import java.lang.Exception;
      import java.lang.IllegalStateException;
      import java.lang.RuntimeException;
+     import java.lang.Throwable;
      import software.amazon.awssdk.services.kms.KmsClient;
      import software.amazon.awssdk.services.kms.model.DependencyTimeoutException;
      import software.amazon.awssdk.services.kms.model.DoSomethingRequest;
@@ -108,6 +108,7 @@ public class ToNativeConstants {
      import software.amazon.cryptography.services.kms.internaldafny.types.Error;
      import software.amazon.cryptography.services.kms.internaldafny.types.Error_DependencyTimeoutException;
      import software.amazon.cryptography.services.kms.internaldafny.types.Error_Opaque;
+     import software.amazon.cryptography.services.kms.internaldafny.types.Error_OpaqueWithText;
      import software.amazon.cryptography.services.kms.internaldafny.types.IKeyManagementServiceClient;
 
      public class ToNative {
@@ -139,7 +140,23 @@ public class ToNativeConstants {
            return ((Shim) dafnyValue).impl();
        }
 
-       public static RuntimeException Error(Error_Opaque dafnyValue) {
+      public static RuntimeException Error(Error_Opaque dafnyValue) {
+        // While the first two cases are logically identical,
+        // there is a semantic distinction.
+        // An un-modeled Service Error is different from a Java Heap Exhaustion error.
+        // In the future, Smithy-Dafny MAY allow for this distinction.
+        // Which would allow Dafny developers to treat the two differently.
+        if (dafnyValue.dtor_obj() instanceof KmsException) {
+          return (KmsException) dafnyValue.dtor_obj();
+        } else if (dafnyValue.dtor_obj() instanceof RuntimeException) {
+          return (RuntimeException) dafnyValue.dtor_obj();
+        } else if (dafnyValue.dtor_obj() instanceof Throwable) {
+          return new RuntimeException(String.format("Unknown error thrown while calling AWS. %%s", (Throwable) dafnyValue.dtor_obj()));
+        }
+        return new IllegalStateException(String.format(%s, dafnyValue));
+      }
+
+       public static RuntimeException Error(Error_OpaqueWithText dafnyValue) {
          // While the first two cases are logically identical,
          // there is a semantic distinction.
          // An un-modeled Service Error is different from a Java Heap Exhaustion error.
@@ -147,8 +164,10 @@ public class ToNativeConstants {
          // Which would allow Dafny developers to treat the two differently.
          if (dafnyValue.dtor_obj() instanceof KmsException) {
            return (KmsException) dafnyValue.dtor_obj();
-         } else if (dafnyValue.dtor_obj() instanceof Exception) {
+         } else if (dafnyValue.dtor_obj() instanceof RuntimeException) {
            return (RuntimeException) dafnyValue.dtor_obj();
+         } else if (dafnyValue.dtor_obj() instanceof Throwable) {
+           return new RuntimeException(String.format("Unknown error thrown while calling AWS. %%s", (Throwable) dafnyValue.dtor_obj()));
          }
          return new IllegalStateException(String.format(%s, dafnyValue));
        }
@@ -160,6 +179,9 @@ public class ToNativeConstants {
          if (dafnyValue.is_Opaque()) {
            return ToNative.Error((Error_Opaque) dafnyValue);
          }
+         if (dafnyValue.is_OpaqueWithText()) {
+           return ToNative.Error((Error_OpaqueWithText) dafnyValue);
+         }
          // TODO This should indicate a codegen bug; every error Should have been taken care of.
          return new IllegalStateException(
            String.format("Unknown error thrown while calling service. %%s", dafnyValue)
@@ -170,6 +192,7 @@ public class ToNativeConstants {
         STRING_CONVERSION,
         STRING_CONVERSION,
         STRING_CONVERSION,
+        "\"Unknown error thrown while calling AWS. %s\"",
         "\"Unknown error thrown while calling AWS. %s\""
       );
 }
