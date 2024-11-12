@@ -276,9 +276,12 @@ public class DafnyLocalServiceGenerator implements Runnable {
 
         String returnResponse, returnError;
         var defaultRetType = "nil";
+        final String validationErrorRet;
+        final String validationErrorVar = "opaqueErr";
         if (outputShape.hasTrait(UnitTypeTrait.class)) {
           returnResponse = "return nil";
           returnError = "return";
+          validationErrorRet = "return %s }".formatted(validationErrorVar);
         } else {
           if (outputShape.hasTrait(PositionalTrait.class)) {
             MemberShape postionalMemShape = outputShape
@@ -355,6 +358,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 );
           }
           returnError = "return %s,".formatted(defaultRetType);
+          validationErrorRet = "return %s, %s".formatted(defaultRetType, validationErrorVar);
         }
         String validationCheck = "";
         if (!inputShape.hasTrait(UnitTypeTrait.class)) {
@@ -365,11 +369,12 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   opaqueErr := %s.OpaqueError{
                     ErrObject: err,
                   }
-                  return %s, opaqueErr
+                  return %s, %s
                 }
             """.formatted(
                 SmithyNameResolver.smithyTypesNamespace(inputShape),
-                defaultRetType
+                defaultRetType,
+                validationErrorVar
               );
         }
 
