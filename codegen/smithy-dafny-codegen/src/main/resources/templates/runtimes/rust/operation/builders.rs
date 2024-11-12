@@ -49,9 +49,12 @@ impl $pascalCaseOperationName:LFluentBuilder {
             // Operations' models don't declare their own validation error,
             // and smithy-rs seems to not generate a ValidationError case unless there is.
             // Vanilla smithy-rs uses SdkError::construction_failure, but we aren't using SdkError.
-            .map_err(|mut e| $qualifiedRustServiceErrorType:L::Opaque {
-                obj: ::dafny_runtime::Object::from_ref(&mut e as &mut dyn ::std::any::Any)
-            })?;
+            .map_err(|mut e| {
+	     let msg = format!("{:?}", e);
+             $qualifiedRustServiceErrorType:L::OpaqueWithText {
+                obj: ::dafny_runtime::Object::from_ref(&mut e as &mut dyn ::std::any::Any),
+		objMessage: msg
+             }})?;
         $rustRootModuleName:L::operation::$snakeCaseOperationName:L::$pascalCaseOperationName:L::send(&self.$operationTargetName:L, input).await
     }
 

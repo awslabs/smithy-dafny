@@ -425,6 +425,10 @@ public class Dafny extends NameResolver {
     return classForDatatypeConstructor("Error", "Opaque");
   }
 
+  public ClassName classForOpaqueWithTextError() {
+    return classForDatatypeConstructor("Error", "OpaqueWithText");
+  }
+
   public CodeBlock typeDescriptor(ShapeId shapeId) {
     Shape shape = model
       .getShape(shapeId)
