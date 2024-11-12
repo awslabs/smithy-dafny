@@ -71,7 +71,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
   }
 
   void generateClient(GoWriter writer) {
-    // Generate each operation for the service. We do this here instead of via the operation visitor method to
+    // Generate each operation for the service. We do this here instead of via the operation visitor
+    // method to
     // limit it to the operations bound to the service.
     final var serviceSymbol = symbolProvider.toSymbol(service);
     final var serviceTrait = service.expectTrait(LocalServiceTrait.class);
@@ -220,17 +221,6 @@ public class DafnyLocalServiceGenerator implements Runnable {
               SmithyNameResolver.smithyTypesNamespace(outputShape),
               outputShape.toShapeId().getName()
             );
-        String validationCheck = "";
-        if (!inputType.equals("")) {
-          validationCheck =
-            """
-                err := params.Validate()
-                if err != nil {
-                    opaqueErr := %s.OpaqueError{
-                        ErrObject: err,
-                    }
-            """.formatted(SmithyNameResolver.smithyTypesNamespace(inputShape));
-        }
         String baseClientCall;
         if (inputShape.hasTrait(UnitTypeTrait.class)) {
           baseClientCall =
@@ -240,7 +230,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
         } else {
           String dafnyType;
           if (inputShape.hasTrait(PositionalTrait.class)) {
-            // TODO: We can probably refactor this for better code quality. Like: inputForPositional could be redundant and we could use input itself.
+            // TODO: We can probably refactor this for better code quality. Like: inputForPositional
+            // could be redundant and we could use input itself.
             Shape inputForPositional = model.expectShape(
               inputShape
                 .getAllMembers()
@@ -271,7 +262,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
             var dafny_response = client.DafnyClient.%s(dafny_request)
             """.formatted(
                 dafnyType,
-                // We could unwrap the shape right here if positional but we will also have to change shim
+                // We could unwrap the shape right here if positional but we will also have to change
+                // shim
                 // TODO: Decide this later
                 SmithyNameResolver.getToDafnyMethodName(
                   service,
@@ -283,10 +275,10 @@ public class DafnyLocalServiceGenerator implements Runnable {
         }
 
         String returnResponse, returnError;
+        var defaultRetType = "nil";
         if (outputShape.hasTrait(UnitTypeTrait.class)) {
           returnResponse = "return nil";
           returnError = "return";
-          validationCheck += "return opaqueErr }";
         } else {
           if (outputShape.hasTrait(PositionalTrait.class)) {
             MemberShape postionalMemShape = outputShape
@@ -338,15 +330,13 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     symbolProvider.toSymbol(outputShape)
                   )
                 );
-            final var defaultRetType = Constants.getDefaultValueForSmithyType(
-              SmithyNameResolver.getSmithyType(
-                outputShape,
-                symbolProvider.toSymbol(outputShape)
-              )
-            );
-            returnError = "return %s,".formatted(defaultRetType);
-            validationCheck +=
-            "return %s, opaqueErr }".formatted(defaultRetType);
+            defaultRetType =
+              Constants.getDefaultValueForSmithyType(
+                SmithyNameResolver.getSmithyType(
+                  outputShape,
+                  symbolProvider.toSymbol(outputShape)
+                )
+              );
           } else {
             returnResponse =
               """
@@ -363,9 +353,24 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     symbolProvider.toSymbol(outputShape)
                   )
                 );
-            returnError = "return nil,";
-            validationCheck += "return nil, opaqueErr }";
           }
+          returnError = "return %s,".formatted(defaultRetType);
+        }
+        String validationCheck = "";
+        if (!inputShape.hasTrait(UnitTypeTrait.class)) {
+          validationCheck =
+            """
+                err := params.Validate()
+                if err != nil {
+                  opaqueErr := %s.OpaqueError{
+                    ErrObject: err,
+                  }
+                  return %s, opaqueErr
+                }
+            """.formatted(
+                SmithyNameResolver.smithyTypesNamespace(inputShape),
+                defaultRetType
+              );
         }
 
         writer.write(
@@ -946,7 +951,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
           }
         );
       } else {
-        //Generate Service
+        // Generate Service
       }
     }
   }
