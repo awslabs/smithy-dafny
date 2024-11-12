@@ -73,7 +73,7 @@ See the [`codegen/smithy-dafny-codegen-cli`](codegen/smithy-dafny-codegen-cli) d
 
 ### Python
 
-1. To Polymorph Python code, you must install Python libraries that format the code. Run:
+1. To generate Python code with Smithy-Dafny, you must install Python libraries that format the code. Run:
    ```
    make setup_smithy_dafny_python
    ```
