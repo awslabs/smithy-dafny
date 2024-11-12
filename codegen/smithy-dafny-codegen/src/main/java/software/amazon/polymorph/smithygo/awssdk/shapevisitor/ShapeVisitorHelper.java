@@ -124,7 +124,11 @@ public class ShapeVisitorHelper {
         )
       );
     }
-    final String funcName = Constants.funcNameGenerator(memberShape, "ToDafny", context.model());
+    final String funcName = Constants.funcNameGenerator(
+      memberShape,
+      "ToDafny",
+      context.model()
+    );
     return (funcName.concat("(").concat(dataSource).concat(")"));
   }
 }
