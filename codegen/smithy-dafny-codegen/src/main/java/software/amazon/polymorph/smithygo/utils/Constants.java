@@ -2,6 +2,7 @@ package software.amazon.polymorph.smithygo.utils;
 
 import java.util.Map;
 import software.amazon.smithy.model.shapes.MemberShape;
+import software.amazon.smithy.utils.CaseUtils;
 
 public class Constants {
 
@@ -27,7 +28,7 @@ public class Constants {
     return DEFAULT_VALUES.getOrDefault(smithyType, "nil");
   }
 
-  // TODO: Is it possible to make this function name shorter and in camelCase?
+  // TODO: Is it possible to make this function name shorter?
   /**
    * Generates a function name for shape visitors for AWS SDK and localservice.
    *
@@ -39,10 +40,8 @@ public class Constants {
     final MemberShape memberShape,
     final String suffix
   ) {
-    return memberShape
-      .getId()
-      .toString()
-      .replaceAll("[.$#]", "_")
+    String funcNameWithOutSuffix = CaseUtils.toPascalCase(memberShape.getId().toString().replaceAll("[.$#]", "_"));
+    return funcNameWithOutSuffix
       .concat("_")
       .concat(suffix);
   }
