@@ -346,7 +346,7 @@ public class DirectedPythonCodegen implements DirectedCodegen<GenerationContext,
         try {
             CodegenUtils.runCommand("python3 -m black -h", fileManifest.getBaseDir());
         } catch (CodegenException e) {
-            throw new CodegenException("Unable to find the python package black. Run `make setup_python` and ensure `python3 -m black` indicates the package is installed..", e);
+            throw new CodegenException("Unable to find the python package black. Run `make setup_python` and ensure `python3 -m black` indicates the package is installed.", e);
         }
         LOGGER.info("Running code formatter on generated code");
         CodegenUtils.runCommand("python3 -m black . --exclude \"\"", fileManifest.getBaseDir());

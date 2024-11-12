@@ -71,6 +71,13 @@ See the [`codegen/smithy-dafny-codegen-cli`](codegen/smithy-dafny-codegen-cli) d
    make mvn_local_deploy_polymorph
    ```
 
+### Python
+
+1. To Polymorph Python code, you must install Python libraries that format the code. Run:
+   ```
+   make setup_smithy_dafny_python
+   ```
+
 ## Limitations
 
 ### Completeness
