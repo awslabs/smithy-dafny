@@ -830,11 +830,7 @@ public class DafnyAwsSdkClientTypeConversionProtocol
                 return $L
             }
             """,
-            Constants.funcNameGenerator(
-              visitingMemberShape,
-              "ToDafny",
-              context.model()
-            ),
+            Constants.funcNameGenerator(visitingMemberShape, "ToDafny"),
             inputType,
             outputType,
             AwsSdkToDafnyShapeVisitor.getConversionFunc(visitingMemberShape)
@@ -890,11 +886,7 @@ public class DafnyAwsSdkClientTypeConversionProtocol
             func $L(input $L)($L) {
                 return $L
             }""",
-            Constants.funcNameGenerator(
-              visitingMemberShape,
-              "FromDafny",
-              context.model()
-            ),
+            Constants.funcNameGenerator(visitingMemberShape, "FromDafny"),
             "interface {}",
             outputType,
             DafnyToAwsSdkShapeVisitor.getConversionFunc(visitingMemberShape)

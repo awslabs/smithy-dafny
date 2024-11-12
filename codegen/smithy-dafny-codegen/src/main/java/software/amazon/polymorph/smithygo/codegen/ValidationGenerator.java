@@ -85,7 +85,7 @@ public class ValidationGenerator {
       writer.openBlock(
         "func (input $L) $L($L) (error) {",
         symbol.getName(),
-        Constants.funcNameGenerator(key, "Validate", context.model()),
+        Constants.funcNameGenerator(key, "Validate"),
         inputType
       );
       writer.write(validationFuncMap.get(key));

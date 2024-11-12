@@ -14,6 +14,7 @@ public class Constants {
   // TODO: Is it possible to make this function name shorter and in camelCase?
   /**
    * Generates a function name for shape visitors for AWS SDK and localservice.
+   * Generates private function for all shape excepts memberShape whose containerShape has positional trait
    *
    * @param memberShape The visiting MemberShape
    * @param suffix A string to be appended at the end of the generated function name
@@ -25,15 +26,32 @@ public class Constants {
     final String suffix,
     final Model model
   ) {
-    String funcNameWithOutSuffix = memberShape
-      .getId()
-      .toString()
-      .replaceAll("[.$#]", "_");
+    String funcName = funcNameGenerator(memberShape, suffix);
     Shape containerShape = model.expectShape(memberShape.getContainer());
     // membershape inside a container shape with positional trait has to be exposed.
     if (containerShape.hasTrait(PositionalTrait.class)) {
-      funcNameWithOutSuffix = CaseUtils.toPascalCase(funcNameWithOutSuffix);
+      funcName = CaseUtils.toPascalCase(funcName);
     }
-    return funcNameWithOutSuffix.concat("_").concat(suffix);
+    return funcName;
+  }
+
+  /**
+   * Generates a function name for shape visitors for AWS SDK and localservice.
+   * Always generates private function for all shape
+   *
+   * @param memberShape The visiting MemberShape
+   * @param suffix A string to be appended at the end of the generated function name
+   * @return A string representing the generated function name
+   */
+  public static String funcNameGenerator(
+    final MemberShape memberShape,
+    final String suffix
+  ) {
+    return memberShape
+      .getId()
+      .toString()
+      .replaceAll("[.$#]", "_")
+      .concat("_")
+      .concat(suffix);
   }
 }
