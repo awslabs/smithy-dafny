@@ -21,7 +21,10 @@ enforce-determinism = false
 reads-clauses-on-methods = true
 
 # Options that differ from Dafny's
-# unicode-char = false
+unicode-char = false
+
+# TODO: temporary
+allow-warnings = true
 
 # Options important for sustainable development
 # of the libraries themselves.
