@@ -5,8 +5,9 @@ include "../Model/SimpleStreamingTypes.dfy"
 module SimpleStreamingImpl refines AbstractSimpleStreamingOperations {
 
   import opened Std.Aggregators
-  import Seq
-
+  import Std.Collections.Seq
+  import opened Chunker
+  
   datatype Config = Config
   type InternalConfig = Config
   predicate ValidInternalConfig?(config: InternalConfig)
@@ -65,6 +66,35 @@ module SimpleStreamingImpl refines AbstractSimpleStreamingOperations {
   predicate ChunksEnsuresPublicly(input: ChunksInput , output: Result<ChunksOutput, Error>)
   {true}
 
+  method Chunks ( config: InternalConfig , input: ChunksInput )
+    returns (output: Result<ChunksOutput, Error>)
+  {
+    var chunker := new Chunker(input.bytesIn, input.chunkSize);
+
+    return Success(ChunksOutput(bytesOut := chunker));
+  }
+
+  method ChunksAlt ( config: InternalConfig , input: ChunksInput )
+    returns (output: Result<ChunksOutput, Error>)
+  {
+    var outStream := SomeOtherServiceOp(input.bytesIn);
+
+    return Success(ChunksOutput(bytesOut := outStream));
+  }
+
+  method SomeOtherServiceOp( input: StreamingBlob ) returns (r: StreamingBlob) {
+    // Imagine this was external
+    r := new SeqEnumerator([]);
+  }
+}
+
+module Chunker {
+
+  import opened Std.Wrappers
+  import opened Types = SimpleStreamingTypes
+  import opened StandardLibrary.UInt
+  import opened Std.Enumerators
+  import opened Std.Aggregators
 
   class Chunker extends Pipeline<bytes, bytes> {
 
@@ -80,7 +110,7 @@ module SimpleStreamingImpl refines AbstractSimpleStreamingOperations {
       chunkBuffer := [];
     }
 
-    method Process(event: Option<bytes>, a: Accumulator<bytes>)
+    method Process(event: Wrappers.Option<bytes>, a: Accumulator<bytes>)
       requires Valid()
       requires a.Valid()
       requires Repr !! a.Repr
@@ -109,30 +139,5 @@ module SimpleStreamingImpl refines AbstractSimpleStreamingOperations {
         }
       }
     }
-  }
-
-  method Chunks ( config: InternalConfig , input: ChunksInput )
-    returns (output: Result<ChunksOutput, Error>)
-  {
-    var chunker := new Chunker(input.bytesIn, input.chunkSize);
-
-    return Success(ChunksOutput(bytesOut := chunker));
-  }
-
-
-
-
-
-  method ChunksAlt ( config: InternalConfig , input: ChunksInput )
-    returns (output: Result<ChunksOutput, Error>)
-  {
-    var outStream := SomeOtherServiceOp(input.bytesIn);
-
-    return Success(ChunksOutput(bytesOut := outStream));
-  }
-
-  method SomeOtherServiceOp( input: StreamingBlob ) returns (r: StreamingBlob) {
-    // Imagine this was external
-    r := new SeqEnumerator([]);
   }
 }

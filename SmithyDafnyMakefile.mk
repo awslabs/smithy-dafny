@@ -204,8 +204,12 @@ transpile_implementation:
 		$(DAFNY_OTHER_FILES) \
 		$(TRANSPILE_MODULE_NAME) \
 		$(if $(strip $(STD_LIBRARY)) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/src/Index.dfy, ) \
+		$(if $(strip $(STD_LIBRARY)) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/../stdlibs.doo, ) \
 		$(TRANSLATION_RECORD) \
 		$(TRANSPILE_DEPENDENCIES)
+
+stdlibs:
+	cd $(PROJECT_ROOT)/$(STD_LIBRARY)/..; dafny build -t:lib --output stdlibs DafnyStandardLibraries.toml
 
 # If the project under transpilation uses `replaceable` modules,
 #   it MUST define a SRC_INDEX variable per language.
@@ -241,6 +245,7 @@ transpile_test:
 		$(DAFNY_OPTIONS) \
 		$(DAFNY_OTHER_FILES) \
 		$(if $(strip $(STD_LIBRARY)) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/src/Index.dfy, ) \
+		$(if $(strip $(STD_LIBRARY)) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/../stdlibs.doo, ) \
 		$(TRANSLATION_RECORD) \
 		$(SOURCE_TRANSLATION_RECORD) \
 		$(TRANSPILE_DEPENDENCIES) \

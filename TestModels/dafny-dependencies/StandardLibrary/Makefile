@@ -98,6 +98,7 @@ transpile_implementation:
 		--unicode-char:false \
 		--function-syntax:3 \
 		--output $(OUT) \
+		../stdlibs.doo \
 		$(DAFNY_OPTIONS) \
 		$(DAFNY_OTHER_FILES) \
 		$(TRANSPILE_MODULE_NAME)
