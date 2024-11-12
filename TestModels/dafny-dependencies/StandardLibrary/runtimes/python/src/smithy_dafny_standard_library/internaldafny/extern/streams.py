@@ -1,8 +1,8 @@
 
 from _dafny import Seq
 from smithy_python.interfaces.blobs import ByteStream
-from standard_library.internaldafny.generated.Std_Enumerators import Enumerator
-from standard_library.internaldafny.generated.Wrappers import Option, Option_Some, Option_None
+from smithy_dafny_standard_library.internaldafny.generated.Std_Enumerators import Enumerator
+from smithy_dafny_standard_library.internaldafny.generated.Std_Wrappers import Option, Option_Some, Option_None
 
 
 class EnumeratorByteStream(ByteStream):

@@ -29,6 +29,7 @@ import software.amazon.smithy.model.shapes.StringShape;
 import software.amazon.smithy.model.shapes.StructureShape;
 import software.amazon.smithy.model.shapes.TimestampShape;
 import software.amazon.smithy.model.shapes.UnionShape;
+import software.amazon.smithy.model.traits.StreamingTrait;
 import software.amazon.smithy.python.codegen.GenerationContext;
 import software.amazon.smithy.python.codegen.PythonWriter;
 
@@ -92,7 +93,12 @@ public class DafnyToLocalServiceShapeVisitor
 
   @Override
   public String blobShape(BlobShape shape) {
-    return "bytes(%1$s)".formatted(dataSource);
+    if (shape.hasTrait(StreamingTrait.class)) {
+      writer.addStdlibImport("smithy_dafny_standard_library.internaldafny.extern.streams", "EnumeratorByteStream");
+      return "EnumeratorByteStream(%1$s)".formatted(dataSource);
+    } else {
+      return "bytes(%1$s)".formatted(dataSource);
+    }
   }
 
   @Override
