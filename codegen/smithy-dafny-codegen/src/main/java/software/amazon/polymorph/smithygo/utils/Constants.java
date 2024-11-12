@@ -5,6 +5,7 @@ import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.utils.CaseUtils;
+import software.amazon.smithy.utils.StringUtils;
 
 public class Constants {
 
@@ -26,15 +27,13 @@ public class Constants {
     final String suffix,
     final Model model
   ) {
-    StringBuilder funcName = new StringBuilder(
-      funcNameGenerator(memberShape, suffix)
-    );
-    Shape containerShape = model.expectShape(memberShape.getContainer());
+    String funcName = funcNameGenerator(memberShape, suffix);
+    final Shape containerShape = model.expectShape(memberShape.getContainer());
     // membershape inside a container shape with positional trait has to be exposed.
     if (containerShape.hasTrait(PositionalTrait.class)) {
-      funcName.setCharAt(0, Character.toUpperCase(funcName.charAt(0)));
+      funcName = StringUtils.capitalize(funcName);
     }
-    return funcName.toString();
+    return funcName;
   }
 
   /**
