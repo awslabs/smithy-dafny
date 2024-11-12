@@ -26,13 +26,16 @@ public class Constants {
     final String suffix,
     final Model model
   ) {
-    String funcName = funcNameGenerator(memberShape, suffix);
+    String funcNameWithOutSuffix = memberShape
+      .getId()
+      .toString()
+      .replaceAll("[.$#]", "_");
     Shape containerShape = model.expectShape(memberShape.getContainer());
     // membershape inside a container shape with positional trait has to be exposed.
     if (containerShape.hasTrait(PositionalTrait.class)) {
-      funcName = CaseUtils.toPascalCase(funcName);
+      funcNameWithOutSuffix = CaseUtils.toPascalCase(funcNameWithOutSuffix);
     }
-    return funcName;
+    return funcNameWithOutSuffix.concat("_").concat(suffix);
   }
 
   /**
