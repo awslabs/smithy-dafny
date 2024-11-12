@@ -75,7 +75,7 @@ See the [`codegen/smithy-dafny-codegen-cli`](codegen/smithy-dafny-codegen-cli) d
 
 1. To generate Python code with Smithy-Dafny, you must install Python libraries that format the code. Run:
    ```
-   make setup_smithy_dafny_python
+   make setup_python
    ```
    The packages installed by this step must be accessible via a `bash` invocation of `python3`.
 
