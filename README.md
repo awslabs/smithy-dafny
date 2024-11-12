@@ -77,6 +77,7 @@ See the [`codegen/smithy-dafny-codegen-cli`](codegen/smithy-dafny-codegen-cli) d
    ```
    make setup_smithy_dafny_python
    ```
+   The packages installed by this step must be accessible via a `bash` invocation of `python3`.
 
 ## Limitations
 
