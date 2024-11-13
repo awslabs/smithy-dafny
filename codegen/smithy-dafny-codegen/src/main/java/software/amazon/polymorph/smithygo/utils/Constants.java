@@ -1,5 +1,7 @@
 package software.amazon.polymorph.smithygo.utils;
 
+import static java.util.Map.entry;
+
 import java.util.Map;
 import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.utils.CaseUtils;
@@ -9,19 +11,13 @@ public class Constants {
   public static final String DAFNY_RUNTIME_GO_LIBRARY_MODULE =
     "github.com/dafny-lang/DafnyRuntimeGo/v4";
 
-  private static final Map<String, String> DEFAULT_VALUES = Map.of(
-    "int32",
-    "0",
-    "string",
-    "",
-    "[]byte",
-    "[0]",
-    "int64",
-    "0",
-    "float64",
-    "0",
-    "bool",
-    "false"
+  private static final Map<String, String> DEFAULT_VALUES = Map.ofEntries(
+    entry("int32", "0"),
+    entry("string", ""),
+    entry("[]byte", "[0]"),
+    entry("int64", "0"),
+    entry("float64", "0"),
+    entry("bool", "false")
   );
 
   /**
