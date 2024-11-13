@@ -171,7 +171,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
           );
       }
       if (!this.isOptional) {
-        return "return %1$s{%2$s}".formatted(
+        return "return &%s{%s}".formatted(
             namespace.concat(
               context.symbolProvider().toSymbol(serviceShape).getName()
             ),
