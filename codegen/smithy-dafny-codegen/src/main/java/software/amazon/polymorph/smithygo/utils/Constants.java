@@ -14,7 +14,7 @@ public class Constants {
   private static final Map<String, String> DEFAULT_VALUES = Map.ofEntries(
     Map.<String, String>entry("int32", "0"),
     Map.<String, String>entry("string", ""),
-    Map.<String, String>entry("[]byte", "[0]"),
+    Map.<String, String>entry("[]byte", "[]byte(\"\")"),
     Map.<String, String>entry("int64", "0"),
     Map.<String, String>entry("float64", "0"),
     Map.<String, String>entry("bool", "false")
