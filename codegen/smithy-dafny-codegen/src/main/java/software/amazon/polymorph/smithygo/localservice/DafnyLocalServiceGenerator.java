@@ -248,8 +248,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
             var dafny_response = client.DafnyClient.%s(dafny_request)
             """.formatted(
                 dafnyType,
-                // We could unwrap the shape right here if positional but we will also have to change
-                // shim
+                // We could unwrap the shape right here if positional but we will also have to change shim
                 // TODO: Decide this later
                 SmithyNameResolver.getToDafnyMethodName(
                   service,

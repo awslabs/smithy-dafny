@@ -1,7 +1,6 @@
 package software.amazon.polymorph.smithygo.utils;
 
 import java.util.Map;
-import java.util.Map.Entry;
 import software.amazon.polymorph.traits.PositionalTrait;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.shapes.MemberShape;
@@ -27,7 +26,7 @@ public class Constants {
    * @param smithyType The Smithy type to get the default value for
    * @return The default value for the specified type, or null if the type is not found
    */
-  public static String getDefaultValueForSmithyType(String smithyType) {
+  public static String getDefaultValueForSmithyType(final String smithyType) {
     return DEFAULT_VALUES.getOrDefault(smithyType, "nil");
   }
 
