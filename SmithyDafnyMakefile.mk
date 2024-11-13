@@ -594,28 +594,6 @@ _mv_implementation_rust:
 	rustfmt --edition 2021 runtimes/rust/src/implementation_from_dafny.rs
 	rm -rf implementation_from_dafny-rust
 
-patch_after_transpile_rust:
-	export service_deps_var=SERVICE_DEPS_$(MAIN_SERVICE_FOR_RUST) ; \
-	export namespace_var=SERVICE_NAMESPACE_$(MAIN_SERVICE_FOR_RUST) ; \
-	export SERVICE=$(MAIN_SERVICE_FOR_RUST) ; \
-	$(MAKE) _patch_after_transpile_rust ; \
-
-_patch_after_transpile_rust: OUTPUT_RUST=--output-rust $(LIBRARY_ROOT)/runtimes/rust
-_patch_after_transpile_rust:
-	cd $(CODEGEN_CLI_ROOT); \
-	./../gradlew run --args="\
-	patch-after-transpile \
-	--library-root $(LIBRARY_ROOT) \
-	$(OUTPUT_RUST) \
-	--model $(if $(DIR_STRUCTURE_V2), $(LIBRARY_ROOT)/dafny/$(SERVICE)/Model, $(SMITHY_MODEL_ROOT)) \
-	--dependent-model $(PROJECT_ROOT)/$(SMITHY_DEPS) \
-	$(patsubst %, --dependent-model $(PROJECT_ROOT)/%/Model, $($(service_deps_var))) \
-	--namespace $($(namespace_var)) \
-	$(AWS_SDK_CMD) \
-	$(POLYMORPH_OPTIONS) \
-	$(if $(TRANSPILE_TESTS_IN_RUST), --local-service-test, ) \
-	";
-
 build_rust:
 	cd runtimes/rust; \
 	cargo build
