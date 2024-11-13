@@ -65,8 +65,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
   }
 
   void generateClient(GoWriter writer) {
-    // Generate each operation for the service. We do this here instead of via the operation visitor
-    // method to
+    // Generate each operation for the service. We do this here instead of via the operation visitor method to
     // limit it to the operations bound to the service.
     final var serviceSymbol = symbolProvider.toSymbol(service);
     final var serviceTrait = service.expectTrait(LocalServiceTrait.class);
@@ -218,8 +217,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
         } else {
           String dafnyType;
           if (inputShape.hasTrait(PositionalTrait.class)) {
-            // TODO: We can probably refactor this for better code quality. Like: inputForPositional
-            // could be redundant and we could use input itself.
+            // TODO: We can probably refactor this for better code quality. Like: inputForPositional could be redundant and we could use input itself.
             Shape inputForPositional = model.expectShape(
               inputShape
                 .getAllMembers()
