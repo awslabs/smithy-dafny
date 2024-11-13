@@ -269,7 +269,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
           validationErrorRet = "return %s".formatted(validationErrorVar);
         } else {
           if (outputShape.hasTrait(PositionalTrait.class)) {
-            MemberShape postionalMemShape = outputShape
+            final MemberShape postionalMemShape = outputShape
               .getAllMembers()
               .values()
               .stream()
