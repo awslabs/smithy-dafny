@@ -134,7 +134,7 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     }
 
     if (resourceOrService.asServiceShape().isPresent()) {
-      var clientConversion = dataSource;
+      var clientConversion = dataSource.concat(".DafnyClient");
       if (resourceOrService.hasTrait(ServiceTrait.class)) {
         writer.addImportFromModule(
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
