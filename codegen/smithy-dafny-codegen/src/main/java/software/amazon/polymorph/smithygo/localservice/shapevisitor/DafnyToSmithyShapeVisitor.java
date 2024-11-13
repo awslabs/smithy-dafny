@@ -278,7 +278,10 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         .expectShape(memberShape.getTarget());
       final String DtorConversion;
       if (!shape.hasTrait(PositionalTrait.class)) {
-        DtorConversion = ".Dtor_%s()".formatted(memberName);
+        DtorConversion =
+          ".Dtor_%s()".formatted(
+              DafnyNameResolver.dafnyCompilesExtra_(memberName)
+            );
       } else {
         // Shapes with PositionalTrait already gets input unwrapped so no conversion needed.
         DtorConversion = "";
