@@ -310,7 +310,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
             }
             returnResponse =
               """
-              var native_response = %s(dafny_response.Extract().(%s))
+              var native_response = %s(dafny_response.Dtor_value().(%s))
               return native_response, nil
               """.formatted(
                   fromDafnyConvMethodName,
@@ -329,7 +329,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
           } else {
             returnResponse =
               """
-              var native_response = %s(dafny_response.Extract().(%s))
+              var native_response = %s(dafny_response.Dtor_value().(%s))
               return &native_response, nil
               """.formatted(
                   SmithyNameResolver.getFromDafnyMethodName(
@@ -859,7 +859,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 } else {
                   returnResponse =
                     """
-                    var native_response = %s(dafny_response.Extract().(%s))
+                    var native_response = %s(dafny_response.Dtor_value().(%s))
                     return &native_response, nil
                     """.formatted(
                         SmithyNameResolver.getFromDafnyMethodName(
