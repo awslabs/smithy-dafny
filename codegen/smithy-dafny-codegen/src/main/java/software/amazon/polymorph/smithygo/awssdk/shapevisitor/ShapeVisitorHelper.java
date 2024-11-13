@@ -100,7 +100,6 @@ public class ShapeVisitorHelper {
    * @param context codegen context
    * @param dataSource the native variable name aka data source
    * @param writer used to write to the Go package.
-   * @param isConfigShape if the shape is a local service config shape
    * @param isOptional if the shape is optional and might require wrapping.
    * @param isPointerType if the shape is a pointer type and might require dereferencing.
    * @return the generated type conversion function as a string
@@ -110,25 +109,12 @@ public class ShapeVisitorHelper {
     final GenerationContext context,
     final String dataSource,
     final GoWriter writer,
-    final boolean isConfigShape,
     final boolean isOptional,
     final boolean isPointerType
   ) {
     final Shape targetShape = context
       .model()
       .expectShape(memberShape.getTarget());
-    if (targetShape.hasTrait(ReferenceTrait.class)) {
-      return targetShape.accept(
-        new AwsSdkToDafnyShapeVisitor(
-          context,
-          dataSource,
-          writer,
-          isConfigShape,
-          isOptional,
-          isPointerType
-        )
-      );
-    }
     final String funcDataSource = "input";
     if (
       !AwsSdkToDafnyShapeVisitor
@@ -144,7 +130,6 @@ public class ShapeVisitorHelper {
             context,
             funcDataSource,
             writer,
-            isConfigShape,
             isOptional,
             isPointerType
           )

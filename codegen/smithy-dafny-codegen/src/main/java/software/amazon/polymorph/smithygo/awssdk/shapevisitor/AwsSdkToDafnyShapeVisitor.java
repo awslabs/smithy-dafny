@@ -43,7 +43,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
   private final GenerationContext context;
   private final String dataSource;
   private final GoWriter writer;
-  private final boolean isConfigShape;
 
   private final boolean isOptional;
   protected boolean isPointerType;
@@ -55,14 +54,12 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     final GenerationContext context,
     final String dataSource,
     final GoWriter writer,
-    final boolean isConfigShape,
     final boolean isOptional,
     final boolean isPointerType
   ) {
     this.context = context;
     this.dataSource = dataSource;
     this.writer = writer;
-    this.isConfigShape = isConfigShape;
     this.isOptional = isOptional;
     this.isPointerType = isPointerType;
   }
@@ -213,7 +210,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
               context,
               dataSource.concat(".").concat(StringUtils.capitalize(memberName)),
               writer,
-              isConfigShape,
               memberShape.isOptional(),
               AwsSdkGoPointableIndex
                 .of(context.model())
@@ -274,7 +270,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
             context,
             "key",
             writer,
-            isConfigShape,
             false,
             false
           ),
@@ -283,7 +278,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
             context,
             "val",
             writer,
-            isConfigShape,
             false,
             false
           ),
@@ -330,7 +324,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
             context,
             "val",
             writer,
-            isConfigShape,
             false,
             false
           ),
@@ -591,11 +584,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
       .asServiceShape()
       .get();
 
-    final var internalDafnyType = DafnyNameResolver.getDafnyType(
-      shape,
-      context.symbolProvider().toSymbol(shape)
-    );
-
     var returnType = DafnyNameResolver.getDafnyType(
       shape,
       context.symbolProvider().toSymbol(shape)
@@ -613,7 +601,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
 
     final var eachMemberInUnion = new StringBuilder();
     for (final var member : shape.getAllMembers().values()) {
-      final var memberName = context.symbolProvider().toMemberName(member);
       final var targetShape = context.model().expectShape(member.getTarget());
       final var baseType = DafnyNameResolver.getDafnyType(
         targetShape,
@@ -633,7 +620,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
       eachMemberInUnion.append(
         """
         case *%s.%s:
-            var companion = %s
             var inputToConversion = %s
             return %s
         """.formatted(
@@ -642,23 +628,18 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
               true
             ),
             context.symbolProvider().toMemberName(member),
-            internalDafnyType.replace(
-              shape.getId().getName(),
-              "CompanionStruct_".concat(shape.getId().getName()).concat("_{}")
-            ),
             ShapeVisitorHelper.toDafnyShapeVisitorWriter(
               member,
               context,
               dataSourceInput,
               writer,
-              isConfigShape,
               true,
               false
             ),
             someWrapIfRequired.formatted(
               DafnyNameResolver.getDafnyCreateFuncForUnionMemberShape(
                 shape,
-                memberName
+                member.getMemberName()
               ),
               "inputToConversion.UnwrapOr(nil)%s".formatted(
                   !baseType.isEmpty() ? ".(".concat(baseType).concat(")") : ""
@@ -682,11 +663,38 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
 
   @Override
   public String timestampShape(final TimestampShape shape) {
-    //TODO: This is a stub implementation and not working yet.
     writer.addImport("time");
+    writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+
+    String nilWrapIfRequired = "dafny.SeqOf()";
+    String someWrapIfRequired = "%s";
+    String returnType = "dafny.Sequence";
     if (this.isOptional) {
-      return "Wrappers.Companion_Option_.Create_None_()";
+      nilWrapIfRequired = "Wrappers.Companion_Option_.Create_None_()";
+      someWrapIfRequired = "Wrappers.Companion_Option_.Create_Some_(%s)";
+      returnType = "Wrappers.Option";
     }
-    return "dafny.SeqOf()";
+
+    var nilCheck = "";
+    if (isPointerType) {
+      nilCheck =
+        "if %s == nil {return %s}".formatted(dataSource, nilWrapIfRequired);
+    }
+
+    var conversionCode =
+      """
+      func () %s {
+        %s
+        formattedTime := %s.Format(\"2006-01-02T15:04:05.999999Z\")
+        return %s
+      }()""".formatted(
+          returnType,
+          nilCheck,
+          dataSource,
+          someWrapIfRequired.formatted(
+            "dafny.SeqOfChars([]dafny.Char(formattedTime)...)"
+          )
+        );
+    return conversionCode;
   }
 }

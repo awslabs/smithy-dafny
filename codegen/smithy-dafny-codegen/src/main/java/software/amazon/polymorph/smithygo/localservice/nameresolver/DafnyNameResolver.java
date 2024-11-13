@@ -1,7 +1,5 @@
 package software.amazon.polymorph.smithygo.localservice.nameresolver;
 
-import static software.amazon.polymorph.smithygo.localservice.nameresolver.Constants.BLANK;
-import static software.amazon.polymorph.smithygo.localservice.nameresolver.Constants.DAFNY_TYPES;
 import static software.amazon.polymorph.smithygo.localservice.nameresolver.Constants.DOT;
 
 import software.amazon.polymorph.traits.LocalServiceTrait;
@@ -18,6 +16,12 @@ public class DafnyNameResolver {
   public static String dafnyTypesNamespace(final Shape shape) {
     // Delegate to the smithy-dafny-dafny logic. Ideally, this should be independent, but it is not today.
     return software.amazon.polymorph.smithydafny.DafnyNameResolver.dafnyTypesModuleName(
+      shape.toShapeId().getNamespace()
+    );
+  }
+
+  public static String dafnyDependentErrorName(final Shape shape) {
+    return software.amazon.polymorph.smithydafny.DafnyNameResolver.dafnyBaseModuleName(
       shape.toShapeId().getNamespace()
     );
   }
@@ -56,7 +60,7 @@ public class DafnyNameResolver {
     }
     switch (type) {
       case INTEGER, LONG, BOOLEAN:
-        return symbol.getName();
+        return dafnyCompilesExtra_(symbol.getName());
       case MAP:
         return "dafny.Map";
       // TODO: Figure out the dafny type for TIMESTAMP
@@ -69,7 +73,7 @@ public class DafnyNameResolver {
         return DafnyNameResolver
           .dafnyTypesNamespace(shape)
           .concat(DOT)
-          .concat(symbol.getName());
+          .concat(dafnyCompilesExtra_(symbol.getName()));
     }
   }
 
@@ -80,7 +84,7 @@ public class DafnyNameResolver {
     return DafnyNameResolver
       .getDafnyBaseErrorType(shape)
       .concat("_")
-      .concat(symbol.getName());
+      .concat(dafnyCompilesExtra_(symbol.getName()));
   }
 
   public static String getDafnyBaseErrorType(final Shape shape) {
@@ -97,7 +101,7 @@ public class DafnyNameResolver {
     return DafnyNameResolver
       .dafnyTypesNamespace(shape)
       .concat(DOT)
-      .concat("Companion_%s_".formatted(symbol.getName()));
+      .concat("Companion_%s_".formatted(dafnyCompilesExtra_(symbol.getName())));
   }
 
   public static String getDafnyErrorCompanion(final Shape shape) {
@@ -114,7 +118,7 @@ public class DafnyNameResolver {
     return DafnyNameResolver
       .getDafnyErrorCompanion(shape)
       .concat(DOT)
-      .concat("Create_%s_".formatted(symbol.getName()));
+      .concat("Create_%s_".formatted(dafnyCompilesExtra_(symbol.getName())));
   }
 
   public static String getDafnyCompanionStructType(
@@ -124,7 +128,19 @@ public class DafnyNameResolver {
     return DafnyNameResolver
       .dafnyTypesNamespace(shape)
       .concat(DOT)
-      .concat("CompanionStruct_%s_".formatted(symbol.getName()));
+      .concat(
+        "CompanionStruct_%s_".formatted(dafnyCompilesExtra_(symbol.getName()))
+      );
+  }
+
+  public static String getDafnyCompanionStructType(
+    final Shape shape,
+    final String memberName
+  ) {
+    return DafnyNameResolver
+      .dafnyTypesNamespace(shape)
+      .concat(DOT)
+      .concat("CompanionStruct_%s_".formatted(dafnyCompilesExtra_(memberName)));
   }
 
   public static String getDafnyCompanionTypeCreate(
@@ -134,7 +150,7 @@ public class DafnyNameResolver {
     return DafnyNameResolver
       .getDafnyCompanionType(shape, symbol)
       .concat(DOT)
-      .concat("Create_%s_".formatted(symbol.getName()));
+      .concat("Create_%s_".formatted(dafnyCompilesExtra_(symbol.getName())));
   }
 
   /**
@@ -147,15 +163,18 @@ public class DafnyNameResolver {
     final UnionShape unionShape,
     final String memberName
   ) {
-    return "companion".concat(DOT)
-      .concat(
-        memberName.replace(unionShape.getId().getName() + "Member", "Create_")
-      )
-      .concat("_");
+    return DafnyNameResolver
+      .getDafnyUnionBaseStructType(unionShape, unionShape.getId().getName())
+      .concat(DOT)
+      .concat("Create_%s_".formatted(dafnyCompilesExtra_(memberName)));
   }
 
   public static String getDafnyClient(final String sdkId) {
     return sdkId.concat(DOT).concat(sdkId).concat("Client");
+  }
+
+  public static String getDafnyClientName(final String sdkId) {
+    return sdkId.concat("Client");
   }
 
   public static String getDafnyInterfaceClient(final Shape shape) {
@@ -195,5 +214,18 @@ public class DafnyNameResolver {
       .concat(".Companion_Default___")
       .concat(DOT)
       .concat(sdkId);
+  }
+
+  public static String getDafnyUnionBaseStructType(
+    final Shape shape,
+    final String memberName
+  ) {
+    return DafnyNameResolver
+      .getDafnyCompanionStructType(shape, memberName)
+      .concat("{}");
+  }
+
+  public static String dafnyCompilesExtra_(final String name) {
+    return name.replace("_", "__");
   }
 }

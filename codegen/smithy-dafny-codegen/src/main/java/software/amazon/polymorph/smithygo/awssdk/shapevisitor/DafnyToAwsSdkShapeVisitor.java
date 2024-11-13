@@ -262,7 +262,8 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
 
     final var typeName = GoCodegenUtils.getType(
       context.symbolProvider().toSymbol(targetShape),
-      serviceTrait
+      serviceTrait,
+      true
     );
 
     final String unAssertedDataSource = dataSource.startsWith("input.(")
@@ -320,7 +321,8 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
       .expectShape(valueMemberShape.getTarget());
     final var typeName = GoCodegenUtils.getType(
       context.symbolProvider().toSymbol(valueTargetShape),
-      serviceTrait
+      serviceTrait,
+      true
     );
 
     var nilCheck = "";
@@ -642,22 +644,19 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
       final var memberName = context.symbolProvider().toMemberName(member);
 
       // unwrap union type, assert it then convert it to its member type with Dtor_ (example: Dtor_BlobValue()). unionDataSource is not a wrapper object until now.
-      var unionDataSource = dataSource
-        .concat(".Dtor_")
-        .concat(
-          memberName.replace(shape.getId().getName().concat("Member"), "")
-        )
-        .concat("()");
-
+      var unionDataSource = dataSource.concat(
+        ".Dtor_%s()".formatted(
+            DafnyNameResolver.dafnyCompilesExtra_(member.getMemberName())
+          )
+      );
       final var isMemberShapePointable = awsSdkGoPointableIndex.isPointable(
         member
       );
       final var pointerForPointableShape = isMemberShapePointable ? "*" : "";
       final var isMemberCheck =
-        """
-        if ((%s).%s()) {""".formatted(
+        "if ((%s).Is_%s()) {".formatted(
             dataSource,
-            memberName.replace(shape.getId().getName().concat("Member"), "Is_")
+            DafnyNameResolver.dafnyCompilesExtra_(member.getMemberName())
           );
 
       var wrappedDataSource = "";
@@ -709,8 +708,48 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
 
   @Override
   public String timestampShape(final TimestampShape shape) {
-    // TODO: Figure out timestamp types when working on timestampShape
     writer.addImport("time");
-    return "nil";
+
+    var nilCheck = "";
+    final String unAssertedDataSource = dataSource.startsWith("input.(")
+      ? "input"
+      : dataSource;
+    if (this.isOptional) {
+      if (this.isPointable) {
+        nilCheck =
+          "if %s == nil { return nil }".formatted(unAssertedDataSource);
+      } else {
+        nilCheck =
+          "if %s == nil { return time.Time}".formatted(unAssertedDataSource);
+      }
+    }
+
+    return """
+    	func() %stime.Time {
+    	var s string
+    	%s
+    	for i := dafny.Iterate(%s.(dafny.Sequence)); ; {
+    		val, ok := i()
+    		if !ok {
+    			break
+    		} else {
+    			s = s + string(val.(dafny.Char))
+    		}
+    	}
+    	if len(s) == 0 {
+    		panic("timestamp string is empty")
+    	} else {
+    		t, err := time.Parse("2006-01-02T15:04:05.999999Z", s)
+    		if err != nil {
+    			panic(err)
+    		}
+    		return %st
+    	}
+    }()""".formatted(
+        this.isPointable ? "*" : "",
+        nilCheck,
+        dataSource,
+        this.isPointable ? "&" : ""
+      );
   }
 }
