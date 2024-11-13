@@ -508,8 +508,6 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       .expectTrait(ReferenceTrait.class)
                       .getReferentId()
                   );
-                System.out.println(outputShape);
-                System.out.println(service);
                 toDafnyConvMethodName =
                   SmithyNameResolver.getToDafnyMethodName(outputShape, "");
               }
