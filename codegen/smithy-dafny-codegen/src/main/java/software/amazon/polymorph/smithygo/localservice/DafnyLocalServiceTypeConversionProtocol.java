@@ -235,6 +235,30 @@ public class DafnyLocalServiceTypeConversionProtocol
                     ""
                   );
                 final var inputSymbol = symbolProvider.toSymbol(input);
+                final String outputType;
+                if (input.hasTrait(PositionalTrait.class)) {
+                  // Output type in To Dafny should be unwrapped
+                  Shape inputForPositional = model.expectShape(
+                    input
+                      .getAllMembers()
+                      .values()
+                      .stream()
+                      .findFirst()
+                      .get()
+                      .getTarget()
+                  );
+                  Symbol symbolForPositional = symbolProvider.toSymbol(
+                    inputForPositional
+                  );
+                  outputType =
+                    DafnyNameResolver.getDafnyType(
+                      inputForPositional,
+                      symbolForPositional
+                    );
+                } else {
+                  outputType =
+                    DafnyNameResolver.getDafnyType(input, inputSymbol);
+                }
                 writerDelegator.useFileWriter(
                   "%s/%s".formatted(
                       SmithyNameResolver.shapeNamespace(serviceShape),
@@ -255,7 +279,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                       }""",
                       inputToDafnyMethodName,
                       SmithyNameResolver.getSmithyType(input, inputSymbol),
-                      DafnyNameResolver.getDafnyType(input, inputSymbol),
+                      outputType,
                       writer.consumer(w ->
                         generateRequestSerializer(
                           context,
@@ -293,28 +317,41 @@ public class DafnyLocalServiceTypeConversionProtocol
                     ),
                   SmithyNameResolver.shapeNamespace(serviceShape),
                   writer -> {
-                    writer.addImportFromModule(
-                      SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-                        output.toShapeId().getNamespace()
-                      ),
-                      SmithyNameResolver.smithyTypesNamespace(output)
-                    );
-                    writer.write(
-                      """
-                      func $L(nativeOutput $L)($L) {
-                          ${C|}
-                      }""",
-                      outputToDafnyMethodName,
-                      SmithyNameResolver.getSmithyType(output, outputSymbol),
-                      DafnyNameResolver.getDafnyType(output, outputSymbol),
-                      writer.consumer(w ->
-                        generateResponseSerializer(
+                    if (output.hasTrait(PositionalTrait.class)) {
+                      output.accept(
+                        new SmithyToDafnyShapeVisitor(
                           context,
-                          operation,
-                          context.writerDelegator()
+                          "nativeOutput",
+                          writer,
+                          false,
+                          false,
+                          false
                         )
-                      )
-                    );
+                      );
+                    } else {
+                      writer.addImportFromModule(
+                        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+                          output.toShapeId().getNamespace()
+                        ),
+                        SmithyNameResolver.smithyTypesNamespace(output)
+                      );
+                      writer.write(
+                        """
+                        func $L(nativeOutput $L)($L) {
+                            ${C|}
+                        }""",
+                        outputToDafnyMethodName,
+                        SmithyNameResolver.getSmithyType(output, outputSymbol),
+                        DafnyNameResolver.getDafnyType(output, outputSymbol),
+                        writer.consumer(w ->
+                          generateResponseSerializer(
+                            context,
+                            operation,
+                            context.writerDelegator()
+                          )
+                        )
+                      );
+                    }
                   }
                 );
               }
@@ -576,6 +613,32 @@ public class DafnyLocalServiceTypeConversionProtocol
                 final var inputSymbol = context
                   .symbolProvider()
                   .toSymbol(input);
+                final String inputType;
+                if (input.hasTrait(PositionalTrait.class)) {
+                  // Input type in To native should be unwrapped
+                  Shape inputForPositional = context
+                    .model()
+                    .expectShape(
+                      input
+                        .getAllMembers()
+                        .values()
+                        .stream()
+                        .findFirst()
+                        .get()
+                        .getTarget()
+                    );
+                  Symbol symbolForPositional = context
+                    .symbolProvider()
+                    .toSymbol(inputForPositional);
+                  inputType =
+                    DafnyNameResolver.getDafnyType(
+                      inputForPositional,
+                      symbolForPositional
+                    );
+                } else {
+                  inputType =
+                    DafnyNameResolver.getDafnyType(input, inputSymbol);
+                }
 
                 delegator.useFileWriter(
                   "%s/%s".formatted(
@@ -597,7 +660,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                           ${C|}
                       }""",
                       inputFromDafnyMethodName,
-                      DafnyNameResolver.getDafnyType(input, inputSymbol),
+                      inputType,
                       SmithyNameResolver.getSmithyType(input, inputSymbol),
                       writer.consumer(w ->
                         generateRequestDeserializer(
@@ -641,29 +704,40 @@ public class DafnyLocalServiceTypeConversionProtocol
                     ),
                   SmithyNameResolver.shapeNamespace(serviceShape),
                   writer -> {
-                    writer.addImportFromModule(
-                      SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-                        output.toShapeId().getNamespace()
-                      ),
-                      SmithyNameResolver.smithyTypesNamespace(output)
-                    );
-
-                    writer.write(
-                      """
-                      func $L(dafnyOutput $L)($L) {
-                          ${C|}
-                      }""",
-                      outputFromDafnyMethodName,
-                      DafnyNameResolver.getDafnyType(output, outputSymbol),
-                      SmithyNameResolver.getSmithyType(output, outputSymbol),
-                      writer.consumer(w ->
-                        generateResponseDeserializer(
+                    if (output.hasTrait(PositionalTrait.class)) {
+                      output.accept(
+                        new DafnyToSmithyShapeVisitor(
                           context,
-                          operation,
-                          context.writerDelegator()
+                          "dafnyOutput",
+                          writer,
+                          false
                         )
-                      )
-                    );
+                      );
+                    } else {
+                      writer.addImportFromModule(
+                        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+                          output.toShapeId().getNamespace()
+                        ),
+                        SmithyNameResolver.smithyTypesNamespace(output)
+                      );
+
+                      writer.write(
+                        """
+                        func $L(dafnyOutput $L)($L) {
+                            ${C|}
+                        }""",
+                        outputFromDafnyMethodName,
+                        DafnyNameResolver.getDafnyType(output, outputSymbol),
+                        SmithyNameResolver.getSmithyType(output, outputSymbol),
+                        writer.consumer(w ->
+                          generateResponseDeserializer(
+                            context,
+                            operation,
+                            context.writerDelegator()
+                          )
+                        )
+                      );
+                    }
                   }
                 );
               }
