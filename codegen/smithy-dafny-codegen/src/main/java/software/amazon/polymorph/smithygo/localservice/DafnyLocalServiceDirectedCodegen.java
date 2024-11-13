@@ -137,7 +137,10 @@ public class DafnyLocalServiceDirectedCodegen
     writeEnumShape(directive.context(), directive.shape());
   }
 
-  public void writeEnumShape(final GenerationContext context, final Shape shape) {
+  public void writeEnumShape(
+    final GenerationContext context,
+    final Shape shape
+  ) {
     if (
       shape
         .getId()
