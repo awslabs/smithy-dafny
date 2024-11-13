@@ -282,7 +282,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
             // We use different function name in conversion layer for memberShape and Shape.
             String fromDafnyConvMethodName = Constants.funcNameGenerator(
               postionalMemShape,
-              "FromDafny"
+              "FromDafny",
+              model
             );
             outputType =
               SmithyNameResolver
@@ -499,7 +500,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   .shapeNamespace(postionalMemShape)
                   .concat(".")
                   .concat(
-                    Constants.funcNameGenerator(postionalMemShape, "ToDafny")
+                    Constants.funcNameGenerator(postionalMemShape, "ToDafny", model)
                   );
               if (outputShape.hasTrait(ReferenceTrait.class)) {
                 outputShape =
