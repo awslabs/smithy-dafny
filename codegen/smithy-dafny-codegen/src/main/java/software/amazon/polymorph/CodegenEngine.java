@@ -1266,8 +1266,11 @@ public class CodegenEngine {
       // with the same version.
       // The better fix for this is for Dafny to pre-release
       if (dafnyVersion.compareTo(MAX_DAFNY_VERSION) > 0) {
-        LOGGER.warn("Dafny version {} appears to be unreleased, downgrading to {} to ensure runtimes are available",
-          dafnyVersion.unparse(), MAX_DAFNY_VERSION.unparse());
+        LOGGER.warn(
+          "Dafny version {} appears to be unreleased, downgrading to {} to ensure runtimes are available",
+          dafnyVersion.unparse(),
+          MAX_DAFNY_VERSION.unparse()
+        );
         dafnyVersion = MAX_DAFNY_VERSION;
       }
 
