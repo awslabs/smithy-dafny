@@ -7,7 +7,9 @@
 )]
 
 pub mod client;
+pub mod types;
 pub mod conversions;
+pub mod deps;
 pub(crate) mod implementation_from_dafny;
 mod standard_library_conversions;
 mod standard_library_externs;
