@@ -500,7 +500,11 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   .shapeNamespace(postionalMemShape)
                   .concat(".")
                   .concat(
-                    Constants.funcNameGenerator(postionalMemShape, "ToDafny", model)
+                    Constants.funcNameGenerator(
+                      postionalMemShape,
+                      "ToDafny",
+                      model
+                    )
                   );
               if (outputShape.hasTrait(ReferenceTrait.class)) {
                 outputShape =
