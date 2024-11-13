@@ -161,7 +161,7 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
               }
               return Wrappers.Companion_Option_.Create_Some_(%s)
           }()""";
-        return goCodeBlock.formatted(clientConversion, clientConversion);
+        return goCodeBlock.formatted(dataSource, clientConversion);
       }
     }
 
