@@ -12,7 +12,6 @@ import software.amazon.polymorph.smithygo.utils.Constants;
 import software.amazon.polymorph.smithygo.utils.GoCodegenUtils;
 import software.amazon.polymorph.traits.DafnyUtf8BytesTrait;
 import software.amazon.polymorph.traits.ReferenceTrait;
-import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.codegen.core.SymbolProvider;
 import software.amazon.smithy.model.Model;
@@ -474,7 +473,8 @@ public class ValidationGenerator {
     ) {
       final String funcName = Constants.funcNameGenerator(
         memberShape,
-        "Validate"
+        "Validate",
+        context.model()
       );
       final String funcInput = dataSource.startsWith("input") ? "" : dataSource;
       if (!funcInput.isEmpty()) {
@@ -568,7 +568,11 @@ public class ValidationGenerator {
       !validationFuncMap.containsKey(memberShape) &&
       (!keyValidation.isEmpty() || !valueValidation.isEmpty())
     ) {
-      final var funcName = Constants.funcNameGenerator(memberShape, "Validate");
+      final var funcName = Constants.funcNameGenerator(
+        memberShape,
+        "Validate",
+        context.model()
+      );
       final var funcInput = dataSource.startsWith("input") ? "" : dataSource;
       if (!funcInput.isEmpty()) {
         final var currServiceShapeNamespace = SmithyNameResolver.shapeNamespace(
@@ -635,7 +639,11 @@ public class ValidationGenerator {
     final StringBuilder validationCode,
     final String dataSource
   ) {
-    final var funcName = Constants.funcNameGenerator(memberShape, "Validate");
+    final var funcName = Constants.funcNameGenerator(
+      memberShape,
+      "Validate",
+      context.model()
+    );
     final var funcInput = dataSource.startsWith("input") ? "" : dataSource;
     var dataSourceForUnion = dataSource;
     final var currServiceShapeNamespace =
@@ -687,9 +695,8 @@ public class ValidationGenerator {
             """.formatted(dataSourceForUnion)
       );
       for (final var memberInUnion : currentShape.getAllMembers().values()) {
-        final var targetShape = model.expectShape(memberInUnion.getTarget());
         final var currMemberNamespace = SmithyNameResolver.smithyTypesNamespace(
-          model.expectShape(targetShape.getId())
+          currentShape
         );
         final Boolean isExternalShape =
           !currServiceShapeNamespace.equals(currMemberNamespace) &&

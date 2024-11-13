@@ -1150,7 +1150,7 @@ public class DafnyLocalServiceTypeConversionProtocol
           SmithyNameResolver.smithyTypesNamespace(depShape),
           dep.getName(),
           DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
-          dep.getName(),
+          DafnyNameResolver.dafnyDependentErrorName(depShape),
           SmithyNameResolver.shapeNamespace(depShape)
         );
       }
@@ -1413,18 +1413,15 @@ public class DafnyLocalServiceTypeConversionProtocol
                 final var depService = context
                   .model()
                   .expectShape(dep, ServiceShape.class);
-                final var sdkId = depService.hasTrait(LocalServiceTrait.class)
-                  ? depService.expectTrait(LocalServiceTrait.class).getSdkId()
-                  : DafnyNameResolver.dafnyNamespace(depService);
                 w.write(
                   """
                   if err.Is_$L() {
                       return $L.Error_FromDafny(err.Dtor_$L())
                   }
                   """,
-                  sdkId,
+                  DafnyNameResolver.dafnyDependentErrorName(depService),
                   SmithyNameResolver.shapeNamespace(depService),
-                  sdkId
+                  DafnyNameResolver.dafnyDependentErrorName(depService)
                 );
               }
             })
@@ -1491,7 +1488,11 @@ public class DafnyLocalServiceTypeConversionProtocol
                 return $L
             }
             """,
-            Constants.funcNameGenerator(visitingMemberShape, "ToDafny"),
+            Constants.funcNameGenerator(
+              visitingMemberShape,
+              "ToDafny",
+              context.model()
+            ),
             inputType,
             outputType,
             SmithyToDafnyShapeVisitor.getConversionFunc(visitingMemberShape)
@@ -1581,7 +1582,11 @@ public class DafnyLocalServiceTypeConversionProtocol
             func $L(input interface{})($L) {
                 $L
             }""",
-            Constants.funcNameGenerator(visitingMemberShape, "FromDafny"),
+            Constants.funcNameGenerator(
+              visitingMemberShape,
+              "FromDafny",
+              context.model()
+            ),
             outputType,
             DafnyToSmithyShapeVisitor.getConversionFunc(visitingMemberShape)
           );
