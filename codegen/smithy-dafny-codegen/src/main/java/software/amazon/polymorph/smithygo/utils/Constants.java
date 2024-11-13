@@ -31,11 +31,6 @@ public class Constants {
     return DEFAULT_VALUES.getOrDefault(smithyType, "nil");
   }
 
-  private static Entry entry(String string, String string2) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'entry'");
-  }
-
   // TODO: Is it possible to make this function name shorter and in camelCase?
   /**
    * Generates a function name for memberShapes.
