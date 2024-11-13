@@ -308,6 +308,17 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   ""
                 );
             }
+            switch (outputShape.getType()) {
+              case DOUBLE, STRING, BLOB, LIST, TIMESTAMP, MAP:
+                writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+              case ENUM, STRUCTURE, UNION, RESOURCE:
+                writer.addImportFromModule(
+                  SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+                    outputShape.toShapeId().getNamespace()
+                  ),
+                  DafnyNameResolver.dafnyTypesNamespace(outputShape)
+                );
+            }
             returnResponse =
               """
               var native_response = %s(dafny_response.Dtor_value().(%s))
@@ -327,6 +338,17 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 )
               );
           } else {
+            switch (outputShape.getType()) {
+              case DOUBLE, STRING, BLOB, LIST, TIMESTAMP, MAP:
+                writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+              case ENUM, STRUCTURE, UNION, RESOURCE:
+                writer.addImportFromModule(
+                  SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+                    outputShape.toShapeId().getNamespace()
+                  ),
+                  DafnyNameResolver.dafnyTypesNamespace(outputShape)
+                );
+            }
             returnResponse =
               """
               var native_response = %s(dafny_response.Dtor_value().(%s))
@@ -857,6 +879,17 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   returnResponse = "return nil";
                   returnError = "return";
                 } else {
+                  switch (outputShape.getType()) {
+                    case DOUBLE, STRING, BLOB, LIST, TIMESTAMP, MAP:
+                      writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+                    case ENUM, STRUCTURE, UNION, RESOURCE:
+                      writer.addImportFromModule(
+                        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+                          outputShape.toShapeId().getNamespace()
+                        ),
+                        DafnyNameResolver.dafnyTypesNamespace(outputShape)
+                      );
+                  }
                   returnResponse =
                     """
                     var native_response = %s(dafny_response.Dtor_value().(%s))
