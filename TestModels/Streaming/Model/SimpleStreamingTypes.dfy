@@ -79,8 +79,11 @@ module SimpleStreamingTypes
       returns (output: Result<CountBitsOutput, Error>)
       requires
         && ValidState()
+      // TODO: smithy-dafny isn't yet generating the `input.bits.Valid()` part.
+      requires input.bits.Valid() && History !in input.bits.Repr
       modifies Modifies - {History} ,
-               History`CountBits
+               History`CountBits ,
+               input.bits.Repr
       // Dafny will skip type parameters when generating a default decreases clause.
       decreases Modifies - {History}
       ensures
@@ -102,6 +105,8 @@ module SimpleStreamingTypes
         && ValidState()
       ensures BinaryOfEnsuresPublicly(input, output)
       ensures History.BinaryOf == old(History.BinaryOf) + [DafnyCallEvent(input, output)]
+  // TODO: smithy-dafny isn't yet generating this
+      ensures output.Success? ==> output.value.binary.Valid() && fresh(output.value.binary.Repr)
 
     predicate ChunksEnsuresPublicly(input: ChunksInput , output: Result<ChunksOutput, Error>)
     // The public method to be called by library consumers
@@ -210,8 +215,11 @@ abstract module AbstractSimpleStreamingService
       returns (output: Result<CountBitsOutput, Error>)
       requires
         && ValidState()
+      // TODO: smithy-dafny isn't yet generating the `input.bits.Valid()` parts.
+      requires input.bits.Valid() && History !in input.bits.Repr
       modifies Modifies - {History} ,
-               History`CountBits
+               History`CountBits ,
+               input.bits.Repr
       // Dafny will skip type parameters when generating a default decreases clause.
       decreases Modifies - {History}
       ensures
@@ -238,6 +246,8 @@ abstract module AbstractSimpleStreamingService
         && ValidState()
       ensures BinaryOfEnsuresPublicly(input, output)
       ensures History.BinaryOf == old(History.BinaryOf) + [DafnyCallEvent(input, output)]
+      // TODO: smithy-dafny isn't yet generating this
+      ensures output.Success? ==> output.value.binary.Valid() && fresh(output.value.binary.Repr)
     {
       output := Operations.BinaryOf(config, input);
       History.BinaryOf := History.BinaryOf + [DafnyCallEvent(input, output)];
@@ -282,7 +292,7 @@ abstract module AbstractSimpleStreamingOperations {
     returns (output: Result<CountBitsOutput, Error>)
     requires
       // TODO: smithy-dafny isn't yet generating the `input.bits.Valid()` part.
-      && ValidInternalConfig?(config) && input.bits.Valid()
+      && ValidInternalConfig?(config) && input.bits.Valid() && ModifiesInternalConfig(config) !! input.bits.Repr
     // TODO: smithy-dafny isn't yet generating the `input.bits.Repr` part.
     modifies ModifiesInternalConfig(config), input.bits.Repr
     // Dafny will skip type parameters when generating a default decreases clause.
@@ -306,6 +316,8 @@ abstract module AbstractSimpleStreamingOperations {
     ensures
       && ValidInternalConfig?(config)
     ensures BinaryOfEnsuresPublicly(input, output)
+    // TODO: smithy-dafny isn't yet generating this
+    ensures output.Success? ==> output.value.binary.Valid() && fresh(output.value.binary.Repr)
 
 
   predicate ChunksEnsuresPublicly(input: ChunksInput , output: Result<ChunksOutput, Error>)
