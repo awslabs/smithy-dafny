@@ -1,23 +1,43 @@
 ```mermaid
 flowchart LR
-    Smithy["Smithy model"]
+    classDef Process stroke:#f00
+    classDef Library stroke:#0f0
+    classDef Authored stroke:#0ff
+    classDef Generated stroke:#ff0
 
-    subgraph DafnyProject["Dafny Library"]
-        DafnyAPI["Dafny API"]
-        DafnyImpl["Dafny Impl"]
+    Smithy["Smithy model"]:::Authored
+
+    subgraph SourceProject["Dafny Library"]
+        SourceAPI["Dafny API"]:::Generated
+        SourceImpl["Dafny Implementation"]:::Authored
     end
+    SourceProject:::Library
 
-    subgraph JavaProject["Java Library"]
-        JavaAPI["Java API"]
-        DafnyToJavaShims["Dafny to Java shims"]
-        DafnyAPIInJava["Dafny API in Java"]
-        DafnyImplInJava["Dafny Impl in Java"]
+    subgraph Polymorph
+        SmithyTargetClient[["smithy
+        (java-client-codegen)"]]:::Process
+        SmithyShims[["smithy
+        (dafny-java-shims-codegen)"]]:::Process
+
+        Compiler[["dafny
+        (translate java)"]]:::Process
     end
+    Polymorph:::Process
 
-    Smithy -- smithy ---> JavaAPI
-    Smithy -- smithy --> DafnyAPI
-    Smithy -- polymorph ---> DafnyToJavaShims
-    DafnyAPI -- dafny --> DafnyAPIInJava
-    DafnyImpl -- dafny --> DafnyImplInJava
+    SmithySourceClient[["smithy
+    (dafny-client-codegen)"]]:::Process
+
+    subgraph TargetProject["Java Library"]
+        TargetAPI["Java API"]:::Generated
+        SourceToTargetShims["Dafny to Java shims"]:::Generated
+        SourceAPIInTarget["Dafny API in Java"]:::Generated
+        SourceImplInTarget["Dafny Implementation in Java"]:::Generated
+    end
+    TargetProject:::Library
+
+    Smithy --> SmithyTargetClient --> TargetAPI
+    Smithy --> SmithySourceClient --> SourceAPI
+    Smithy --> SmithyShims --> SourceToTargetShims
+    SourceAPI & SourceImpl --> Compiler --> SourceAPIInTarget & SourceImplInTarget
 
 ```

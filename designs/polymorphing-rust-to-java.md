@@ -1,26 +1,44 @@
 ```mermaid
 flowchart LR
-    Smithy["Smithy model"]
+    classDef Process stroke:#f00
+    classDef Library stroke:#0f0
+    classDef Authored stroke:#0ff
+    classDef Generated stroke:#ff0
 
-    subgraph RustProject["Rust Library"]
-        RustAPI["Rust API"]
-        RustImpl["Rust Impl"]
+    Smithy["Smithy model"]:::Authored
+
+    subgraph SourceProject["Rust Library"]
+        SourceAPI["Rust API"]:::Generated
+        SourceImpl["Rust Implementation"]:::Authored
     end
+    SourceProject:::Library
 
-    subgraph JavaProject["Java Library"]
-        JavaAPI["Java API"]
-        RustToJavaShims["Rust to Java bindings"]
+    subgraph Polymorph
+        SmithyTargetClient[["smithy
+        (java-client-codegen)"]]:::Process
+        SmithyShims[["smithy
+        (dafny-java-shims-codegen)"]]:::Process
 
-        subgraph RustBinaries["Rust Binaries"]
-            RustAPIInJava["Rust API Binary"]
-            RustImplInJava["Rust Impl Binary"]
-        end
+        Compiler[["rustc"]]:::Process
     end
+    Polymorph:::Process
 
-    Smithy -- smithy ---> JavaAPI
-    Smithy -- smithy --> RustAPI
-    Smithy -- polymorph ---> RustToJavaShims
-    RustAPI -- rustc --> RustAPIInJava
-    RustImpl -- rustc --> RustImplInJava
+    SmithySourceClient[["smithy
+    (dafny-client-codegen)"]]:::Process
+
+    subgraph TargetProject["Java Library"]
+        TargetAPI["Java API"]:::Generated
+        SourceToTargetShims["Rust to Java shims"]:::Generated
+        SourceAPIInTarget["Rust API in Java
+        (binaries)"]:::Generated
+        SourceImplInTarget["Rust Implementation in Java
+        (binaries)"]:::Generated
+    end
+    TargetProject:::Library
+
+    Smithy --> SmithyTargetClient --> TargetAPI
+    Smithy --> SmithySourceClient --> SourceAPI
+    Smithy --> SmithyShims --> SourceToTargetShims
+    SourceAPI & SourceImpl --> Compiler --> SourceAPIInTarget & SourceImplInTarget
 
 ```
