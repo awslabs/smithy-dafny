@@ -1,6 +1,5 @@
 package software.amazon.polymorph.smithygo.awssdk.shapevisitor;
 
-import static software.amazon.polymorph.smithygo.codegen.SymbolUtils.POINTABLE;
 import static software.amazon.polymorph.smithygo.localservice.nameresolver.Constants.DOT;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
 
@@ -40,7 +39,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
   private final GenerationContext context;
   private final String dataSource;
   private final GoWriter writer;
-  private final boolean isConfigShape;
 
   private final boolean isOptional;
   protected boolean isPointerType;
@@ -52,14 +50,12 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     final GenerationContext context,
     final String dataSource,
     final GoWriter writer,
-    final boolean isConfigShape,
     final boolean isOptional,
     final boolean isPointerType
   ) {
     this.context = context;
     this.dataSource = dataSource;
     this.writer = writer;
-    this.isConfigShape = isConfigShape;
     this.isOptional = isOptional;
     this.isPointerType = isPointerType;
   }
@@ -189,7 +185,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
               context,
               dataSource.concat(".").concat(StringUtils.capitalize(memberName)),
               writer,
-              isConfigShape,
               memberShape.isOptional(),
               AwsSdkGoPointableIndex
                 .of(context.model())
@@ -248,7 +243,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
             context,
             "key",
             writer,
-            isConfigShape,
             false,
             false
           ),
@@ -257,7 +251,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
             context,
             "val",
             writer,
-            isConfigShape,
             false,
             false
           ),
@@ -304,7 +297,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
             context,
             "val",
             writer,
-            isConfigShape,
             false,
             false
           ),
@@ -610,7 +602,6 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
               context,
               dataSourceInput,
               writer,
-              isConfigShape,
               true,
               false
             ),

@@ -379,7 +379,6 @@ public class DafnyAwsSdkClientTypeConversionProtocol
             "nativeInput",
             writer,
             false,
-            false,
             false
           )
         );
@@ -414,7 +413,6 @@ public class DafnyAwsSdkClientTypeConversionProtocol
             context,
             "nativeOutput",
             writer,
-            false,
             false,
             false
           )
@@ -539,7 +537,6 @@ public class DafnyAwsSdkClientTypeConversionProtocol
                       context,
                       "nativeInput",
                       writer,
-                      false,
                       false,
                       false
                     )
