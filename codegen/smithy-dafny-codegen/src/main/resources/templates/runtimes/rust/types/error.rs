@@ -45,7 +45,7 @@ impl Error {
 }
 
 #[derive(::std::clone::Clone, ::std::fmt::Debug)]
-pub(crate) struct ValidationError(::std::rc::Rc<dyn ::std::error::Error>);
+pub struct ValidationError(::std::rc::Rc<dyn ::std::error::Error>);
 
 impl ::std::cmp::PartialEq for ValidationError {
     fn eq(&self, other: &Self) -> bool {
