@@ -134,7 +134,7 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     }
 
     if (resourceOrService.asServiceShape().isPresent()) {
-      var clientConversion = dataSource;
+      var clientConversion = dataSource.concat(".DafnyClient");
       if (resourceOrService.hasTrait(ServiceTrait.class)) {
         writer.addImportFromModule(
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
@@ -161,7 +161,7 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
               }
               return Wrappers.Companion_Option_.Create_Some_(%s)
           }()""";
-        return goCodeBlock.formatted(clientConversion, clientConversion);
+        return goCodeBlock.formatted(dataSource, clientConversion);
       }
     }
 
