@@ -21,8 +21,10 @@ import software.amazon.smithy.codegen.core.directed.GenerateIntEnumDirective;
 import software.amazon.smithy.codegen.core.directed.GenerateServiceDirective;
 import software.amazon.smithy.codegen.core.directed.GenerateStructureDirective;
 import software.amazon.smithy.codegen.core.directed.GenerateUnionDirective;
+import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.shapes.ShapeType;
 import software.amazon.smithy.model.shapes.StructureShape;
+import software.amazon.smithy.model.traits.EnumTrait;
 
 public class DafnyLocalServiceDirectedCodegen
   implements DirectedCodegen<GenerationContext, GoSettings, GoIntegration> {
@@ -132,29 +134,30 @@ public class DafnyLocalServiceDirectedCodegen
   public void generateEnumShape(
     GenerateEnumDirective<GenerationContext, GoSettings> directive
   ) {
+    writeEnumShape(directive.context(), directive.shape());
+  }
+
+  public void writeEnumShape(final GenerationContext context, final Shape shape) {
     if (
-      !directive
-        .shape()
+      shape
         .getId()
         .getNamespace()
-        .equals(directive.context().settings().getService().getNamespace())
+        .equals(context.settings().getService().getNamespace())
     ) {
-      return;
+      context
+        .writerDelegator()
+        .useShapeWriter(
+          shape,
+          writer -> {
+            EnumGenerator enumGenerator = new EnumGenerator(
+              context.symbolProvider(),
+              writer,
+              shape
+            );
+            enumGenerator.run();
+          }
+        );
     }
-    directive
-      .context()
-      .writerDelegator()
-      .useShapeWriter(
-        directive.shape(),
-        writer -> {
-          EnumGenerator enumGenerator = new EnumGenerator(
-            directive.symbolProvider(),
-            writer,
-            directive.shape()
-          );
-          enumGenerator.run();
-        }
-      );
   }
 
   @Override
@@ -206,7 +209,8 @@ public class DafnyLocalServiceDirectedCodegen
       ShapeType.RESOURCE,
       ShapeType.INTEGER,
       ShapeType.UNION,
-      ShapeType.STRING
+      ShapeType.STRING,
+      ShapeType.LONG
     );
 
     for (final var shapeToGenerate : orderedShapes) {
@@ -215,6 +219,11 @@ public class DafnyLocalServiceDirectedCodegen
           .asStructureShape()
           .orElseThrow();
         writeStructure(directive.context(), structureShape);
+      } else if (
+        shapeToGenerate.isStringShape() &&
+        shapeToGenerate.hasTrait(EnumTrait.class)
+      ) {
+        writeEnumShape(directive.context(), shapeToGenerate);
       } else if (shapesToSkip.contains(shapeToGenerate.getType())) {
         LOGGER.info(
           "Orphan shape %s is skipped due to configuration.".formatted(

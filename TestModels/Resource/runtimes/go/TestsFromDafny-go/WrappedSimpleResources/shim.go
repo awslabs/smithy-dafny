@@ -5,7 +5,6 @@ package WrappedSimpleResources
 import (
 	"context"
 
-	"github.com/dafny-lang/DafnyRuntimeGo/v4/dafny"
 	"github.com/dafny-lang/DafnyStandardLibGo/Wrappers"
 	"github.com/smithy-lang/smithy-dafny/TestModels/Resource/SimpleResourcesTypes"
 	"github.com/smithy-lang/smithy-dafny/TestModels/Resource/simpleresourcessmithygenerated"
