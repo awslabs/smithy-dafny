@@ -6,7 +6,6 @@ import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoWriter;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.utils.Constants;
-import software.amazon.polymorph.traits.ReferenceTrait;
 import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.traits.EnumTrait;
@@ -82,25 +81,12 @@ public class ShapeVisitorHelper {
     final GenerationContext context,
     final String dataSource,
     final GoWriter writer,
-    final boolean isConfigShape,
     final boolean isOptional,
     final boolean isPointerType
   ) {
     final Shape targetShape = context
       .model()
       .expectShape(memberShape.getTarget());
-    if (targetShape.hasTrait(ReferenceTrait.class)) {
-      return targetShape.accept(
-        new AwsSdkToDafnyShapeVisitor(
-          context,
-          dataSource,
-          writer,
-          isConfigShape,
-          isOptional,
-          isPointerType
-        )
-      );
-    }
     final String funcDataSource = "input";
     if (
       !AwsSdkToDafnyShapeVisitor
@@ -116,7 +102,6 @@ public class ShapeVisitorHelper {
             context,
             funcDataSource,
             writer,
-            isConfigShape,
             isOptional,
             isPointerType
           )
