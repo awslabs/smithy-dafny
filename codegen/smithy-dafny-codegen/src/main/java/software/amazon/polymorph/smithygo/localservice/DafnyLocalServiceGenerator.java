@@ -25,6 +25,8 @@ import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.ResourceShape;
 import software.amazon.smithy.model.shapes.ServiceShape;
 import software.amazon.smithy.model.shapes.Shape;
+import software.amazon.smithy.model.shapes.ShapeType;
+import software.amazon.smithy.model.traits.EnumTrait;
 import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.UnitTypeTrait;
 
@@ -303,7 +305,11 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   ""
                 );
             }
-            switch (outputShape.getType()) {
+            var type = outputShape.getType();
+            if (outputShape.hasTrait(EnumTrait.class)) {
+              type = ShapeType.ENUM;
+            }
+            switch (type) {
               case DOUBLE, STRING, BLOB, LIST, TIMESTAMP, MAP:
                 writer.addImportFromModule(
                   DAFNY_RUNTIME_GO_LIBRARY_MODULE,
