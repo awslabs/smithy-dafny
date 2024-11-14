@@ -338,8 +338,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
             returnError =
               """
               var defaultVal %s
-              return defaultVal,
-              """.formatted(
+              return defaultVal,""".formatted(
                   SmithyNameResolver.getSmithyType(
                     outputShape,
                     symbolProvider.toSymbol(outputShape)
