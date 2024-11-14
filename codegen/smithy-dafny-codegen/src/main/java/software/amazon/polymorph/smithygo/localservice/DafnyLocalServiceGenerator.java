@@ -874,12 +874,16 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       );
                 }
 
-                String returnResponse, returnError;
+                final String returnResponse, returnError;
                 if (outputShape.hasTrait(UnitTypeTrait.class)) {
                   returnResponse = "return nil";
                   returnError = "return";
                 } else {
-                  switch (outputShape.getType()) {
+                  var type = outputShape.getType();
+                  if (outputShape.hasTrait(EnumTrait.class)) {
+                    type = ShapeType.ENUM;
+                  }
+                  switch (type) {
                     case DOUBLE, STRING, BLOB, LIST, TIMESTAMP, MAP:
                       writer.addImportFromModule(
                         DAFNY_RUNTIME_GO_LIBRARY_MODULE,
