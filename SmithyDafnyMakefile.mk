@@ -208,9 +208,6 @@ transpile_implementation:
 		$(TRANSLATION_RECORD) \
 		$(TRANSPILE_DEPENDENCIES)
 
-stdlibs:
-	cd $(PROJECT_ROOT)/$(STD_LIBRARY)/..; dafny build -t:lib --output stdlibs DafnyStandardLibraries.toml
-
 # If the project under transpilation uses `replaceable` modules,
 #   it MUST define a SRC_INDEX variable per language.
 # The purpose and usage of this is described in the `transpile_implementation` comments.
