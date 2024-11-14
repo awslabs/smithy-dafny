@@ -11,24 +11,6 @@ public class Constants {
 
   public static final String DAFNY_RUNTIME_GO_LIBRARY_MODULE =
     "github.com/dafny-lang/DafnyRuntimeGo/v4";
-  private static final Map<String, String> DEFAULT_VALUES = Map.ofEntries(
-    Map.<String, String>entry("int32", "0"),
-    Map.<String, String>entry("string", ""),
-    Map.<String, String>entry("[]byte", "[]byte(\"\")"),
-    Map.<String, String>entry("int64", "0"),
-    Map.<String, String>entry("float64", "0"),
-    Map.<String, String>entry("bool", "false")
-  );
-
-  /**
-   * Gets the default value for a specific Smithy type.
-   *
-   * @param smithyType The Smithy type to get the default value for
-   * @return The default value for the specified type, or null if the type is not found
-   */
-  public static String getDefaultValueForSmithyType(final String smithyType) {
-    return DEFAULT_VALUES.getOrDefault(smithyType, "nil");
-  }
 
   // TODO: Is it possible to make this function name shorter and in camelCase?
   /**
