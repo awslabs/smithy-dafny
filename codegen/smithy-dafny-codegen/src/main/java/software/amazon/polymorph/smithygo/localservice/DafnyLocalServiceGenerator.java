@@ -3,8 +3,6 @@
 
 package software.amazon.polymorph.smithygo.localservice;
 
-import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
-
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoDelegator;
 import software.amazon.polymorph.smithygo.codegen.GoWriter;
@@ -13,6 +11,7 @@ import software.amazon.polymorph.smithygo.codegen.UnionGenerator;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
 import software.amazon.polymorph.smithygo.utils.Constants;
+import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
 import software.amazon.polymorph.traits.ExtendableTrait;
 import software.amazon.polymorph.traits.LocalServiceTrait;
 import software.amazon.polymorph.traits.PositionalTrait;
@@ -215,10 +214,10 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 operationShape.getId().getName()
               );
         } else {
-          String dafnyType;
+          final String dafnyType;
           if (inputShape.hasTrait(PositionalTrait.class)) {
             // TODO: We can probably refactor this for better code quality. Like: inputForPositional could be redundant and we could use input itself.
-            Shape inputForPositional = model.expectShape(
+            final Shape inputForPositional = model.expectShape(
               inputShape
                 .getAllMembers()
                 .values()
@@ -227,7 +226,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 .get()
                 .getTarget()
             );
-            Symbol symbolForPositional = symbolProvider.toSymbol(
+            final Symbol symbolForPositional = symbolProvider.toSymbol(
               inputForPositional
             );
             dafnyType =
@@ -508,7 +507,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
             if (outputShape.hasTrait(PositionalTrait.class)) {
               // Shape with positional shape MUST have only one membershape which is always required.
               isMemberShapePointable = false;
-              MemberShape postionalMemShape = outputShape
+              final MemberShape postionalMemShape = outputShape
                 .getAllMembers()
                 .values()
                 .stream()
@@ -583,7 +582,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 DAFNY_RUNTIME_GO_LIBRARY_MODULE,
                 "dafny"
               );
-              Shape inputForPositional = model.expectShape(
+              final Shape inputForPositional = model.expectShape(
                 inputShape
                   .getAllMembers()
                   .values()
@@ -592,10 +591,10 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   .get()
                   .getTarget()
               );
-              Symbol symbolForPositional = symbolProvider.toSymbol(
+              final Symbol symbolForPositional = symbolProvider.toSymbol(
                 inputForPositional
               );
-              String dafnyType = DafnyNameResolver.getDafnyType(
+              final String dafnyType = DafnyNameResolver.getDafnyType(
                 inputForPositional,
                 symbolForPositional
               );
