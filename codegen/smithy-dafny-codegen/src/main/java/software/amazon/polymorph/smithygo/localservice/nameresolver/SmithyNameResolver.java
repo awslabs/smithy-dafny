@@ -8,11 +8,6 @@ import java.util.HashSet;
 import java.util.Map;
 import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.Symbol;
-import software.amazon.smithy.codegen.core.SymbolProvider;
-import software.amazon.smithy.model.Model;
-import software.amazon.smithy.model.shapes.ListShape;
-import software.amazon.smithy.model.shapes.MapShape;
-import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.ServiceShape;
 import software.amazon.smithy.model.shapes.Shape;
 
@@ -30,6 +25,13 @@ public class SmithyNameResolver {
       "bool" //boolean shape
     )
   );
+  private static String awsServiceClientName = "Client";
+
+  public static Boolean isShapeFromAWSSDK(final Shape shape) {
+    // Is there a better way to do this?
+    // I did not figure out any other then hardcoding.
+    return shape.toShapeId().getNamespace().startsWith("com.amazonaws.");
+  }
 
   public static void setSmithyNamespaceToGoModuleNameMap(
     Map<String, String> smithyNamespaceToGoModuleNameMap
@@ -60,9 +62,14 @@ public class SmithyNameResolver {
   }
 
   public static String smithyTypesNamespace(final Shape shape) {
-    return shape
-      .toShapeId()
-      .getNamespace()
+    final String shapeNameSpace = shape.toShapeId().getNamespace();
+    if (isShapeFromAWSSDK(shape)) {
+      final String sdkName = shapeNameSpace
+        .substring(shapeNameSpace.lastIndexOf(".") + 1)
+        .toLowerCase();
+      return sdkName.concat("types");
+    }
+    return shapeNameSpace
       .replace(DOT, BLANK)
       .toLowerCase()
       .concat("smithygeneratedtypes");
@@ -210,6 +217,10 @@ public class SmithyNameResolver {
     return SmithyNameResolver
       .smithyTypesNamespaceAws(serviceTrait, false)
       .concat(DOT)
-      .concat("Client");
+      .concat(getAwsServiceClientName());
+  }
+
+  public static String getAwsServiceClientName() {
+    return awsServiceClientName;
   }
 }
