@@ -33,6 +33,10 @@ import software.amazon.smithy.model.traits.EnumTrait;
 import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.utils.StringUtils;
 
+/**
+ * This class is used to generate the type conversion method for native shapes to dafny shapes.
+ * It uses the ShapeVisitor pattern to traverse the Smithy shapes and generate the corresponding Go type conversion code.
+ */
 // TODO: Remove anonymous function in each of the shape visitor and test if it will work
 public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
 
@@ -60,10 +64,21 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     this.isPointerType = isPointerType;
   }
 
+  /**
+   * Returns a set of all shapes that has been visited and has type conversion method generated.
+   *
+   * @return Set of MemberShape objects.
+   */
   public static Set<MemberShape> getAllShapesRequiringConversionFunc() {
     return memberShapeConversionFuncMap.keySet();
   }
 
+  /**
+   * Puts the shape and its corresponding conversion function in the memberShapeConversionFuncMap.
+   *
+   * @param shape          MemberShape object.
+   * @param conversionFunc String representing the conversion function.
+   */
   public static void putShapesWithConversionFunc(
     final MemberShape shape,
     final String conversionFunc
@@ -71,6 +86,12 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     memberShapeConversionFuncMap.put(shape, conversionFunc);
   }
 
+  /**
+   * Returns the conversion function for the given shape.
+   *
+   * @param shape MemberShape object.
+   * @return String representing the conversion function.
+   */
   public static String getConversionFunc(final MemberShape shape) {
     return memberShapeConversionFuncMap.get(shape);
   }
@@ -117,7 +138,8 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
 
   @Override
   public String structureShape(final StructureShape shape) {
-    final var builder = new StringBuilder();
+    final var typeConversionMethodBuilder = new StringBuilder();
+
     writer.addImportFromModule(
       "github.com/dafny-lang/DafnyStandardLibGo",
       "Wrappers"
@@ -129,10 +151,12 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
       DafnyNameResolver.dafnyTypesNamespace(shape)
     );
 
+    // Check if it's optional and needs to be wrapped in Wrappers.Some()
     String someWrapIfRequired = "%s";
 
     final String companionStruct;
     String returnType;
+
     if (shape.hasTrait(ErrorTrait.class)) {
       companionStruct =
         DafnyNameResolver.getDafnyErrorCompanionCreate(
@@ -152,6 +176,7 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
           context.symbolProvider().toSymbol(shape)
         );
     }
+
     String nilWrapIfRequired = returnType.concat("{}");
 
     if (this.isOptional) {
@@ -172,13 +197,13 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
           return %s
       }()""";
 
-    builder.append("%1$s(".formatted(companionStruct));
+    typeConversionMethodBuilder.append("%1$s(".formatted(companionStruct));
     final String fieldSeparator = ",";
     for (final var memberShapeEntry : shape.getAllMembers().entrySet()) {
       final var memberName = memberShapeEntry.getKey();
       final var memberShape = memberShapeEntry.getValue();
 
-      builder.append(
+      typeConversionMethodBuilder.append(
         "%1$s%2$s".formatted(
             ShapeVisitorHelper.toDafnyShapeVisitorWriter(
               memberShape,
@@ -198,13 +223,15 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     return goCodeBlock.formatted(
       returnType,
       nilCheck,
-      someWrapIfRequired.formatted(builder.append(")").toString())
+      someWrapIfRequired.formatted(
+        typeConversionMethodBuilder.append(")").toString()
+      )
     );
   }
 
   @Override
   public String mapShape(final MapShape shape) {
-    final StringBuilder builder = new StringBuilder();
+    final StringBuilder typeConversionMethodBuilder = new StringBuilder();
 
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
 
@@ -225,7 +252,7 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
       nilCheck =
         "if %s == nil {return %s}".formatted(dataSource, nilWrapIfRequired);
     }
-    builder.append(
+    typeConversionMethodBuilder.append(
       """
       func () %s {
           %s
@@ -259,13 +286,13 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     );
 
     // Close structure
-    return builder.toString();
+    return typeConversionMethodBuilder.toString();
   }
 
   @Override
   public String listShape(final ListShape shape) {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
-    final var builder = new StringBuilder();
+    final var typeConversionMethodBuilder = new StringBuilder();
     final var memberShape = shape.getMember();
 
     var nilWrapIfRequired = "nil";
@@ -277,7 +304,7 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
       returnType = "Wrappers.Option";
     }
 
-    builder.append(
+    typeConversionMethodBuilder.append(
       """
       func () %s {
              if %s == nil { return %s }
@@ -305,7 +332,7 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     );
 
     // Close structure
-    return builder.toString();
+    return typeConversionMethodBuilder.toString();
   }
 
   @Override
@@ -341,12 +368,15 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
   @Override
   public String stringShape(final StringShape shape) {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+
+    // Enum is hard because we need to travers all the values, do an equal check and find the index.
     if (shape.hasTrait(EnumTrait.class)) {
       String someWrapIfRequired = "%s";
       String returnType = DafnyNameResolver.getDafnyType(
         shape,
         context.symbolProvider().toSymbol(shape)
       );
+
       if (this.isOptional) {
         someWrapIfRequired = "Wrappers.Companion_Option_.Create_Some_(%s)";
         returnType = "Wrappers.Option";
@@ -388,6 +418,7 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
           )
         );
     } else {
+      //It's a normal string shape (and not enum)
       String nilWrapIfRequired = "nil";
       String someWrapIfRequired = "%s";
       String returnType = "dafny.Sequence";

@@ -10,6 +10,12 @@ import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.traits.EnumTrait;
 
+/**
+ * This class is a delegator / helper class for the ShapeVisitors to allow visitors generate the
+ * typeconversion functions for acyclic shapes. In case of Recursive shapes, this class checks if the shape
+ * has already been visited, and if yes then it re-uses the generated method instead of delegating
+ * it again to the shape visitors. This helps in avoiding infinite recursion, and has aws-sdk specific logic.
+ */
 public class ShapeVisitorHelper {
 
   private static final Map<MemberShape, Boolean> optionalShapesToDafny =
@@ -25,6 +31,17 @@ public class ShapeVisitorHelper {
     return pointerShapesToNative.get(shape);
   }
 
+  /**
+   * Generates the ToNative conversion function.
+   * @param memberShape to operate on
+   * @param context codegen context
+   * @param dataSource the dafny variable name aka data source
+   * @param assertionRequired if the shape is a generic type and needs typecasting / assertion.
+   * @param writer used to write to the Go package.
+   * @param isOptional if the shape is optional and might require unwrapping.
+   * @param isPointable if the shape is a pointer and might require referencing/dereferencing.
+   * @return the generated type conversion function as a string
+   */
   public static String toNativeShapeVisitorWriter(
     final MemberShape memberShape,
     final GenerationContext context,
@@ -76,6 +93,16 @@ public class ShapeVisitorHelper {
     return (funcName.concat("(").concat(dataSource).concat(")"));
   }
 
+  /**
+   * Generates the ToDafny conversion function.
+   * @param memberShape to operate on
+   * @param context codegen context
+   * @param dataSource the native variable name aka data source
+   * @param writer used to write to the Go package.
+   * @param isOptional if the shape is optional and might require wrapping.
+   * @param isPointerType if the shape is a pointer type and might require dereferencing.
+   * @return the generated type conversion function as a string
+   */
   public static String toDafnyShapeVisitorWriter(
     final MemberShape memberShape,
     final GenerationContext context,

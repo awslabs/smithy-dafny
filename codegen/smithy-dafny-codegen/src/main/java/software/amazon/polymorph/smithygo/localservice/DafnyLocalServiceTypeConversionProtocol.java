@@ -1003,7 +1003,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                 default:
                     error, ok := err.($L.OpaqueError)
                     if !ok {
-                      panic("Error is not an OpaqueError")
+                        panic("Error is not an OpaqueError")
                     }
                     return OpaqueError_Input_ToDafny(error)
                 }
