@@ -259,14 +259,10 @@ public class DafnyLocalServiceGenerator implements Runnable {
               );
         }
 
-        String returnResponse, returnError;
-        var defaultRetType = "nil";
-        final String validationErrorRet;
-        final String validationErrorVar = "opaqueErr";
+        final String returnResponse, returnError;
         if (outputShape.hasTrait(UnitTypeTrait.class)) {
           returnResponse = "return nil";
           returnError = "return";
-          validationErrorRet = "return %s".formatted(validationErrorVar);
         } else {
           if (outputShape.hasTrait(PositionalTrait.class)) {
             final MemberShape postionalMemShape = outputShape
@@ -333,8 +329,10 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     symbolProvider.toSymbol(outputShape)
                   )
                 );
-            defaultRetType =
-              Constants.getDefaultValueForSmithyType(
+              returnError = """
+              var defaultVal %s   
+              return defaultVal,
+              """.formatted(
                 SmithyNameResolver.getSmithyType(
                   outputShape,
                   symbolProvider.toSymbol(outputShape)
@@ -370,10 +368,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     symbolProvider.toSymbol(outputShape)
                   )
                 );
+            returnError = "return nil,";
           }
-          returnError = "return %s,".formatted(defaultRetType);
-          validationErrorRet =
-            "return %s, %s".formatted(defaultRetType, validationErrorVar);
         }
         String validationCheck = "";
         if (!inputShape.hasTrait(UnitTypeTrait.class)) {
@@ -384,11 +380,11 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   opaqueErr := %s.OpaqueError{
                     ErrObject: err,
                   }
-                  %s
+                  %s opaqueErr
                 }
             """.formatted(
                 SmithyNameResolver.smithyTypesNamespace(inputShape),
-                validationErrorRet
+                returnError
               );
         }
 
