@@ -1,6 +1,5 @@
 package software.amazon.polymorph.smithygo.utils;
 
-import java.util.Map;
 import software.amazon.polymorph.traits.PositionalTrait;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.shapes.MemberShape;

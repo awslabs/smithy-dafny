@@ -3,6 +3,8 @@
 
 package software.amazon.polymorph.smithygo.localservice;
 
+import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
+
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoDelegator;
 import software.amazon.polymorph.smithygo.codegen.GoWriter;
@@ -11,7 +13,6 @@ import software.amazon.polymorph.smithygo.codegen.UnionGenerator;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
 import software.amazon.polymorph.smithygo.utils.Constants;
-import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
 import software.amazon.polymorph.traits.ExtendableTrait;
 import software.amazon.polymorph.traits.LocalServiceTrait;
 import software.amazon.polymorph.traits.PositionalTrait;
@@ -334,15 +335,16 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     symbolProvider.toSymbol(outputShape)
                   )
                 );
-              returnError = """
-              var defaultVal %s   
+            returnError =
+              """
+              var defaultVal %s
               return defaultVal,
               """.formatted(
-                SmithyNameResolver.getSmithyType(
-                  outputShape,
-                  symbolProvider.toSymbol(outputShape)
-                )
-              );
+                  SmithyNameResolver.getSmithyType(
+                    outputShape,
+                    symbolProvider.toSymbol(outputShape)
+                  )
+                );
           } else {
             switch (outputShape.getType()) {
               case DOUBLE, STRING, BLOB, LIST, TIMESTAMP, MAP:
