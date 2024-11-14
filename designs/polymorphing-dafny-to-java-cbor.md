@@ -5,20 +5,18 @@ flowchart LR
     classDef Authored stroke:#0f0
     classDef Generated stroke:#ff0
 
-    SmithyModel["Smithy model"]:::Authored
+    Smithy["Smithy model"]:::Authored
 
     subgraph SourceProject["Dafny Library"]
-        SourceImpl["Dafny
-        Implementation"]:::Authored
+        SourceDeserialization["Dafny CBOR deserialization"]:::Generated
         SourceAPI["Dafny API"]:::Generated
+        SourceImpl["Dafny Implementation"]:::Authored
     end
     SourceProject:::Library
 
     subgraph Polymorph
         SmithyTargetClient[["smithy
         (java-client-codegen)"]]:::Process
-        SmithyShims[["smithy
-        (dafny-java-shims-codegen)"]]:::Process
 
         Compiler[["dafny
         (translate java)"]]:::Process
@@ -30,16 +28,15 @@ flowchart LR
 
     subgraph TargetProject["Java Library"]
         TargetAPI["Java API"]:::Generated
-        SourceToTargetShims["Dafny to Java shims"]:::Generated
+        TargetSerialization["Java CBOR serialization"]:::Generated
+        SourceDeserializationInTarget["Dafny CBOR deserialization in Java"]:::Generated
         SourceAPIInTarget["Dafny API in Java"]:::Generated
-        SourceImplInTarget["Dafny Implementation
-        in Java"]:::Generated
+        SourceImplInTarget["Dafny Implementation in Java"]:::Generated
     end
     TargetProject:::Library
 
-    SmithyModel --> SmithyTargetClient --> TargetAPI
-    SmithyModel --> SmithySourceClient --> SourceAPI
-    SmithyModel --> SmithyShims --> SourceToTargetShims
-    SourceAPI & SourceImpl --> Compiler --> SourceAPIInTarget & SourceImplInTarget
+    Smithy --> SmithyTargetClient --> TargetAPI & TargetSerialization
+    Smithy --> SmithySourceClient --> SourceDeserialization & SourceAPI
+    SourceDeserialization & SourceAPI & SourceImpl --> Compiler --> SourceDeserializationInTarget & SourceAPIInTarget & SourceImplInTarget
 
 ```

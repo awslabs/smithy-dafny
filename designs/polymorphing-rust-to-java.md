@@ -1,6 +1,6 @@
 ```mermaid
 flowchart LR
-    classDef Process stroke:#f00
+    classDef Process stroke:#f80
     classDef Library stroke:#0f0
     classDef Authored stroke:#0ff
     classDef Generated stroke:#ff0
@@ -28,7 +28,8 @@ flowchart LR
 
     subgraph TargetProject["Java Library"]
         TargetAPI["Java API"]:::Generated
-        SourceToTargetShims["Rust to Java shims"]:::Generated
+        SourceToTargetShims["Rust to Java shims
+        (bindings)"]:::Generated
         SourceAPIInTarget["Rust API in Java
         (binaries)"]:::Generated
         SourceImplInTarget["Rust Implementation in Java
