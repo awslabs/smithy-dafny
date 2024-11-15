@@ -71,7 +71,7 @@ public class DafnyNameResolver {
           .dafnyTypesNamespace(shape)
           .concat(DOT)
           .concat("I")
-          .concat(shape.toShapeId().getName());
+          .concat(dafnyCompilesExtra_(shape.toShapeId().getName()));
       // ENUM, STRUCTURE, UNION can be removed but for posterity it looks great to see all the shapes being covered.
       case ENUM, STRUCTURE, UNION:
       default:
