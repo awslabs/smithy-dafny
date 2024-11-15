@@ -18,6 +18,7 @@ import software.amazon.polymorph.traits.ExtendableTrait;
 import software.amazon.polymorph.traits.LocalServiceTrait;
 import software.amazon.polymorph.traits.PositionalTrait;
 import software.amazon.polymorph.traits.ReferenceTrait;
+import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.codegen.core.SymbolProvider;
 import software.amazon.smithy.model.Model;
@@ -901,6 +902,10 @@ public class DafnyLocalServiceGenerator implements Runnable {
                           symbolProvider.toSymbol(outputShape)
                         )
                         .concat(",");
+                    String deReferenceRequired = "";
+                    if (outputShape.hasTrait(ServiceTrait.class)) {
+                      deReferenceRequired = "*";
+                    }
                     var typeAssertion = outputShape.isResourceShape()
                       ? ".(%s)".formatted(
                           DafnyNameResolver.getDafnyType(
@@ -912,8 +917,12 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     returnResponse =
                       """
                       var native_response = %s(dafny_response.Dtor_value()%s)
-                      return native_response, nil
-                      """.formatted(fromDafnyConvMethodName, typeAssertion);
+                      return %snative_response, nil
+                      """.formatted(
+                          fromDafnyConvMethodName,
+                          typeAssertion,
+                          deReferenceRequired
+                        );
                     returnError =
                       """
                       var defaultVal %s
