@@ -1,5 +1,5 @@
 ```mermaid
-flowchart TD
+flowchart LR
     classDef Process stroke:#f80
     classDef Library stroke:#0f0
     classDef Authored stroke:#0ff
@@ -7,7 +7,7 @@ flowchart TD
 
     Smithy["Smithy model"]:::Authored
 
-    ConsumingSourceProject:::Library --> ConsumingTargetProject:::Library 
+    ConsumingSourceProject[Consuming Dafny Project]:::Library --> ConsumingTargetProject[Consuming Java Project]:::Library 
 
     ConsumingSourceProject:::Library --> SourceProject
 
