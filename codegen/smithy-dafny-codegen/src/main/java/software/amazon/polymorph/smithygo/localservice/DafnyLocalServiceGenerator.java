@@ -489,18 +489,6 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 .findFirst()
                 .get();
               outputShape = model.expectShape(postionalMemShape.getTarget());
-              // We use different function name in conversion layer for memberShape and Shape.
-              toDafnyConvMethodName =
-                SmithyNameResolver
-                  .shapeNamespace(postionalMemShape)
-                  .concat(".")
-                  .concat(
-                    Constants.funcNameGenerator(
-                      postionalMemShape,
-                      "ToDafny",
-                      model
-                    )
-                  );
               if (outputShape.hasTrait(ReferenceTrait.class)) {
                 outputShape =
                   model.expectShape(
@@ -508,9 +496,18 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       .expectTrait(ReferenceTrait.class)
                       .getReferentId()
                   );
-                toDafnyConvMethodName =
-                  SmithyNameResolver.getToDafnyMethodName(outputShape, "");
               }
+              toDafnyConvMethodName = outputShape.isResourceShape()
+              ? SmithyNameResolver.getFromDafnyMethodName(
+                service,
+                outputShape,
+                ""
+              )
+              : Constants.funcNameGenerator(
+                postionalMemShape,
+                "ToDafny",
+                model
+              );
             }
             // this is maybe because positional trait can change this
             final var maybeInputType = inputShape.hasTrait(UnitTypeTrait.class)
