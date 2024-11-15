@@ -30,9 +30,11 @@ block-beta
     block:Polymorph["Polymorph\n\n\n\n\n\n"]
         columns 1
         space
+        space
         SmithyTargetClient[["smithy (java-client-codegen)"]]
         SmithyShims[["smithy (dafny-java-shims-codegen)"]]
         Compiler[["dafny translate java"]]
+        space
     end
     class Polymorph Process
     class SmithyTargetClient Process
@@ -42,8 +44,9 @@ block-beta
     
     space 
 
-    block:TargetProject["Java Library\n\n\n\n\n"]
+    block:TargetProject["Java Library\n\n\n\n\n\n\n\n\n"]
         columns 1
+        space
         TargetAPI["Java API"]
         SourceToTargetShims["Dafny to Java shims"]
         SourceAPIInTarget["Dafny API in Java"]
@@ -82,6 +85,8 @@ block-beta
 
     SmithyModel --> SmithyTargetClient
     SmithyTargetClient --> TargetAPI
+    SmithyModel --> SmithyShims
+    SmithyShims --> SourceToTargetShims
 
     SourceAPI --> Compiler
     SourceImpl --> Compiler
