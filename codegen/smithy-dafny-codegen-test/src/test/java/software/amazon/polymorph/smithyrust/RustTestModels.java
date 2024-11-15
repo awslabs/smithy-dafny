@@ -25,13 +25,11 @@ class RustTestModels extends TestModelTest {
     DISABLED_TESTS.add("SimpleTypes/SimpleByte");
     DISABLED_TESTS.add("SimpleTypes/SimpleFloat");
     DISABLED_TESTS.add("SimpleTypes/SimpleShort");
+    DISABLED_TESTS.add("SQSExtended");
     DISABLED_TESTS.add("aws-sdks/glue");
     DISABLED_TESTS.add("aws-sdks/lakeformation");
     DISABLED_TESTS.add("aws-sdks/sqs");
     DISABLED_TESTS.add("aws-sdks/sqs-via-cli");
-    // V2 Models are not yet supported in Rust.
-    DISABLED_TESTS.add("aws-sdks/ddbv2");
-    DISABLED_TESTS.add("aws-sdks/kmsv2");
     // S3 is not yet supported
     DISABLED_TESTS.add("aws-sdks/s3");
   }

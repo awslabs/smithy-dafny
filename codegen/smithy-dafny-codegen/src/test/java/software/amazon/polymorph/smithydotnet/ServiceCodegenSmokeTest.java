@@ -50,6 +50,7 @@ public class ServiceCodegenSmokeTest {
     final Set<Path> expectedPaths = Stream
       .of(
         "OpaqueError",
+        "OpaqueWithTextError",
         "CollectionOfErrors",
         "CreateArrayListInput",
         "CreateArrayListOutput",

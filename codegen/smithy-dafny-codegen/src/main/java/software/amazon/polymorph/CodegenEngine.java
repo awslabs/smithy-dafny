@@ -75,6 +75,11 @@ public class CodegenEngine {
   private static final DafnyVersion MIN_DAFNY_VERSION = DafnyVersion.parse(
     "4.5"
   );
+  // The highest released version of Dafny.
+  // Needed to handle pre-releases differently.
+  private static final DafnyVersion MAX_DAFNY_VERSION = DafnyVersion.parse(
+    "4.9"
+  );
 
   // Used to distinguish different conventions between the CLI
   // and the Smithy build plugin, such as where .NET project files live.
@@ -527,6 +532,10 @@ public class CodegenEngine {
       if (generationAspects.contains(GenerationAspect.CLIENT_CONSTRUCTORS)) {
         writeTemplatedFile(
           "runtimes/java/src/main/java/Dafny/$namespaceDir;L/__default.java",
+          parameters
+        );
+        writeTemplatedFile(
+          "runtimes/java/src/main/java/Dafny/$namespaceDir;L/types/__default.java",
           parameters
         );
         if (localServiceTest) {
@@ -1241,7 +1250,7 @@ public class CodegenEngine {
       final Map<TargetLanguage, Path> targetLangTestOutputDirs =
         ImmutableMap.copyOf(targetLangTestOutputDirsRaw);
 
-      final DafnyVersion dafnyVersion = Optional
+      DafnyVersion dafnyVersion = Optional
         .ofNullable(this.dafnyVersion)
         .orElseGet(CodegenEngine::getDafnyVersionFromDafny);
       if (dafnyVersion.compareTo(MIN_DAFNY_VERSION) < 0) {
@@ -1251,6 +1260,18 @@ public class CodegenEngine {
           " is required, but found " +
           dafnyVersion.unparse()
         );
+      }
+      // If the version has not been released yet,
+      // downgrade it. Otherwise, the system will not find runtime libraries
+      // with the same version.
+      // The better fix for this is for Dafny to pre-release
+      if (dafnyVersion.compareTo(MAX_DAFNY_VERSION) > 0) {
+        LOGGER.warn(
+          "Dafny version {} appears to be unreleased, downgrading to {} to ensure runtimes are available",
+          dafnyVersion.unparse(),
+          MAX_DAFNY_VERSION.unparse()
+        );
+        dafnyVersion = MAX_DAFNY_VERSION;
       }
 
       final Optional<Path> propertiesFile = Optional

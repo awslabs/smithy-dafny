@@ -8,6 +8,3 @@ edition = "2021"
 [dependencies]
 dafny_runtime = { path = "../../../dafny_runtime_rust"}
 aws-smithy-types = "1.2.0"
-
-[lib]
-path = "src/implementation_from_dafny.rs"

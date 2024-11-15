@@ -18,7 +18,7 @@ def GetExtern(config, input):
 @staticmethod
 def ExternMustError(config, input):
   exception = Exception(input)
-  return Wrappers.Result_Failure(SimpleDafnyExternTypes.Error_Opaque(exception, repr(input)))
+  return Wrappers.Result_Failure(SimpleDafnyExternTypes.Error_Opaque(exception))
 
 default__.GetExtern = GetExtern
 default__.ExternMustError = ExternMustError
