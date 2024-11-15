@@ -497,17 +497,19 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       .getReferentId()
                   );
               }
-              toDafnyConvMethodName = outputShape.isResourceShape()
-              ? SmithyNameResolver.getFromDafnyMethodName(
-                service,
-                outputShape,
-                ""
-              )
-              : Constants.funcNameGenerator(
-                postionalMemShape,
-                "ToDafny",
-                model
-              );
+              toDafnyConvMethodName =
+                outputShape.isResourceShape()
+                  ? SmithyNameResolver.getToDafnyMethodName(outputShape, "")
+                  : SmithyNameResolver
+                    .shapeNamespace(postionalMemShape)
+                    .concat(".")
+                    .concat(
+                      Constants.funcNameGenerator(
+                        postionalMemShape,
+                        "ToDafny",
+                        model
+                      )
+                    );
             }
             // this is maybe because positional trait can change this
             final var maybeInputType = inputShape.hasTrait(UnitTypeTrait.class)
