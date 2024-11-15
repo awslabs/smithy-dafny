@@ -1,6 +1,7 @@
 package software.amazon.polymorph.smithygo.utils;
 
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
+
 import software.amazon.polymorph.smithygo.codegen.GoWriter;
 import software.amazon.polymorph.smithygo.codegen.SymbolUtils;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
@@ -109,10 +110,7 @@ public class GoCodegenUtils {
     }
     switch (type) {
       case DOUBLE, STRING, BLOB, LIST, TIMESTAMP, MAP:
-        writer.addImportFromModule(
-          DAFNY_RUNTIME_GO_LIBRARY_MODULE,
-          "dafny"
-        );
+        writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
       case ENUM, STRUCTURE, UNION, RESOURCE:
         writer.addImportFromModule(
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
