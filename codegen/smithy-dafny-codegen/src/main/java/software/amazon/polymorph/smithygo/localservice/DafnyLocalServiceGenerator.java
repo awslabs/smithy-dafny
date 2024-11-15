@@ -275,38 +275,28 @@ public class DafnyLocalServiceGenerator implements Runnable {
               .findFirst()
               .get();
             outputShape = model.expectShape(postionalMemShape.getTarget());
-            // We use different function name in conversion layer for memberShape and Shape.
-            String fromDafnyConvMethodName = Constants.funcNameGenerator(
-              postionalMemShape,
-              "FromDafny",
-              model
-            );
-            outputType =
-              SmithyNameResolver
-                .getSmithyType(
-                  postionalMemShape,
-                  symbolProvider.toSymbol(postionalMemShape)
-                )
-                .concat(",");
             if (outputShape.hasTrait(ReferenceTrait.class)) {
               outputShape =
                 model.expectShape(
                   outputShape.expectTrait(ReferenceTrait.class).getReferentId()
                 );
-              outputType =
+            }
+            String fromDafnyConvMethodName = outputShape.isResourceShape() ? SmithyNameResolver.getFromDafnyMethodName(
+              service,
+              outputShape,
+              ""
+            ) : Constants.funcNameGenerator(
+              postionalMemShape,
+              "FromDafny",
+              model
+            );
+            outputType =
                 SmithyNameResolver
                   .getSmithyType(
                     outputShape,
                     symbolProvider.toSymbol(outputShape)
                   )
                   .concat(",");
-              fromDafnyConvMethodName =
-                SmithyNameResolver.getFromDafnyMethodName(
-                  service,
-                  outputShape,
-                  ""
-                );
-            }
             GoCodegenUtils.importNamespace(outputShape, writer);
             returnResponse =
               """
