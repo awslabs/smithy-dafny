@@ -888,6 +888,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                         "FromDafny",
                         model
                       );
+                      
                     outputType =
                       SmithyNameResolver
                         .getSmithyType(
@@ -895,16 +896,17 @@ public class DafnyLocalServiceGenerator implements Runnable {
                           symbolProvider.toSymbol(outputShape)
                         )
                         .concat(",");
+                    var typeAssertion = outputShape.isResourceShape() ? ".(%s)".formatted(DafnyNameResolver.getDafnyType(
+                      outputShape,
+                      symbolProvider.toSymbol(outputShape)
+                    )) : "";
                     returnResponse =
                       """
-                      var native_response = %s(dafny_response.Dtor_value().(%s))
+                      var native_response = %s(dafny_response.Dtor_value()%s)
                       return native_response, nil
                       """.formatted(
                           fromDafnyConvMethodName,
-                          DafnyNameResolver.getDafnyType(
-                            outputShape,
-                            symbolProvider.toSymbol(outputShape)
-                          )
+                          typeAssertion
                         );
                     returnError =
                       """
