@@ -281,22 +281,24 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   outputShape.expectTrait(ReferenceTrait.class).getReferentId()
                 );
             }
-            String fromDafnyConvMethodName = outputShape.isResourceShape() ? SmithyNameResolver.getFromDafnyMethodName(
-              service,
-              outputShape,
-              ""
-            ) : Constants.funcNameGenerator(
-              postionalMemShape,
-              "FromDafny",
-              model
-            );
+            String fromDafnyConvMethodName = outputShape.isResourceShape()
+              ? SmithyNameResolver.getFromDafnyMethodName(
+                service,
+                outputShape,
+                ""
+              )
+              : Constants.funcNameGenerator(
+                postionalMemShape,
+                "FromDafny",
+                model
+              );
             outputType =
-                SmithyNameResolver
-                  .getSmithyType(
-                    outputShape,
-                    symbolProvider.toSymbol(outputShape)
-                  )
-                  .concat(",");
+              SmithyNameResolver
+                .getSmithyType(
+                  outputShape,
+                  symbolProvider.toSymbol(outputShape)
+                )
+                .concat(",");
             GoCodegenUtils.importNamespace(outputShape, writer);
             returnResponse =
               """
