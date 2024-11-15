@@ -798,11 +798,11 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   operation,
                   OperationShape.class
                 );
-                final var inputShape = model.expectShape(
+                var inputShape = model.expectShape(
                   operationShape.getInputShape()
                 );
 
-                final var outputShape = model.expectShape(
+                var outputShape = model.expectShape(
                   operationShape.getOutputShape()
                 );
                 final var inputType = inputShape.hasTrait(UnitTypeTrait.class)
@@ -813,7 +813,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                         symbolProvider.toSymbol(inputShape)
                       )
                     );
-                final var outputType = outputShape.hasTrait(UnitTypeTrait.class)
+                var outputType = outputShape.hasTrait(UnitTypeTrait.class)
                   ? ""
                   : "*%s,".formatted(
                       SmithyNameResolver.getSmithyType(
@@ -829,6 +829,17 @@ public class DafnyLocalServiceGenerator implements Runnable {
                         operationShape.getId().getName()
                       );
                 } else {
+                  if (inputShape.hasTrait(PositionalTrait.class)) {
+                    inputShape = model.expectShape(
+                      inputShape
+                        .getAllMembers()
+                        .values()
+                        .stream()
+                        .findFirst()
+                        .get()
+                        .getTarget()
+                    );
+                  }
                   baseClientCall =
                     """
                     var dafny_request %s = %s(params)
@@ -852,7 +863,60 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   returnResponse = "return nil";
                   returnError = "return";
                 } else {
-                  GoCodegenUtils.importNamespace(outputShape, writer);
+                  if (outputShape.hasTrait(PositionalTrait.class)) {
+                    final MemberShape postionalMemShape = outputShape
+                      .getAllMembers()
+                      .values()
+                      .stream()
+                      .findFirst()
+                      .get();
+                    outputShape = model.expectShape(postionalMemShape.getTarget());
+                    if (outputShape.hasTrait(ReferenceTrait.class)) {
+                      outputShape =
+                        model.expectShape(
+                          outputShape.expectTrait(ReferenceTrait.class).getReferentId()
+                        );
+                    }
+                    String fromDafnyConvMethodName = outputShape.isResourceShape()
+                      ? SmithyNameResolver.getFromDafnyMethodName(
+                        service,
+                        outputShape,
+                        ""
+                      )
+                      : Constants.funcNameGenerator(
+                        postionalMemShape,
+                        "FromDafny",
+                        model
+                      );
+                    outputType =
+                      SmithyNameResolver
+                        .getSmithyType(
+                          outputShape,
+                          symbolProvider.toSymbol(outputShape)
+                        )
+                        .concat(",");
+                    returnResponse =
+                      """
+                      var native_response = %s(dafny_response.Dtor_value().(%s))
+                      return native_response, nil
+                      """.formatted(
+                          fromDafnyConvMethodName,
+                          DafnyNameResolver.getDafnyType(
+                            outputShape,
+                            symbolProvider.toSymbol(outputShape)
+                          )
+                        );
+                    returnError =
+                      """
+                      var defaultVal %s
+                      return defaultVal,""".formatted(
+                          SmithyNameResolver.getSmithyType(
+                            outputShape,
+                            symbolProvider.toSymbol(outputShape)
+                          )
+                        );
+                  } else {
+                  
                   returnResponse =
                     """
                     var native_response = %s(dafny_response.Dtor_value().(%s))
@@ -869,6 +933,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
                         )
                       );
                   returnError = "return nil,";
+                  }
+                  GoCodegenUtils.importNamespace(outputShape, writer);
                 }
 
                 writer.write(
