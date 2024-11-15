@@ -13,6 +13,7 @@ import software.amazon.polymorph.smithygo.codegen.UnionGenerator;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
 import software.amazon.polymorph.smithygo.utils.Constants;
+import software.amazon.polymorph.smithygo.utils.GoCodegenUtils;
 import software.amazon.polymorph.traits.ExtendableTrait;
 import software.amazon.polymorph.traits.LocalServiceTrait;
 import software.amazon.polymorph.traits.PositionalTrait;
@@ -306,24 +307,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   ""
                 );
             }
-            var type = outputShape.getType();
-            if (outputShape.hasTrait(EnumTrait.class)) {
-              type = ShapeType.ENUM;
-            }
-            switch (type) {
-              case DOUBLE, STRING, BLOB, LIST, TIMESTAMP, MAP:
-                writer.addImportFromModule(
-                  DAFNY_RUNTIME_GO_LIBRARY_MODULE,
-                  "dafny"
-                );
-              case ENUM, STRUCTURE, UNION, RESOURCE:
-                writer.addImportFromModule(
-                  SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-                    outputShape.toShapeId().getNamespace()
-                  ),
-                  DafnyNameResolver.dafnyTypesNamespace(outputShape)
-                );
-            }
+            GoCodegenUtils.importNamespace(outputShape, writer);
             returnResponse =
               """
               var native_response = %s(dafny_response.Dtor_value().(%s))
@@ -879,24 +863,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   returnResponse = "return nil";
                   returnError = "return";
                 } else {
-                  var type = outputShape.getType();
-                  if (outputShape.hasTrait(EnumTrait.class)) {
-                    type = ShapeType.ENUM;
-                  }
-                  switch (type) {
-                    case DOUBLE, STRING, BLOB, LIST, TIMESTAMP, MAP:
-                      writer.addImportFromModule(
-                        DAFNY_RUNTIME_GO_LIBRARY_MODULE,
-                        "dafny"
-                      );
-                    case ENUM, STRUCTURE, UNION, RESOURCE:
-                      writer.addImportFromModule(
-                        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-                          outputShape.toShapeId().getNamespace()
-                        ),
-                        DafnyNameResolver.dafnyTypesNamespace(outputShape)
-                      );
-                  }
+                  GoCodegenUtils.importNamespace(outputShape, writer);
                   returnResponse =
                     """
                     var native_response = %s(dafny_response.Dtor_value().(%s))
