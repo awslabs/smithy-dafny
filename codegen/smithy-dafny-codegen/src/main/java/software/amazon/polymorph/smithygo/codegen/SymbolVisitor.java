@@ -359,6 +359,16 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
     Symbol reference = toSymbol(shape.getMember());
     // Shape name will be unused for symbols that represent a slice, but in the event it does we set the collection
     // shape's name to make debugging simpler.
+    if (
+      model
+        .expectShape(shape.getMember().getTarget())
+        .hasTrait(ReferenceTrait.class)
+    ) {
+      reference =
+        toSymbol(model.expectShape(shape.getMember().getTarget()))
+          .getProperty("Referred", Symbol.class)
+          .get();
+    }
     return symbolBuilderFor(shape, getDefaultShapeName(shape))
       .putProperty(SymbolUtils.GO_SLICE, true)
       .putProperty(
