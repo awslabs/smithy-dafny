@@ -330,11 +330,11 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 );
           } else {
             writer.addImportFromModule(
-                  SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-                    outputShape.toShapeId().getNamespace()
-                  ),
-                  DafnyNameResolver.dafnyTypesNamespace(outputShape)
-                );
+              SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+                outputShape.toShapeId().getNamespace()
+              ),
+              DafnyNameResolver.dafnyTypesNamespace(outputShape)
+            );
             returnResponse =
               """
               var native_response = %s(dafny_response.Dtor_value().(%s))
