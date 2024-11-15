@@ -830,15 +830,16 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       );
                 } else {
                   if (inputShape.hasTrait(PositionalTrait.class)) {
-                    inputShape = model.expectShape(
-                      inputShape
-                        .getAllMembers()
-                        .values()
-                        .stream()
-                        .findFirst()
-                        .get()
-                        .getTarget()
-                    );
+                    inputShape =
+                      model.expectShape(
+                        inputShape
+                          .getAllMembers()
+                          .values()
+                          .stream()
+                          .findFirst()
+                          .get()
+                          .getTarget()
+                      );
                   }
                   baseClientCall =
                     """
@@ -870,25 +871,29 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       .stream()
                       .findFirst()
                       .get();
-                    outputShape = model.expectShape(postionalMemShape.getTarget());
+                    outputShape =
+                      model.expectShape(postionalMemShape.getTarget());
                     if (outputShape.hasTrait(ReferenceTrait.class)) {
                       outputShape =
                         model.expectShape(
-                          outputShape.expectTrait(ReferenceTrait.class).getReferentId()
+                          outputShape
+                            .expectTrait(ReferenceTrait.class)
+                            .getReferentId()
                         );
                     }
-                    String fromDafnyConvMethodName = outputShape.isResourceShape()
-                      ? SmithyNameResolver.getFromDafnyMethodName(
-                        service,
-                        outputShape,
-                        ""
-                      )
-                      : Constants.funcNameGenerator(
-                        postionalMemShape,
-                        "FromDafny",
-                        model
-                      );
-                      
+                    String fromDafnyConvMethodName =
+                      outputShape.isResourceShape()
+                        ? SmithyNameResolver.getFromDafnyMethodName(
+                          service,
+                          outputShape,
+                          ""
+                        )
+                        : Constants.funcNameGenerator(
+                          postionalMemShape,
+                          "FromDafny",
+                          model
+                        );
+
                     outputType =
                       SmithyNameResolver
                         .getSmithyType(
@@ -896,18 +901,19 @@ public class DafnyLocalServiceGenerator implements Runnable {
                           symbolProvider.toSymbol(outputShape)
                         )
                         .concat(",");
-                    var typeAssertion = outputShape.isResourceShape() ? ".(%s)".formatted(DafnyNameResolver.getDafnyType(
-                      outputShape,
-                      symbolProvider.toSymbol(outputShape)
-                    )) : "";
+                    var typeAssertion = outputShape.isResourceShape()
+                      ? ".(%s)".formatted(
+                          DafnyNameResolver.getDafnyType(
+                            outputShape,
+                            symbolProvider.toSymbol(outputShape)
+                          )
+                        )
+                      : "";
                     returnResponse =
                       """
                       var native_response = %s(dafny_response.Dtor_value()%s)
                       return native_response, nil
-                      """.formatted(
-                          fromDafnyConvMethodName,
-                          typeAssertion
-                        );
+                      """.formatted(fromDafnyConvMethodName, typeAssertion);
                     returnError =
                       """
                       var defaultVal %s
@@ -918,23 +924,22 @@ public class DafnyLocalServiceGenerator implements Runnable {
                           )
                         );
                   } else {
-                  
-                  returnResponse =
-                    """
-                    var native_response = %s(dafny_response.Dtor_value().(%s))
-                    return &native_response, nil
-                    """.formatted(
-                        SmithyNameResolver.getFromDafnyMethodName(
-                          service,
-                          outputShape,
-                          ""
-                        ),
-                        DafnyNameResolver.getDafnyType(
-                          inputShape,
-                          symbolProvider.toSymbol(outputShape)
-                        )
-                      );
-                  returnError = "return nil,";
+                    returnResponse =
+                      """
+                      var native_response = %s(dafny_response.Dtor_value().(%s))
+                      return &native_response, nil
+                      """.formatted(
+                          SmithyNameResolver.getFromDafnyMethodName(
+                            service,
+                            outputShape,
+                            ""
+                          ),
+                          DafnyNameResolver.getDafnyType(
+                            inputShape,
+                            symbolProvider.toSymbol(outputShape)
+                          )
+                        );
+                    returnError = "return nil,";
                   }
                   GoCodegenUtils.importNamespace(outputShape, writer);
                 }
