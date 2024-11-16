@@ -135,7 +135,8 @@ public class GoCodegenUtils {
       getInputOrOutputName(
         model,
         model.expectShape(operationShape.getInputShape()),
-        symbolProvider
+        symbolProvider,
+        false
       )
     );
   }
@@ -149,7 +150,8 @@ public class GoCodegenUtils {
       getInputOrOutputName(
         model,
         model.expectShape(operationShape.getOutputShape()),
-        symbolProvider
+        symbolProvider,
+        true
       )
     );
   }
@@ -157,7 +159,8 @@ public class GoCodegenUtils {
   private static String getInputOrOutputName(
     final Model model,
     final Shape shape,
-    final SymbolProvider symbolProvider
+    final SymbolProvider symbolProvider,
+    final Boolean includeDeference
   ) {
     if (shape.hasTrait(UnitTypeTrait.class)) {
       return "";
@@ -178,7 +181,7 @@ public class GoCodegenUtils {
         )
       );
     } else {
-      return shape.getId().getName();
+      return (includeDeference ? "*".concat(shape.getId().getName()) : shape.getId().getName());
     }
   }
 }
