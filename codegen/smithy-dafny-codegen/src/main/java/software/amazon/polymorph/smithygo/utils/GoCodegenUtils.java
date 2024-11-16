@@ -181,7 +181,11 @@ public class GoCodegenUtils {
         )
       );
     } else {
-      return (includeDeference ? "*".concat(shape.getId().getName()) : shape.getId().getName());
+      return (
+        includeDeference
+          ? "*".concat(shape.getId().getName())
+          : shape.getId().getName()
+      );
     }
   }
 }
