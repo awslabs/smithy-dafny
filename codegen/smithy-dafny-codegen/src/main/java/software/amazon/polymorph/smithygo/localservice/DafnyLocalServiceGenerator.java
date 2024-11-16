@@ -1109,6 +1109,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   outputShape,
                   ""
                 );
+              boolean deReferenceRequired = true;
               if (outputShape.hasTrait(PositionalTrait.class)) {
                 final MemberShape postionalMemShape = outputShape
                   .getAllMembers()
@@ -1137,11 +1138,13 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       "FromDafny",
                       model
                     );
+                deReferenceRequired = false;
               }
               clientResponse = "var native_response, native_error";
               returnResponse =
-                "%s(*native_response)".formatted(
-                    fromDafnyConvMethodNameForOutput
+                "%s(%snative_response)".formatted(
+                    fromDafnyConvMethodNameForOutput,
+                    deReferenceRequired ? "*" : ""
                   );
             }
             writer.write(
