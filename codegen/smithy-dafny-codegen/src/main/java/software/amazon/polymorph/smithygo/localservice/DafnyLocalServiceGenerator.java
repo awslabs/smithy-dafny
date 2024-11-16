@@ -729,12 +729,11 @@ public class DafnyLocalServiceGenerator implements Runnable {
                         symbolProvider
                       );
                     final var output =
-                      
-                          GoCodegenUtils.getOperationalShapeOutputName(
-                            model,
-                            operationShape,
-                            symbolProvider
-                          );
+                      GoCodegenUtils.getOperationalShapeOutputName(
+                        model,
+                        operationShape,
+                        symbolProvider
+                      );
                     w.write(
                       """
                       $L($L) ($L error)
