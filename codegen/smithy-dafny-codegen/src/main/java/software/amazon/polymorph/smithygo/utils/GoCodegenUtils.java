@@ -126,38 +126,56 @@ public class GoCodegenUtils {
     }
   }
 
-  public static String getOperationalShapeInputName(final Model model, final OperationShape operationShape, final SymbolProvider symbolProvider) {
-    return (getInputOrOutputName(model, model.expectShape(operationShape.getInputShape()), symbolProvider));
+  public static String getOperationalShapeInputName(
+    final Model model,
+    final OperationShape operationShape,
+    final SymbolProvider symbolProvider
+  ) {
+    return (
+      getInputOrOutputName(
+        model,
+        model.expectShape(operationShape.getInputShape()),
+        symbolProvider
+      )
+    );
   }
 
-  public static String getOperationalShapeOutputName(final Model model, final OperationShape operationShape, final SymbolProvider symbolProvider) {
-    return (getInputOrOutputName(model, model.expectShape(operationShape.getOutputShape()), symbolProvider));
+  public static String getOperationalShapeOutputName(
+    final Model model,
+    final OperationShape operationShape,
+    final SymbolProvider symbolProvider
+  ) {
+    return (
+      getInputOrOutputName(
+        model,
+        model.expectShape(operationShape.getOutputShape()),
+        symbolProvider
+      )
+    );
   }
 
-  private static String getInputOrOutputName(final Model model, final Shape shape, final SymbolProvider symbolProvider) {
+  private static String getInputOrOutputName(
+    final Model model,
+    final Shape shape,
+    final SymbolProvider symbolProvider
+  ) {
     if (shape.hasTrait(UnitTypeTrait.class)) {
-        return "";
-    }
-    else if (shape.hasTrait(PositionalTrait.class)) {
-      Shape curShape = model.expectShape(shape.getAllMembers()
-      .values()
-      .stream()
-      .findFirst()
-      .get().getTarget());
+      return "";
+    } else if (shape.hasTrait(PositionalTrait.class)) {
+      Shape curShape = model.expectShape(
+        shape.getAllMembers().values().stream().findFirst().get().getTarget()
+      );
       if (curShape.hasTrait(ReferenceTrait.class)) {
         curShape =
           model.expectShape(
-            curShape
-              .expectTrait(ReferenceTrait.class)
-              .getReferentId()
+            curShape.expectTrait(ReferenceTrait.class).getReferentId()
           );
       }
       return (
-          SmithyNameResolver
-            .getSmithyType(
-              curShape,
-              symbolProvider.toSymbol(curShape)
-            )
+        SmithyNameResolver.getSmithyType(
+          curShape,
+          symbolProvider.toSymbol(curShape)
+        )
       );
     } else {
       return shape.getId().getName();
