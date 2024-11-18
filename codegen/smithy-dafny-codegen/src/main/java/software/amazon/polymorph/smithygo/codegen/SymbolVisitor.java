@@ -537,6 +537,10 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
   @Override
   public Symbol stringShape(StringShape shape) {
     if (shape.hasTrait(EnumTrait.class)) {
+      // System.out.println("");
+      // System.out.println(shape);
+      // System.out.println(SmithyNameResolver.smithyTypesNamespace(shape));
+      // System.out.println(shape.getId().getNamespace());
       String name = getDefaultShapeName(shape);
       return symbolBuilderFor(
         shape,

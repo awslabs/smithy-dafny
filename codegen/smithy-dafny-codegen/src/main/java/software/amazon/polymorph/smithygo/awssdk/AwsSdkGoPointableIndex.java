@@ -19,6 +19,9 @@ import software.amazon.smithy.model.traits.EnumTrait;
 import software.amazon.smithy.model.traits.StreamingTrait;
 import software.amazon.smithy.utils.SetUtils;
 
+/**
+ * This class is modelled on the codegen/GoPointableIndex but has specific logic for dafny - aws-sdk shapes.
+ */
 public class AwsSdkGoPointableIndex implements KnowledgeIndex {
 
   public static final NullableIndex.CheckMode DEFAULT_CHECKMODE =

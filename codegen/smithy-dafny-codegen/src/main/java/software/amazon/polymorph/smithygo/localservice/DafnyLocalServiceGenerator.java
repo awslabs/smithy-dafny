@@ -430,6 +430,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     symbolProvider.toSymbol(inputShape)
                   )
                 );
+
             final String inputType;
             final var typeConversion = inputShape.hasTrait(UnitTypeTrait.class)
               ? ""
