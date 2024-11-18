@@ -1,42 +1,83 @@
 ```mermaid
-flowchart LR
+%%{init: {"flowchart": {"defaultRenderer": "elk"}} }%%
+flowchart TB
     classDef Process stroke:#f80
     classDef Library stroke:#0ff
     classDef Authored stroke:#0f0
     classDef Generated stroke:#ff0
 
-    Smithy["Smithy model"]:::Authored
+    SmithyModel["Smithy model"]:::Authored
+
+    SmithySourceServerCodegen[["smithy
+        (dafny-server-codegen)"]]:::Process
 
     subgraph SourceProject["Dafny Library"]
-        SourceDeserialization["Dafny CBOR deserialization"]:::Generated
+        SourceProtocolDeserialization["Dafny Protocol
+        Deserialization"]:::Generated
         SourceAPI["Dafny API"]:::Generated
-        SourceImpl["Dafny Implementation"]:::Authored
+        SourceImpl["Dafny
+        Implementation"]:::Authored
+       
+        SourceProtocolDeserialization <==> SourceAPI <==> SourceImpl
     end
     SourceProject:::Library
 
-    subgraph Polymorph
-        SmithyTargetClient[["smithy
-        (java-client-codegen)"]]:::Process
+    SmithyModel -.-> SmithySourceServerCodegen -.-> SourceProtocolDeserialization & SourceAPI
+
+    subgraph SmithyTargetClientCodegen["smithy 
+                                    (java-client-codegen)"]
+        SmithyTargetAPICodegen[["API/protocol generation"]]:::Process
 
         Compiler[["dafny
-        (translate java)"]]:::Process
+        (translate rust)"]]:::Process
     end
-    Polymorph:::Process
+    SmithyTargetClientCodegen:::Process
 
-    SmithySourceClient[["smithy
-    (dafny-server-codegen)"]]:::Process
+    subgraph TargetProject["Rust Library"]
+        TargetAPI["Rust API"]:::Generated
+        TargetProtocolSerialization["Rust Protocol Serialization"]:::Generated
 
-    subgraph TargetProject["Java Library"]
-        TargetAPI["Java API"]:::Generated
-        TargetSerialization["Java CBOR serialization"]:::Generated
-        SourceDeserializationInTarget["Dafny CBOR deserialization in Java"]:::Generated
-        SourceAPIInTarget["Dafny API in Java"]:::Generated
-        SourceImplInTarget["Dafny Implementation in Java"]:::Generated
+        subgraph SourceEmbeddedInTarget["Dafny Library in Rust"]
+            SourceProtocolDeserializationInTarget["Dafny Protocol Deserialization"]:::Generated
+            SourceAPIInTarget["Dafny API"]:::Generated
+            SourceImplInTarget["Dafny Implementation"]:::Generated
+        end
+        SourceEmbeddedInTarget:::Library
+
+        TargetAPI <==> TargetProtocolSerialization <== in-memory bytes ==> SourceProtocolDeserializationInTarget <==> SourceAPIInTarget <==> SourceImplInTarget
     end
     TargetProject:::Library
 
-    Smithy --> SmithyTargetClient --> TargetAPI & TargetSerialization
-    Smithy --> SmithySourceClient --> SourceDeserialization & SourceAPI
-    SourceDeserialization & SourceAPI & SourceImpl --> Compiler --> SourceDeserializationInTarget & SourceAPIInTarget & SourceImplInTarget
+    SmithyModel -.-> SmithyTargetClientCodegen
+    SmithyTargetAPICodegen -.-> TargetAPI & TargetProtocolSerialization
+    SourceProject -.-> Compiler -.-> SourceEmbeddedInTarget
+
+    subgraph SmithyTarget2ClientCodegen["smithy 
+                                    (python-client-codegen)"]
+        SmithyTarget2APICodegen[["API/protocol generation"]]:::Process
+
+        Compiler2[["dafny
+        (translate python)"]]:::Process
+    end
+    SmithyTarget2ClientCodegen:::Process
+
+    subgraph Target2Project["Python Library"]
+        Target2API["Python API"]:::Generated
+        Target2ProtocolSerialization["Python Protocol Serialization"]:::Generated
+            
+        subgraph SourceEmbeddedInTarget2["Dafny Library in Python"]
+            SourceProtocolDeserializationInTarget2["Dafny Protocol Deserialization"]:::Generated
+            SourceAPIInTarget2["Dafny API"]:::Generated
+            SourceImplInTarget2["Dafny Implementation"]:::Generated
+        end
+        SourceEmbeddedInTarget2:::Library
+
+        Target2API <==> Target2ProtocolSerialization <== in-memory bytes ==> SourceProtocolDeserializationInTarget2 <==> SourceAPIInTarget2 <==> SourceImplInTarget2
+    end
+    Target2Project:::Library
+
+    SmithyModel -.-> SmithyTarget2ClientCodegen
+    SmithyTarget2APICodegen -.-> Target2API & Target2ProtocolSerialization
+    SourceProject -.-> Compiler2 -.-> SourceEmbeddedInTarget2
 
 ```
