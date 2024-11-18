@@ -35,8 +35,14 @@ import software.amazon.smithy.model.shapes.UnionShape;
 import software.amazon.smithy.model.traits.EnumTrait;
 import software.amazon.smithy.utils.StringUtils;
 
+/**
+ * This class is used to generate the type conversion method for dafny to smithy / native shapes.
+ * It uses the ShapeVisitor pattern to traverse the Smithy shapes and generate the corresponding Go type conversion code.
+ */
+
 // TODO: Remove anonymous function in each of the shape visitor and test if it will work
 // TODO: if check with %s to figure out if it's a pointer or not and remove duplicate code when shape is optional vs non optional
+// TODO: simple shapes could be migrated smithy-dafny-conversion library
 public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
 
   private final GenerationContext context;
@@ -71,10 +77,21 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     this.isOptional = isOptional;
   }
 
+  /**
+   * Returns a set of all shapes that has been visited and has type conversion method generated.
+   *
+   * @return Set of MemberShape objects.
+   */
   public static Set<MemberShape> getAllShapesRequiringConversionFunc() {
     return memberShapeConversionFuncMap.keySet();
   }
 
+  /**
+   * Puts the shape and its corresponding conversion function in the memberShapeConversionFuncMap.
+   *
+   * @param shape           MemberShape object.
+   * @param conversionFunc  String representing the conversion function.
+   */
   public static void putShapesWithConversionFunc(
     final MemberShape shape,
     final String conversionFunc
@@ -82,10 +99,22 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     memberShapeConversionFuncMap.put(shape, conversionFunc);
   }
 
+  /**
+   * Returns the conversion function for the given shape.
+   *
+   * @param shape MemberShape object.
+   * @return String representing the conversion function.
+   */
   public static String getConversionFunc(final MemberShape shape) {
     return memberShapeConversionFuncMap.get(shape);
   }
 
+  /**
+   * Return the conversion function for shapes with @reference trait.
+   *
+   * @param shape MemberShape object.
+   * @return String representing the conversion function.
+   */
   protected String referenceStructureShape(final StructureShape shape) {
     final ReferenceTrait referenceTrait = shape.expectTrait(
       ReferenceTrait.class
@@ -93,109 +122,130 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     final Shape resourceOrService = context
       .model()
       .expectShape(referenceTrait.getReferentId());
-    var namespace = "";
     if (resourceOrService.asResourceShape().isPresent()) {
-      final var resourceShape = resourceOrService.asResourceShape().get();
-      if (
-        !resourceOrService
-          .toShapeId()
-          .getNamespace()
-          .equals(context.settings().getService().getNamespace())
-      ) {
-        writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-            resourceOrService.toShapeId().getNamespace()
-          ),
-          SmithyNameResolver.shapeNamespace(resourceShape)
-        );
-        namespace =
-          SmithyNameResolver.shapeNamespace(resourceOrService).concat(".");
-      }
-      if (!this.isOptional) {
-        return "%s_FromDafny(%s)".formatted(
-            namespace.concat(resourceShape.toShapeId().getName()),
-            dataSource
-          );
-      }
+      return referencedResourceShape(resourceOrService);
+    }
+
+    if (resourceOrService.asServiceShape().isPresent()) {
+      return referencedServiceShape(resourceOrService);
+    }
+
+    throw new UnsupportedOperationException(
+      "Unknown referenceStructureShape type: ".concat(shape.toString())
+    );
+  }
+
+  /*
+   * Return the conversion function for shapes with @reference{Service} trait.
+   */
+  private String referencedServiceShape(final Shape resourceOrService) {
+    final var serviceShape = resourceOrService.asServiceShape().get();
+    var namespace = "";
+    if (
+      !resourceOrService
+        .toShapeId()
+        .getNamespace()
+        .equals(context.settings().getService().getNamespace())
+    ) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+          resourceOrService.toShapeId().getNamespace()
+        ),
+        SmithyNameResolver.shapeNamespace(serviceShape)
+      );
+      namespace =
+        SmithyNameResolver.shapeNamespace(resourceOrService).concat(".");
+    }
+    if (serviceShape.hasTrait(ServiceTrait.class)) {
+      writer.addImport(
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          serviceShape.getId().getNamespace()
+        )
+      );
       return """
-      func () %s.I%s {
-          if %s == nil {
-              return nil;
-          }
-          return %s
-      }()""".formatted(
-          SmithyNameResolver.smithyTypesNamespace(resourceShape),
-          resourceShape.getId().getName(),
-          dataSource,
-          "%s_FromDafny(%s.(%s.I%s))".formatted(
-              namespace.concat(resourceShape.toShapeId().getName()),
-              dataSource,
-              DafnyNameResolver.dafnyTypesNamespace(resourceShape),
-              resourceShape.getId().getName()
-            )
-        );
-    } else {
-      final var serviceShape = resourceOrService.asServiceShape().get();
-      if (
-        !resourceOrService
-          .toShapeId()
-          .getNamespace()
-          .equals(context.settings().getService().getNamespace())
-      ) {
-        writer.addImportFromModule(
-          SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-            resourceOrService.toShapeId().getNamespace()
-          ),
-          SmithyNameResolver.shapeNamespace(serviceShape)
-        );
-        namespace =
-          SmithyNameResolver.shapeNamespace(resourceOrService).concat(".");
+      shim, ok := %1$s.(*%2$swrapped.Shim)
+      if !ok {
+          panic("Not able to convert client to native")
       }
-      if (serviceShape.hasTrait(ServiceTrait.class)) {
-        writer.addImport(
-          SmithyNameResolver.getGoModuleNameForSdkNamespace(
-            serviceShape.getId().getNamespace()
+      return shim.Client
+      """.formatted(
+          dataSource,
+          DafnyNameResolver.dafnyNamespace(
+            resourceOrService.expectTrait(ServiceTrait.class)
           )
         );
-        return """
-        shim, ok := %1$s.(*%2$swrapped.Shim)
-        if !ok {
-            panic("Not able to convert client to native")
-        }
-        return shim.Client
-        """.formatted(
-            dataSource,
-            DafnyNameResolver.dafnyNamespace(
-              resourceOrService.expectTrait(ServiceTrait.class)
-            )
-          );
-      }
-      if (!this.isOptional) {
-        return "return &%s{%s}".formatted(
-            namespace.concat(
-              context.symbolProvider().toSymbol(serviceShape).getName()
-            ),
-            dataSource
-          );
-      }
-      return """
-      return func () *%s {
-          if %s == nil {
-              return nil;
-          }
-          return &%s{%s.(*%s)}
-      }()""".formatted(
+    }
+    if (!this.isOptional) {
+      return "return &%s{%s}".formatted(
           namespace.concat(
             context.symbolProvider().toSymbol(serviceShape).getName()
           ),
-          dataSource,
-          namespace.concat(
-            context.symbolProvider().toSymbol(serviceShape).getName()
-          ),
-          dataSource,
-          DafnyNameResolver.getDafnyClient(serviceShape.toShapeId().getName())
+          dataSource
         );
     }
+    return """
+    return func () *%s {
+        if %s == nil {
+            return nil;
+        }
+        return &%s{%s.(*%s)}
+    }()""".formatted(
+        namespace.concat(
+          context.symbolProvider().toSymbol(serviceShape).getName()
+        ),
+        dataSource,
+        namespace.concat(
+          context.symbolProvider().toSymbol(serviceShape).getName()
+        ),
+        dataSource,
+        DafnyNameResolver.getDafnyClient(serviceShape.toShapeId().getName())
+      );
+  }
+
+  /*
+   * Return the conversion function for shapes with @reference{Resource} trait.
+   */
+  private String referencedResourceShape(final Shape resourceOrService) {
+    final var resourceShape = resourceOrService.asResourceShape().get();
+    var namespace = "";
+    if (
+      !resourceOrService
+        .toShapeId()
+        .getNamespace()
+        .equals(context.settings().getService().getNamespace())
+    ) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+          resourceOrService.toShapeId().getNamespace()
+        ),
+        SmithyNameResolver.shapeNamespace(resourceShape)
+      );
+      namespace =
+        SmithyNameResolver.shapeNamespace(resourceOrService).concat(".");
+    }
+    if (!this.isOptional) {
+      return "%s_FromDafny(%s)".formatted(
+          namespace.concat(resourceShape.toShapeId().getName()),
+          dataSource
+        );
+    }
+    return """
+    func () %s.I%s {
+        if %s == nil {
+            return nil;
+        }
+        return %s
+    }()""".formatted(
+        SmithyNameResolver.smithyTypesNamespace(resourceShape),
+        resourceShape.getId().getName(),
+        dataSource,
+        "%s_FromDafny(%s.(%s.I%s))".formatted(
+            namespace.concat(resourceShape.toShapeId().getName()),
+            dataSource,
+            DafnyNameResolver.dafnyTypesNamespace(resourceShape),
+            resourceShape.getId().getName()
+          )
+      );
   }
 
   @Override
@@ -222,6 +272,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       );
     }
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+    // Blob shape is inherently value type
     return """
     return func () []byte {
     var b []byte
@@ -253,15 +304,20 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     if (shape.hasTrait(ReferenceTrait.class)) {
       return referenceStructureShape(shape);
     }
-    final var builder = new StringBuilder();
+
     writer.addImportFromModule(
       SmithyNameResolver.getGoModuleNameForSmithyNamespace(
         shape.toShapeId().getNamespace()
       ),
       DafnyNameResolver.dafnyTypesNamespace(shape)
     );
+
+    // Optional values in Dafny use Wrappers.None but Go doesn't have not-set convention
+    // for value types. Hence we use pointer-types in Go which needs to be passed using reference.
     final String referenceType = (this.isOptional) ? "&" : "";
-    builder.append(
+
+    final var typeConversionMethodBuilder = new StringBuilder();
+    typeConversionMethodBuilder.append(
       "return %1$s%2$s{".formatted(
           referenceType,
           SmithyNameResolver
@@ -270,6 +326,8 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
             .concat(shape.getId().getName())
         )
     );
+
+    // Visit each of the member shapes in the structure and get the conversion function for them
     for (final var memberShapeEntry : shape.getAllMembers().entrySet()) {
       final var memberName = memberShapeEntry.getKey();
       final var memberShape = memberShapeEntry.getValue();
@@ -286,6 +344,8 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         // Shapes with PositionalTrait already gets input unwrapped so no conversion needed.
         DtorConversion = "";
       }
+
+      // If a value is a generic type or optional, we need type casting. Dafny doesn't support generics yet.
       //TODO: Is it ever possible for structure to be nil?
       String maybeAssertion = "";
       if (dataSource.equals("input")) {
@@ -317,7 +377,8 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
                 )
               : ""
           );
-      builder.append(
+
+      typeConversionMethodBuilder.append(
         """
            %1$s: %2$s,
         """.formatted(
@@ -335,7 +396,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       );
     }
 
-    return builder.append("}").toString();
+    return typeConversionMethodBuilder.append("}").toString();
   }
 
   // TODO: smithy-dafny-conversion library
@@ -351,19 +412,19 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         SmithyNameResolver.smithyTypesNamespace(shape)
       );
     }
-    final StringBuilder builder = new StringBuilder();
+    final StringBuilder typeConversionMethodBuilder = new StringBuilder();
     final MemberShape memberShape = shape.getMember();
     final Shape targetShape = context
       .model()
       .expectShape(memberShape.getTarget());
     final var symbol = context.symbolProvider().toSymbol(shape);
-    final Boolean assertionRequired = targetShape.isStructureShape();
-    builder.append(
+    final boolean assertionRequired = targetShape.isStructureShape();
+    typeConversionMethodBuilder.append(
       """
-                           var fieldValue %s
-                    if %s == nil {
-                        return nil
-                    }
+       var fieldValue %s
+      if %s == nil {
+          return nil
+      }
       for i := dafny.Iterate(%s.(dafny.Sequence)); ; {
       	val, ok := i()
       	if !ok {
@@ -386,7 +447,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         )
     );
     // Close structure
-    return builder.append("return fieldValue").toString();
+    return typeConversionMethodBuilder.append("return fieldValue").toString();
   }
 
   @Override
@@ -401,7 +462,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         SmithyNameResolver.smithyTypesNamespace(shape)
       );
     }
-    final StringBuilder builder = new StringBuilder();
+    final StringBuilder typeConversionMethodBuilder = new StringBuilder();
     final MemberShape keyMemberShape = shape.getKey();
     final MemberShape valueMemberShape = shape.getValue();
     final Shape valueTargetShape = context
@@ -412,12 +473,12 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       context.symbolProvider().toSymbol(valueTargetShape)
     );
     final String valueDataSource = "(*val.(dafny.Tuple).IndexInt(1))";
-    builder.append(
+    typeConversionMethodBuilder.append(
       """
-                     var m map[string]%s = make(map[string]%s)
-                     if %s == nil {
-                         return nil
-                     }
+      var m map[string]%s = make(map[string]%s)
+      if %s == nil {
+          return nil
+      }
       for i := dafny.Iterate(%s.(dafny.Map).Items());; {
       	val, ok := i()
       	if !ok {
@@ -426,7 +487,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       	m[%s] = %s
       }
       return m
-                                    """.formatted(
+      """.formatted(
           type,
           type,
           dataSource,
@@ -451,7 +512,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
           )
         )
     );
-    return builder.toString();
+    return typeConversionMethodBuilder.toString();
   }
 
   @Override
@@ -580,6 +641,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       }
     }
 
+    //Handle the @utf8Bytes Trait
     final var underlyingType = shape.hasTrait(DafnyUtf8BytesTrait.class)
       ? "uint8"
       : "dafny.Char";
@@ -595,6 +657,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
             s = s + string(byteSlice)
         """.formatted(underlyingType);
     }
+
     if (isOptional) {
       return """
        return func() (*string) {
@@ -751,6 +814,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         SmithyNameResolver.smithyTypesNamespace(shape)
       );
     }
+
     String nilCheck = "";
     if (isOptional) {
       nilCheck =
@@ -759,15 +823,18 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
                 return nil
         }""".formatted(dataSource);
     }
+
     final String functionInit =
       """
           var union %s
           %s
       """.formatted(context.symbolProvider().toSymbol(shape), nilCheck);
+
     final StringBuilder eachMemberInUnion = new StringBuilder();
     for (final var member : shape.getAllMembers().values()) {
       final Shape targetShape = context.model().expectShape(member.getTarget());
       final String memberName = context.symbolProvider().toMemberName(member);
+
       final String rawUnionDataSource =
         "(" +
         dataSource +
@@ -777,6 +844,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
           context.symbolProvider().toSymbol(shape)
         ) +
         "))";
+
       // unwrap union type, assert it then convert it to its member type with Dtor_ (example: Dtor_BlobValue()). unionDataSource is not a wrapper object until now.
       String unionDataSource =
         rawUnionDataSource +
@@ -792,6 +860,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
             rawUnionDataSource,
             DafnyNameResolver.dafnyCompilesExtra_(member.getMemberName())
           );
+
       String wrappedDataSource = "";
       boolean requireAssertion = true;
       if (!(targetShape.isStructureShape())) {
@@ -803,6 +872,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         unionDataSource = "dataSource.UnwrapOr(nil)";
         requireAssertion = false;
       }
+
       eachMemberInUnion.append(
         """
         %s
@@ -829,6 +899,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
           )
       );
     }
+
     return """
         %s
         %s
