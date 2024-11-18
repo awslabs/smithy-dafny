@@ -4,39 +4,52 @@
     "plugins": {
       "dafny-server-codegen": {
         "edition": "2023",
-        "service": "aws.cryptography.materialProviders#AwsCryptographicMaterialProviders"
+        "service": 
+          "aws.cryptography.materialProviders#AwsCryptographicMaterialProviders"
       },
       // Showing a selection of configuration for plugins where they already exist.
       // There's no need to specify polymorph configuration because
       // the protocols appear in the source Smithy model.
-      // Each one could be the logic currently in smithy-dafny wrapped up as a Smithy plugin,
-      // or the existing codegen plugins once they support the necessary polymorph traits.
+      // Each one could be the logic currently in smithy-dafny
+      // wrapped up as a Smithy plugin, or the existing codegen plugins
+      // once they support the necessary polymorph traits.
+      //
+      // These could also be more specialized plugins that bake in common 
+      // configuration for libraries owned by the same organizations,
+      // in the same way that plugins like aws-typescript-client-codegen
+      // bake in assumptions over the more generic typescript-client-codegen plugin.
       "java-client-codegen": {
-        "service": "aws.cryptography.materialProviders#AwsCryptographicMaterialProviders",
+        "service": 
+          "aws.cryptography.materialProviders#AwsCryptographicMaterialProviders",
         "namespace": "software.amazon.cryptography.materialproviders"
       },
       "rust-client-codegen": {
-        "service": "aws.cryptography.materialProviders#AwsCryptographicMaterialProviders",
+        "service": 
+          "aws.cryptography.materialProviders#AwsCryptographicMaterialProviders",
         "module": "aws_crypto_material_providers",
         "moduleVersion": "1.0.0"
       },
       "python-client-codegen": {
-        "service": "aws.cryptography.materialProviders#AwsCryptographicMaterialProviders",
+        "service": 
+          "aws.cryptography.materialProviders#AwsCryptographicMaterialProviders",
         "module": "aws-cryptographic-material-providers",
         "moduleVersion": "1.7.4"
       },
       "typescript-client-codegen": {
-        "service": "aws.cryptography.materialProviders#AwsCryptographicMaterialProviders",
+        "service": 
+          "aws.cryptography.materialProviders#AwsCryptographicMaterialProviders",
         "package": "@aws-crypto/material-providers",
         "packageVersion": "1.0.0"
       },
       "go-codegen": {
-        "service": "aws.cryptography.materialProviders#AwsCryptographicMaterialProviders",
+        "service": 
+          "aws.cryptography.materialProviders#AwsCryptographicMaterialProviders",
         "module": "github.com/aws/aws-crypto-material-providers-go",
         "generateGoMod": true
       },
       "net-client-codegen": {
-        "service": "aws.cryptography.materialProviders#AwsCryptographicMaterialProviders"
+        "service": 
+          "aws.cryptography.materialProviders#AwsCryptographicMaterialProviders"
       }
     }
   }
