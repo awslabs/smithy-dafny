@@ -171,11 +171,12 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
           );
       }
       if (!this.isOptional) {
-        return "return &%s{%s}".formatted(
+        return "return &%s{%s.(*%s)}".formatted(
             namespace.concat(
               context.symbolProvider().toSymbol(serviceShape).getName()
             ),
-            dataSource
+            dataSource,
+            DafnyNameResolver.getDafnyClient(serviceShape.toShapeId().getName())
           );
       }
       return """
