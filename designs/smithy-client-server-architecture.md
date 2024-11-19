@@ -5,6 +5,7 @@ flowchart TD
     classDef Library stroke:#0ff
     classDef Authored stroke:#0f0
     classDef Generated stroke:#ff0
+    classDef hidden display: none;
 
     SmithyModel["Smithy model"]:::Authored
 
@@ -53,6 +54,5 @@ flowchart TD
 
     TargetProtocolSerialization & Target2ProtocolSerialization <== bytes over HTTP ==> 
     SourceProtocolDeserialization
-
 
 ```

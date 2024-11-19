@@ -44,7 +44,7 @@ flowchart TB
         end
         SourceEmbeddedInTarget:::Library
 
-        TargetAPI <==> TargetProtocolSerialization <== in-memory bytes ==> SourceProtocolDeserializationInTarget <==> SourceAPIInTarget <==> SourceImplInTarget
+        TargetAPI <==> TargetProtocolSerialization <====> SourceProtocolDeserializationInTarget <==> SourceAPIInTarget <==> SourceImplInTarget
     end
     TargetProject:::Library
 
@@ -72,7 +72,7 @@ flowchart TB
         end
         SourceEmbeddedInTarget2:::Library
 
-        Target2API <==> Target2ProtocolSerialization <== in-memory bytes ==> SourceProtocolDeserializationInTarget2 <==> SourceAPIInTarget2 <==> SourceImplInTarget2
+        Target2API <==> Target2ProtocolSerialization <====> SourceProtocolDeserializationInTarget2 <==> SourceAPIInTarget2 <==> SourceImplInTarget2
     end
     Target2Project:::Library
 
