@@ -554,7 +554,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   operationShape.getId().getName(),
                   inputToClient
                 );
-            String clientResponse, returnResponse;
+            final String clientResponse, returnResponse;
             if (outputShape.hasTrait(UnitTypeTrait.class)) {
               clientResponse = "var native_error";
               returnResponse = "dafny.TupleOf()";
