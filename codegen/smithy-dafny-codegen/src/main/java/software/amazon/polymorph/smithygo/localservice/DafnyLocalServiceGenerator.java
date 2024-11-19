@@ -29,6 +29,7 @@ import software.amazon.smithy.model.shapes.ServiceShape;
 import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.UnitTypeTrait;
+import software.amazon.smithy.utils.StringUtils;
 
 public class DafnyLocalServiceGenerator implements Runnable {
 
@@ -155,9 +156,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
           operation,
           OperationShape.class
         );
-        final var inputShape = model.expectShape(
-          operationShape.getInputShape()
-        );
+        var inputShape = model.expectShape(operationShape.getInputShape());
         writer.addImportFromModule(
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
             inputShape.toShapeId().getNamespace()
@@ -197,7 +196,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
             SmithyNameResolver.shapeNamespace(outputShape)
           );
         }
-        final var inputType = inputShape.hasTrait(UnitTypeTrait.class)
+        var inputType = inputShape.hasTrait(UnitTypeTrait.class)
           ? ""
           : ", params %s.%s".formatted(
               SmithyNameResolver.smithyTypesNamespace(inputShape),
@@ -216,46 +215,46 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 operationShape.getId().getName()
               );
         } else {
-          final String dafnyType;
+          final String toDafnyMethod;
           if (inputShape.hasTrait(PositionalTrait.class)) {
             // TODO: We can probably refactor this for better code quality. Like: inputForPositional could be redundant and we could use input itself.
-            final Shape inputForPositional = model.expectShape(
-              inputShape
-                .getAllMembers()
-                .values()
-                .stream()
-                .findFirst()
-                .get()
-                .getTarget()
-            );
-            final Symbol symbolForPositional = symbolProvider.toSymbol(
-              inputForPositional
-            );
-            dafnyType =
-              DafnyNameResolver.getDafnyType(
-                inputForPositional,
-                symbolForPositional
+            final MemberShape inputMemberShapeForPositional = inputShape
+              .getAllMembers()
+              .values()
+              .stream()
+              .findFirst()
+              .get();
+            inputShape =
+              model.expectShape(inputMemberShapeForPositional.getTarget());
+            toDafnyMethod =
+              Constants.funcNameGenerator(
+                inputMemberShapeForPositional,
+                "ToDafny",
+                model
               );
+            inputType =
+              ", params %s".formatted(
+                  SmithyNameResolver.getSmithyType(
+                    inputShape,
+                    symbolProvider.toSymbol(inputShape)
+                  )
+                );
           } else {
-            dafnyType =
-              DafnyNameResolver.getDafnyType(
-                inputShape,
-                symbolProvider.toSymbol(inputShape)
-              );
+            toDafnyMethod =
+              SmithyNameResolver.getToDafnyMethodName(service, inputShape, "");
           }
           baseClientCall =
             """
             var dafny_request %s = %s(params)
             var dafny_response = client.DafnyClient.%s(dafny_request)
             """.formatted(
-                dafnyType,
+                DafnyNameResolver.getDafnyType(
+                  inputShape,
+                  symbolProvider.toSymbol(inputShape)
+                ),
                 // We could unwrap the shape right here if positional but we will also have to change shim
                 // TODO: Decide this later
-                SmithyNameResolver.getToDafnyMethodName(
-                  service,
-                  inputShape,
-                  ""
-                ),
+                toDafnyMethod,
                 operationShape.getId().getName()
               );
         }
@@ -344,7 +343,12 @@ public class DafnyLocalServiceGenerator implements Runnable {
           }
         }
         String validationCheck = "";
-        if (!inputShape.hasTrait(UnitTypeTrait.class)) {
+        // inputShape is not a structure only when we have a positional trait
+        // TODO: Figure out how to validate constraint in a structure with positional trait
+        if (
+          !inputShape.hasTrait(UnitTypeTrait.class) &&
+          inputShape.isStructureShape()
+        ) {
           validationCheck =
             """
                 err := params.Validate()
@@ -524,15 +528,30 @@ public class DafnyLocalServiceGenerator implements Runnable {
               : "var native_request = %s(input)".formatted(
                   SmithyNameResolver.getFromDafnyMethodName(inputShape, "")
                 );
-
+            final String inputToClient;
+            if (inputShape.hasTrait(UnitTypeTrait.class)) {
+              inputToClient = "";
+            } else if (inputShape.hasTrait(PositionalTrait.class)) {
+              inputToClient =
+                ", native_request.%s".formatted(
+                    StringUtils.capitalize(
+                      inputShape
+                        .getAllMembers()
+                        .values()
+                        .stream()
+                        .findFirst()
+                        .get()
+                        .getMemberName()
+                    )
+                  );
+            } else {
+              inputToClient = ", native_request";
+            }
             final var clientCall =
               "shim.client.%s(context.Background() %s)".formatted(
                   operationShape.getId().getName(),
-                  inputShape.hasTrait(UnitTypeTrait.class)
-                    ? ""
-                    : ", native_request"
+                  inputToClient
                 );
-
             String clientResponse, returnResponse;
             if (outputShape.hasTrait(UnitTypeTrait.class)) {
               clientResponse = "var native_error";
