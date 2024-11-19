@@ -103,7 +103,7 @@ public class GoCodegenUtils {
     return false;
   }
 
-  public static void importNamespace(Shape shape, GoWriter writer) {
+  public static void importNamespace(final Shape shape, final GoWriter writer) {
     var type = shape.getType();
     if (shape.hasTrait(EnumTrait.class)) {
       type = ShapeType.ENUM;
