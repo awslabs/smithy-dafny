@@ -9,6 +9,10 @@ pub enum Error {
     Opaque {
         obj: ::dafny_runtime::Object<dyn ::std::any::Any>,
     },
+    OpaqueWithText {
+        obj: ::dafny_runtime::Object<dyn ::std::any::Any>,
+        objMessage: ::std::string::String,
+    },
 }
 
 impl ::std::cmp::Eq for Error {}
@@ -41,7 +45,7 @@ impl Error {
 }
 
 #[derive(::std::clone::Clone, ::std::fmt::Debug)]
-pub(crate) struct ValidationError(::std::rc::Rc<dyn ::std::error::Error>);
+pub struct ValidationError(::std::rc::Rc<dyn ::std::error::Error>);
 
 impl ::std::cmp::PartialEq for ValidationError {
     fn eq(&self, other: &Self) -> bool {
