@@ -278,7 +278,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   outputShape.expectTrait(ReferenceTrait.class).getReferentId()
                 );
             }
-            String fromDafnyConvMethodName = outputShape.isResourceShape()
+            final String fromDafnyConvMethodName = outputShape.isResourceShape()
               ? SmithyNameResolver.getFromDafnyMethodName(
                 service,
                 outputShape,
@@ -482,7 +482,9 @@ public class DafnyLocalServiceGenerator implements Runnable {
             String toDafnyConvMethodName =
               SmithyNameResolver.getToDafnyMethodName(outputShape, "");
             if (outputShape.hasTrait(PositionalTrait.class)) {
-              // Shape with positional shape MUST have only one membershape which is always required.
+              // Shape with positional shape MUST have only one membershape. 
+              // We are considering the memberShape inside positional shape should be required. 
+              // TODO: Change isMemberShapePointable if we decide otherwise in https://github.com/smithy-lang/smithy-dafny/issues/727
               isMemberShapePointable = false;
               final MemberShape postionalMemShape = outputShape
                 .getAllMembers()
