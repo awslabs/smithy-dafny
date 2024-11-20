@@ -1032,14 +1032,6 @@ public class DafnyLocalServiceGenerator implements Runnable {
             var outputShape = model.expectShape(
               operationShape.getOutputShape()
             );
-            final var inputType = inputShape.hasTrait(UnitTypeTrait.class)
-              ? ""
-              : "input %s".formatted(
-                  DafnyNameResolver.getDafnyType(
-                    inputShape,
-                    symbolProvider.toSymbol(inputShape)
-                  )
-                );
             final var outputType = outputShape.hasTrait(UnitTypeTrait.class)
               ? ""
               : "*%s,".formatted(
@@ -1081,6 +1073,14 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     model
                   );
             }
+            final var inputType = inputShape.hasTrait(UnitTypeTrait.class)
+              ? ""
+              : "input %s".formatted(
+                  DafnyNameResolver.getDafnyType(
+                    inputShape,
+                    symbolProvider.toSymbol(inputShape)
+                  )
+                );
             final var typeConversion = inputShape.hasTrait(UnitTypeTrait.class)
               ? ""
               : "var native_request = %s(input)".formatted(
