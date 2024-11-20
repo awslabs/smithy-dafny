@@ -881,7 +881,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                             .getReferentId()
                         );
                     }
-                    String fromDafnyConvMethodName =
+                    final String fromDafnyConvMethodName =
                       outputShape.isResourceShape()
                         ? SmithyNameResolver.getFromDafnyMethodName(
                           service,
@@ -901,11 +901,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                           symbolProvider.toSymbol(outputShape)
                         )
                         .concat(",");
-                    String deReferenceRequired = "";
-                    if (outputShape.hasTrait(ServiceTrait.class)) {
-                      deReferenceRequired = "*";
-                    }
-                    var typeAssertion = outputShape.isResourceShape()
+                    final var typeAssertion = outputShape.isResourceShape()
                       ? ".(%s)".formatted(
                           DafnyNameResolver.getDafnyType(
                             outputShape,
@@ -920,7 +916,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       """.formatted(
                           fromDafnyConvMethodName,
                           typeAssertion,
-                          deReferenceRequired
+                          outputShape.hasTrait(ServiceTrait.class) ? "*" : ""
                         );
                     returnError =
                       """
@@ -1094,7 +1090,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     ? ""
                     : "native_request"
                 );
-            String clientResponse, returnResponse;
+            final String clientResponse, returnResponse;
             if (outputShape.hasTrait(UnitTypeTrait.class)) {
               clientResponse = "var native_error";
               returnResponse = "dafny.TupleOf()";
