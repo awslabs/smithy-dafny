@@ -686,8 +686,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
     );
   }
 
-  void generateReferencedResources(GenerationContext context) {
-    var refResources = model.getShapesWithTrait(ReferenceTrait.class);
+  void generateReferencedResources(final GenerationContext context) {
+    final var refResources = model.getShapesWithTrait(ReferenceTrait.class);
     for (final var refResource : refResources) {
       if (!refResource.expectTrait(ReferenceTrait.class).isService()) {
         final var resource = refResource
@@ -718,7 +718,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   .expectShape(resource, ResourceShape.class)
                   .getOperations()
                   .forEach(operation -> {
-                    var operationShape = model.expectShape(
+                    final var operationShape = model.expectShape(
                       operation,
                       OperationShape.class
                     );
@@ -805,14 +805,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 var outputShape = model.expectShape(
                   operationShape.getOutputShape()
                 );
-                final var inputType = inputShape.hasTrait(UnitTypeTrait.class)
-                  ? ""
-                  : "params %s".formatted(
-                      SmithyNameResolver.getSmithyType(
-                        inputShape,
-                        symbolProvider.toSymbol(inputShape)
-                      )
-                    );
+                final String inputType;
                 var outputType = outputShape.hasTrait(UnitTypeTrait.class)
                   ? ""
                   : "*%s,".formatted(
@@ -822,12 +815,13 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       )
                     );
 
-                String baseClientCall;
+                final String baseClientCall;
                 if (inputShape.hasTrait(UnitTypeTrait.class)) {
                   baseClientCall =
                     "var dafny_response = this.Impl.%s()".formatted(
                         operationShape.getId().getName()
                       );
+                  inputType = "";
                 } else {
                   if (inputShape.hasTrait(PositionalTrait.class)) {
                     inputShape =
@@ -841,6 +835,13 @@ public class DafnyLocalServiceGenerator implements Runnable {
                           .getTarget()
                       );
                   }
+                  inputType =
+                    "params %s".formatted(
+                        SmithyNameResolver.getSmithyType(
+                          inputShape,
+                          symbolProvider.toSymbol(inputShape)
+                        )
+                      );
                   baseClientCall =
                     """
                     var dafny_request %s = %s(params)
