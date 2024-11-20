@@ -916,6 +916,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       """.formatted(
                           fromDafnyConvMethodName,
                           typeAssertion,
+                          // Currently we expect all the structure with positional shape to have required trait on its membershape. 
+                          // TODO: If this changed in https://github.com/smithy-lang/smithy-dafny/issues/727, we need to fix it.
                           outputShape.hasTrait(ServiceTrait.class) ? "*" : ""
                         );
                     returnError =
