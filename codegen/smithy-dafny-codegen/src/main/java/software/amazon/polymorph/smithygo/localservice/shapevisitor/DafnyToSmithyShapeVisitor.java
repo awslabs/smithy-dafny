@@ -176,13 +176,19 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         );
     }
     if (!this.isOptional) {
-      return "return &%s{%s.(*%s)}".formatted(
-          namespace.concat(
-            context.symbolProvider().toSymbol(serviceShape).getName()
-          ),
-          dataSource,
-          DafnyNameResolver.getDafnyClient(serviceShape.toShapeId().getName())
-        );
+      return """
+      value, ok := %s.(*%s)
+      if !ok {
+        panic("invalid type found.")
+      }
+      return &%s{value}
+      """.formatted(
+        dataSource,
+        DafnyNameResolver.getDafnyClient(serviceShape.toShapeId().getName()),
+        namespace.concat(
+        context.symbolProvider().toSymbol(serviceShape).getName()
+        )
+      );
     }
     return """
     return func () *%s {
