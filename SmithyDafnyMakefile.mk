@@ -698,6 +698,19 @@ test_python:
 	rm -rf runtimes/python/.tox
 	python3 -m tox -c runtimes/python --verbose
 
+# docformatter exit codes:
+# 0: docformatter did not make changes
+# 1: docformatter made changes
+# 2: Invalid docformatter usage (incorrect arguments, etc.)
+# If docformatter returns exit codes 0 or 1, then exit 0 to format_python. Otherwise, exit 1.
+format_python:
+	python3 -m black runtimes/python/src runtimes/python/test --exclude ""
+	python3 -m docformatter --recursive --in-place runtimes/python/src runtimes/python/test; [ $? -eq 0 ] || [ $? -eq 1 ] || exit 1
+
+format_python-check:
+	python3 -m black runtimes/python/src runtimes/python/test --exclude "" --check
+	python3 -m docformatter --recursive --in-place runtimes/python/src runtimes/python/test
+
 ########################## local testing targets
 
 # These targets are added as a convenience for local development.
