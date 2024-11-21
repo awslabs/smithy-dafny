@@ -328,6 +328,15 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     final String referenceType = (this.isOptional) ? "&" : "";
 
     final var typeConversionMethodBuilder = new StringBuilder();
+    if (this.isOptional) {
+      typeConversionMethodBuilder.append(
+        """
+          if %s == nil {
+              return nil
+          }
+        """.formatted(dataSource)
+      );
+    }
     typeConversionMethodBuilder.append(
       "return %1$s%2$s{".formatted(
           referenceType,
@@ -374,19 +383,11 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         targetShape.isStructureShape() &&
         !targetShape.hasTrait(ReferenceTrait.class);
       final var derivedDataSource =
-        "%1$s%2$s%3$s%4$s%5$s".formatted(
+        "%1$s%2$s%3$s%4$s".formatted(
             dataSource,
             maybeAssertion,
             DtorConversion,
-            memberShape.isOptional() ? ".UnwrapOr(nil)" : "",
-            assertionRequired
-              ? ".(%s)".formatted(
-                  DafnyNameResolver.getDafnyType(
-                    targetShape,
-                    context.symbolProvider().toSymbol(memberShape)
-                  )
-                )
-              : ""
+            memberShape.isOptional() ? ".UnwrapOr(nil)" : ""
           );
 
       typeConversionMethodBuilder.append(
