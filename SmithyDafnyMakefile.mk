@@ -58,6 +58,7 @@ GRADLEW := $(SMITHY_DAFNY_ROOT)/codegen/gradlew
 
 include $(SMITHY_DAFNY_ROOT)/SmithyDafnySedMakefile.mk
 
+
 # This flag enables pre-processing on extern module names.
 # This pre-processing is required to compile to Python and Go.
 # This is disabled by default.
@@ -78,6 +79,7 @@ ENABLE_EXTERN_PROCESSING?=
 #  lemma Correct(cpus:nat)
 #    ensures DAFNY_PROCESSES(cpus) * Z3_PROCESSES(cpus) <= cpus
 #  {}
+
 
 # Verify the entire project
 verify:Z3_PROCESSES=$(shell echo $$(( $(CORES) >= 3 ? 2 : 1 )))
@@ -558,7 +560,10 @@ rust: polymorph_dafny transpile_rust polymorph_rust test_rust
 
 # The Dafny Rust code generator only supports a single crate for everything,
 # so (among other consequences) we compile src and test code together.
-transpile_rust: | transpile_implementation_rust
+transpile_rust: copy_rust_externs transpile_implementation_rust
+
+copy_rust_externs:
+	runtimes/rust/copy_externs.sh || true
 
 transpile_implementation_rust: TARGET=rs
 transpile_implementation_rust: OUT=implementation_from_dafny
@@ -566,7 +571,7 @@ transpile_implementation_rust: SRC_INDEX=$(RUST_SRC_INDEX)
 transpile_implementation_rust: TEST_INDEX=$(RUST_TEST_INDEX)
 # The Dafny Rust code generator is not complete yet,
 # so we want to emit code even if there are unsupported features in the input.
-transpile_implementation_rust: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix
+transpile_implementation_rust: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix --rust-module-name implementation_from_dafny
 # The Dafny Rust code generator only supports a single crate for everything,
 # so we inline all dependencies by not passing `-library` to Dafny.
 transpile_implementation_rust: TRANSPILE_DEPENDENCIES=
@@ -574,7 +579,7 @@ transpile_implementation_rust: STD_LIBRARY=
 transpile_implementation_rust: SRC_INDEX_TRANSPILE=$(if $(SRC_INDEX),$(SRC_INDEX),src)
 transpile_implementation_rust: TEST_INDEX_TRANSPILE=$(if $(TEST_INDEX),$(TEST_INDEX),test)
 transpile_implementation_rust: DAFNY_OTHER_FILES=$(RUST_OTHER_FILES)
-transpile_implementation_rust: $(if $(TRANSPILE_TESTS_IN_RUST), transpile_test, transpile_implementation) _mv_implementation_rust patch_after_transpile_rust
+transpile_implementation_rust: $(if $(TRANSPILE_TESTS_IN_RUST), transpile_test, transpile_implementation) _mv_implementation_rust
 
 transpile_dependencies_rust: LANG=rust
 transpile_dependencies_rust: transpile_dependencies
@@ -589,35 +594,13 @@ _mv_implementation_rust:
 	rustfmt --edition 2021 runtimes/rust/src/implementation_from_dafny.rs
 	rm -rf implementation_from_dafny-rust
 
-patch_after_transpile_rust:
-	export service_deps_var=SERVICE_DEPS_$(MAIN_SERVICE_FOR_RUST) ; \
-	export namespace_var=SERVICE_NAMESPACE_$(MAIN_SERVICE_FOR_RUST) ; \
-	export SERVICE=$(MAIN_SERVICE_FOR_RUST) ; \
-	$(MAKE) _patch_after_transpile_rust ; \
-
-_patch_after_transpile_rust: OUTPUT_RUST=--output-rust $(LIBRARY_ROOT)/runtimes/rust
-_patch_after_transpile_rust:
-	cd $(CODEGEN_CLI_ROOT); \
-	./../gradlew run --args="\
-	patch-after-transpile \
-	--library-root $(LIBRARY_ROOT) \
-	$(OUTPUT_RUST) \
-	--model $(if $(DIR_STRUCTURE_V2), $(LIBRARY_ROOT)/dafny/$(SERVICE)/Model, $(SMITHY_MODEL_ROOT)) \
-	--dependent-model $(PROJECT_ROOT)/$(SMITHY_DEPS) \
-	$(patsubst %, --dependent-model $(PROJECT_ROOT)/%/Model, $($(service_deps_var))) \
-	--namespace $($(namespace_var)) \
-	$(AWS_SDK_CMD) \
-	$(POLYMORPH_OPTIONS) \
-	$(if $(TRANSPILE_TESTS_IN_RUST), --local-service-test, ) \
-	";
-
 build_rust:
 	cd runtimes/rust; \
 	cargo build
 
 test_rust:
 	cd runtimes/rust; \
-	cargo test -- --nocapture
+	cargo test --release -- --nocapture
 
 ########################## Cleanup targets
 
@@ -733,7 +716,7 @@ local_transpile_impl_rust_single: DAFNY_OTHER_FILES=$(RUST_OTHER_FILES)
 local_transpile_impl_rust_single: deps_var=SERVICE_DEPS_$(SERVICE)
 local_transpile_impl_rust_single: service_deps_var=SERVICE_DEPS_$(SERVICE)
 local_transpile_impl_rust_single: namespace_var=SERVICE_NAMESPACE_$(SERVICE)
-local_transpile_impl_rust_single: $(if $(TRANSPILE_TESTS_IN_RUST), transpile_test, transpile_implementation) _mv_implementation_rust _patch_after_transpile_rust
+local_transpile_impl_rust_single: $(if $(TRANSPILE_TESTS_IN_RUST), transpile_test, transpile_implementation) _mv_implementation_rust
 
 
 local_transpile_impl_single: deps_var=SERVICE_DEPS_$(SERVICE)

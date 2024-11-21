@@ -6,13 +6,7 @@ import java.util.Comparator;
 import java.util.Objects;
 
 /**
- * Representation of a Dafny version number, according to SemVer 1.0 semantics.
- *
- * Note that Dafny pre-releases historically have used pre-release suffixes slightly wrong:
- * after releasing 4.2 for example, the nightly pre-releases will have version numbers like
- * "4.2.0-nightly-2023-08-04-656a114", but that should actually be interpreted as a pre-release
- * for 4.2 rather than 4.3. So far that's immaterial for this code base,
- * but if it becomes relevant the better solution is for Dafny pre-releases to correct this instead.
+ * Representation of a Dafny version number, according to SemVer 2.0 semantics.
  */
 public class DafnyVersion implements Comparable<DafnyVersion> {
 
