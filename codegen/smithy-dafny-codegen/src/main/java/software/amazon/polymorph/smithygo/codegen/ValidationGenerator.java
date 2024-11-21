@@ -398,7 +398,8 @@ public class ValidationGenerator {
     ) {
       return requiredCheck;
     }
-    if (GoPointableIndex.of(model).isPointable(memberShape)) {
+    // other cases will itself panic because Go won't get non pointer shape to be nil
+    if (targetShape.isListShape() || targetShape.isMapShape() || targetShape.isUnionShape()) {
       requiredCheck.append(
         """
         if ( %s == nil ) {
