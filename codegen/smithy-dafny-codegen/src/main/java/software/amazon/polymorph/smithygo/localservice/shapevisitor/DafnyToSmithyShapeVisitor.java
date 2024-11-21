@@ -205,11 +205,11 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
           context.symbolProvider().toSymbol(serviceShape).getName()
         ),
         dataSource,
+        dataSource,
+        DafnyNameResolver.getDafnyInterfaceClient(serviceShape),
         namespace.concat(
           context.symbolProvider().toSymbol(serviceShape).getName()
-        ),
-        dataSource,
-        DafnyNameResolver.getDafnyInterfaceClient(serviceShape)
+        )
       );
   }
 
