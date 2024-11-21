@@ -775,14 +775,15 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     final String defaultCase =
       """
               default:
-                return %s.Default()
+                return %s.Default
           }
       }()""".formatted(
+        someWrapIfRequired.formatted(
           DafnyNameResolver.getDafnyUnionBaseStructType(
             shape,
             shape.getId().getName()
-          )
-        );
+          ),""
+        ));
     return """
     %s
     %s
