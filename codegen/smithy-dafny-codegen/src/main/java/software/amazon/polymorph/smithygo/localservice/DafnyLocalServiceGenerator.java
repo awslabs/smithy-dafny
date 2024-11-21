@@ -115,7 +115,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
     writer.write(
       """
       type $T struct {
-          DafnyClient *$L
+          DafnyClient $L
       }
 
       func NewClient(clientConfig $L) (*$T, error) {
@@ -124,7 +124,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
           if (dafny_response.Is_Failure()) {
                panic("Client construction failed. This should never happen")
           }
-          var dafnyClient = dafny_response.Extract().(*$L)
+          var dafnyClient = dafny_response.Extract().($L)
           client := &$T { dafnyClient }
           return client, nil
       }
