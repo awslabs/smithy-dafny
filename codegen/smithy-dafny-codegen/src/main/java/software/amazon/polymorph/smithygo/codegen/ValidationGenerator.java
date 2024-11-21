@@ -487,7 +487,7 @@ public class ValidationGenerator {
         final Boolean isExternalShape = !currServiceShapeNamespace.equals(
           currShapeNamespace
         );
-        var inputType = GoCodegenUtils.getType(
+        final var inputType = GoCodegenUtils.getType(
           symbolProvider.toSymbol(currentShape),
           currentShape,
           isExternalShape
@@ -584,7 +584,7 @@ public class ValidationGenerator {
         final Boolean isExternalShape = !currServiceShapeNamespace.equals(
           currShapeNamespace
         );
-        var inputType = GoCodegenUtils.getType(
+        final var inputType = GoCodegenUtils.getType(
           symbolProvider.toSymbol(currentShape),
           currentShape,
           isExternalShape
@@ -657,7 +657,7 @@ public class ValidationGenerator {
       final Boolean isExternalShape =
         !currServiceShapeNamespace.equals(currShapeNamespace) &&
         !currShapeNamespace.startsWith("smithy");
-      var inputType = GoCodegenUtils.getType(
+      final var inputType = GoCodegenUtils.getType(
         symbolProvider.toSymbol(currentShape),
         currentShape,
         isExternalShape
@@ -691,8 +691,11 @@ public class ValidationGenerator {
       final var unionValidation = new StringBuilder();
       unionValidation.append(
         """
+        if (%s == nil) {
+            return nil
+        }
         switch unionType := %s.(type) {
-            """.formatted(dataSourceForUnion)
+            """.formatted(dataSourceForUnion, dataSourceForUnion)
       );
       for (final var memberInUnion : currentShape.getAllMembers().values()) {
         final var currMemberNamespace = SmithyNameResolver.smithyTypesNamespace(
