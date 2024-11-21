@@ -775,9 +775,14 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     final String defaultCase =
       """
               default:
-      panic("Unhandled union type")
+                return %s.Default()
           }
-      }()""";
+      }()""".formatted(
+          DafnyNameResolver.getDafnyUnionBaseStructType(
+            shape,
+            shape.getId().getName()
+          )
+        );
     return """
     %s
     %s

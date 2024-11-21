@@ -177,25 +177,29 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     }
     if (!this.isOptional) {
       return """
-      value, ok := %s.(*%s)
+      value, ok := %s.(%s)
       if !ok {
         panic("invalid type found.")
       }
       return &%s{value}
       """.formatted(
-        dataSource,
-        DafnyNameResolver.getDafnyClient(serviceShape.toShapeId().getName()),
-        namespace.concat(
-        context.symbolProvider().toSymbol(serviceShape).getName()
-        )
-      );
+          dataSource,
+          DafnyNameResolver.getDafnyInterfaceClient(serviceShape),
+          namespace.concat(
+            context.symbolProvider().toSymbol(serviceShape).getName()
+          )
+        );
     }
     return """
     return func () *%s {
         if %s == nil {
             return nil;
         }
-        return &%s{%s.(*%s)}
+        value, ok := %s.(%s)
+        if !ok {
+          panic("invalid type found.")
+        }
+        return &%s{value}
     }()""".formatted(
         namespace.concat(
           context.symbolProvider().toSymbol(serviceShape).getName()
@@ -205,7 +209,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
           context.symbolProvider().toSymbol(serviceShape).getName()
         ),
         dataSource,
-        DafnyNameResolver.getDafnyClient(serviceShape.toShapeId().getName())
+        DafnyNameResolver.getDafnyInterfaceClient(serviceShape)
       );
   }
 
