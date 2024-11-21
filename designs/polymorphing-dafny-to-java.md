@@ -22,7 +22,7 @@ flowchart TB
     SmithyModel -.-> SmithySourceServerCodegen -.-> SourceAPI
 
     subgraph SmithyTargetClientCodegen["smithy 
-                                    (java-client-codegen)"]
+                                    (rust-client-codegen)"]
         SmithyTargetAPICodegen[["API/Shim Generation"]]:::Process
 
         Compiler[["dafny
