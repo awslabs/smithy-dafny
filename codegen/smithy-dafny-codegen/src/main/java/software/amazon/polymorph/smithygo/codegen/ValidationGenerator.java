@@ -196,23 +196,27 @@ public class ValidationGenerator {
         break;
       case STRUCTURE:
         if (!currentShape.hasTrait(ReferenceTrait.class)) {
-          String wrapIfRequired = "%s";
-          if (symbol.getProperty(POINTABLE, Boolean.class).orElse(false)) {
-            wrapIfRequired =
-              """
-                if (%s != nil) {
-                  %s
-                }
-              """;
-          }
+          final boolean needsWrapping =
+            memberShape.isOptional() &&
+            !dataSource.equals(LIST_ITEM) &&
+            !dataSource.equals(MAP_KEY) &&
+            !dataSource.equals(MAP_VALUE);
           final var funcCall = dataSource.concat(".Validate()");
           final String checkForError = CHECK_AND_RETURN_ERROR.formatted(
             funcCall,
             funcCall
           );
-          validationCode.append(
-            wrapIfRequired.formatted(dataSource, checkForError)
-          );
+          if (needsWrapping) {
+            validationCode.append(
+              """
+              if (%s != nil) {
+                %s
+              }
+              """.formatted(dataSource, checkForError)
+            );
+          } else {
+            validationCode.append(checkForError);
+          }
         }
         break;
       default:
