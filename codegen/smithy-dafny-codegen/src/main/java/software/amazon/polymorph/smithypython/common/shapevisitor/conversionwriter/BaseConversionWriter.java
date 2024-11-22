@@ -128,6 +128,7 @@ public abstract class BaseConversionWriter {
       if (shape.hasTrait(ErrorTrait.class)) {
         return false;
       }
+      return true;
     } else if (shape.isUnionShape()) {
       return true;
     } else if (
