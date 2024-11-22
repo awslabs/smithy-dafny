@@ -435,7 +435,8 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     final var symbol = context.symbolProvider().toSymbol(shape);
     final boolean assertionRequired = targetShape.isStructureShape();
     if (isOptional) {
-      typeConversionMethodBuilder.append("""
+      typeConversionMethodBuilder.append(
+        """
         if %s == nil {
           return nil
         }
