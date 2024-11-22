@@ -200,7 +200,8 @@ public class ValidationGenerator {
             memberShape.isOptional() &&
             !dataSource.equals(LIST_ITEM) &&
             !dataSource.equals(MAP_KEY) &&
-            !dataSource.equals(MAP_VALUE);
+            !dataSource.equals(MAP_VALUE) &&
+            !dataSource.equals(UNION_DATASOURCE);
           final var funcCall = dataSource.concat(".Validate()");
           final String checkForError = CHECK_AND_RETURN_ERROR.formatted(
             funcCall,
@@ -421,13 +422,9 @@ public class ValidationGenerator {
           return fmt.Errorf(\"%s is required but has a nil value.\")
       }
       """;
-    if (SmithyNameResolver.isShapeFromAWSSDK(targetShape)) {
-      if (
-        AwsSdkGoPointableIndex.of(context.model()).isPointable(memberShape) ||
-        AwsSdkGoPointableIndex.of(context.model()).isPointable(targetShape)
-      ) {
+    if (SmithyNameResolver.isShapeFromAWSSDK(targetShape) && memberShape.isOptional()) {
         requiredCheck.append(nilCheck.formatted(dataSource, dataSource));
-      }
+        return requiredCheck;
     }
     // other cases will itself panic because shape with required trait in local service won't get pointer shape and can't be nil
     if (
