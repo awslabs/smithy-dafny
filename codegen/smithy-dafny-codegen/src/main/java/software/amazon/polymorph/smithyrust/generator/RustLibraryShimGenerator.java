@@ -171,7 +171,6 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
 
   public static final String TOP_LEVEL_WRAPPED_CLIENT_DECL =
     """
-    #[cfg(feature = "wrapped-client")]
     pub mod wrapped;
     """;
 

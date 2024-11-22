@@ -75,7 +75,6 @@ public abstract class AbstractRustShimGenerator {
 
     pub mod deps;
 
-    #[cfg(feature = "wrapped-client")]
     pub mod wrapped;
     """;
 
