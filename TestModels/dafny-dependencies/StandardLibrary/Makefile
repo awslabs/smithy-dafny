@@ -22,7 +22,7 @@ else
 	RESET        := ""
 endif
 
-# Overriding this target just to generate the project.properties file
+# Overriding this target just to generate the project.properties file.
 polymorph_dafny :
 	cd $(CODEGEN_CLI_ROOT); \
 	$(GRADLEW) run --args="\
@@ -98,10 +98,13 @@ transpile_implementation:
 		--unicode-char:false \
 		--function-syntax:3 \
 		--output $(OUT) \
-		../stdlibs.doo \
+		DafnyStandardLibraries-smithy-dafny-subset.doo \
 		$(DAFNY_OPTIONS) \
 		$(DAFNY_OTHER_FILES) \
 		$(TRANSPILE_MODULE_NAME)
+
+build_dafny_stdlibs:
+	dafny build -t:lib --output DafnyStandardLibraries-smithy-dafny-subset.doo DafnyStandardLibraries-smithy-dafny-subset.toml
 
 # Override SharedMakefile's build_java to not install
 # StandardLibrary as a dependency

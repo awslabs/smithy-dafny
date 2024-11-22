@@ -20,6 +20,3 @@ features = ["full"]
 
 [dev-dependencies]
 simple_extendable = { path = ".", features = ["wrapped-client"] }
-
-[lib]
-path = "src/implementation_from_dafny.rs"
