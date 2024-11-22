@@ -709,7 +709,13 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
       context.symbolProvider().toSymbol(shape)
     );
 
+    String nilCheck = "";
     if (this.isOptional) {
+      nilCheck =
+        """
+        if %s == nil {
+          return Wrappers.Companion_Option_.Create_None_()
+        }""".formatted(dataSource);
       someWrapIfRequired = "Wrappers.Companion_Option_.Create_Some_(%s(%s))";
       returnType = "Wrappers.Option";
     }
@@ -719,7 +725,8 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     final String functionInit =
       """
       func() %s {
-          switch %s.(type) {""".formatted(returnType, dataSource);
+          %s
+          switch %s.(type) {""".formatted(returnType, nilCheck, dataSource);
 
     final StringBuilder eachMemberInUnion = new StringBuilder();
     for (final var member : shape.getAllMembers().values()) {
@@ -779,16 +786,9 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     final String defaultCase =
       """
               default:
-                return %s
+                panic("Unhandled union type")
           }
-      }()""".formatted(
-          someWrapIfRequired.formatted(
-            DafnyNameResolver
-              .getDafnyUnionBaseStructType(shape, shape.getId().getName())
-              .concat(".Default"),
-            ""
-          )
-        );
+      }()""";
     return """
     %s
     %s
