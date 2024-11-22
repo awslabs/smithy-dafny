@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import software.amazon.polymorph.smithygo.codegen.knowledge.GoPointableIndex;
+import software.amazon.polymorph.smithygo.awssdk.AwsSdkGoPointableIndex;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
 import software.amazon.polymorph.smithygo.utils.Constants;
 import software.amazon.polymorph.smithygo.utils.GoCodegenUtils;
@@ -398,15 +398,27 @@ public class ValidationGenerator {
     ) {
       return requiredCheck;
     }
-    // other cases will itself panic because Go won't get non pointer shape to be nil
-    if (targetShape.isListShape() || targetShape.isMapShape() || targetShape.isUnionShape()) {
-      requiredCheck.append(
-        """
-        if ( %s == nil ) {
-            return fmt.Errorf(\"%s is required but has a nil value.\")
-        }
-        """.formatted(dataSource, dataSource)
-      );
+    final String nilCheck =
+      """
+      if ( %s == nil ) {
+          return fmt.Errorf(\"%s is required but has a nil value.\")
+      }
+      """;
+    if (SmithyNameResolver.isShapeFromAWSSDK(targetShape)) {
+      if (
+        AwsSdkGoPointableIndex.of(context.model()).isPointable(memberShape) ||
+        AwsSdkGoPointableIndex.of(context.model()).isPointable(targetShape)
+      ) {
+        requiredCheck.append(nilCheck.formatted(dataSource, dataSource));
+      }
+    }
+    // other cases will itself panic because shape with required trait in local service won't get pointer shape and can't be nil
+    if (
+      targetShape.isListShape() ||
+      targetShape.isMapShape() ||
+      targetShape.isUnionShape()
+    ) {
+      requiredCheck.append(nilCheck.formatted(dataSource, dataSource));
     }
     return requiredCheck;
   }
