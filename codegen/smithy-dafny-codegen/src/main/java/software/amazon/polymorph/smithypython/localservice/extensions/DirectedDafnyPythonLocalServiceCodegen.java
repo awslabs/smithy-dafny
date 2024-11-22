@@ -495,7 +495,7 @@ public class DirectedDafnyPythonLocalServiceCodegen
             directive.context()
           );
           // Errors don't get conversion functions
-          continue
+          continue;
         } else {
           writeStructureShape(structureShape, directive.context());
         }
