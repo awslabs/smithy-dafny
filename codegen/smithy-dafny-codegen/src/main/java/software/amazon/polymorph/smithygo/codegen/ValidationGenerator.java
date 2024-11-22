@@ -196,9 +196,22 @@ public class ValidationGenerator {
         break;
       case STRUCTURE:
         if (!currentShape.hasTrait(ReferenceTrait.class)) {
+          String wrapIfRequired = "%s";
+          if (symbol.getProperty(POINTABLE, Boolean.class).orElse(false)) {
+            wrapIfRequired =
+              """
+                if (%s != nil) {
+                  %s
+                }
+              """;
+          }
           final var funcCall = dataSource.concat(".Validate()");
+          final String checkForError = CHECK_AND_RETURN_ERROR.formatted(
+            funcCall,
+            funcCall
+          );
           validationCode.append(
-            CHECK_AND_RETURN_ERROR.formatted(funcCall, funcCall)
+            wrapIfRequired.formatted(dataSource, checkForError)
           );
         }
         break;
