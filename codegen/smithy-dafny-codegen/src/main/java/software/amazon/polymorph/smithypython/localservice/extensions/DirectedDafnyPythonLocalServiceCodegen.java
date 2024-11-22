@@ -18,6 +18,7 @@ import software.amazon.smithy.build.FileManifest;
 import software.amazon.smithy.codegen.core.*;
 import software.amazon.smithy.codegen.core.directed.*;
 import software.amazon.smithy.model.shapes.*;
+import software.amazon.smithy.model.traits.EnumTrait;
 import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.python.codegen.*;
 
@@ -494,7 +495,9 @@ public class DirectedDafnyPythonLocalServiceCodegen
             structureShape,
             directive.context()
           );
-          // Errors don't get conversion functions
+          // Errors don't get explicit conversion functions;
+          // Conversions are done in a catch-all function
+          // (This could be changed in the future)
           continue;
         } else {
           writeStructureShape(structureShape, directive.context());
@@ -511,7 +514,6 @@ public class DirectedDafnyPythonLocalServiceCodegen
         );
       } else if (shapeToGenerate.isStringShape()) {
         // Neither classes nor converisons are generated for strings
-        continue;
       } else if (shapeToGenerate.isIntegerShape()) {
         // Neither classes nor converisons are generated for ints
         continue;
@@ -531,35 +533,57 @@ public class DirectedDafnyPythonLocalServiceCodegen
           shapeToGenerate
         );
       }
+    }
+  }
 
-      final WriterDelegator<PythonWriter> delegator = directive.context().writerDelegator();
-      final String moduleName =
-        SmithyNameResolver.getServiceSmithygeneratedDirectoryNameForNamespace(
-          directive.context().settings().getService().getNamespace()
-        );
+  /**
+   * This MUST run after code generation for non-orphaned shapes.
+   * Orphaned shapes may topologically depend on non-orphaned shapes, but not vice versa.
+   *
+   * @param directive
+   */
+  protected void generateOrphanedConversionMethods(
+    GenerateServiceDirective<GenerationContext, PythonSettings> directive
+  ) {
+    List<Shape> orderedShapes = getTopologicallyOrderedOrphanedShapesForService(
+      directive.shape(),
+      directive.model()
+    );
 
-      delegator.useFileWriter(
-        moduleName + "/dafny_to_smithy.py",
-        "",
-        conversionWriter -> {
-          DafnyToLocalServiceConversionFunctionWriter.writeConverterForShapeAndMembers(
-            shapeToGenerate,
-            directive.context(),
-            conversionWriter
+    for (Shape shapeToGenerate : orderedShapes) {
+
+      if (shapeToGenerate.isStructureShape()
+      || shapeToGenerate.isEnumShape()
+      || shapeToGenerate.isStringShape() && shapeToGenerate.hasTrait(EnumTrait.class))
+      {
+        final WriterDelegator<PythonWriter> delegator = directive.context().writerDelegator();
+        final String moduleName =
+          SmithyNameResolver.getServiceSmithygeneratedDirectoryNameForNamespace(
+            directive.context().settings().getService().getNamespace()
           );
-        });
 
-      delegator.useFileWriter(
-        moduleName + "/smithy_to_dafny.py",
-        "",
-        conversionWriter -> {
-          LocalServiceToDafnyConversionFunctionWriter.writeConverterForShapeAndMembers(
-            shapeToGenerate,
-            directive.context(),
-            conversionWriter
-          );
-        });
+        delegator.useFileWriter(
+          moduleName + "/dafny_to_smithy.py",
+          "",
+          conversionWriter -> {
+            DafnyToLocalServiceConversionFunctionWriter.writeConverterForShapeAndMembers(
+              shapeToGenerate,
+              directive.context(),
+              conversionWriter
+            );
+          });
 
+        delegator.useFileWriter(
+          moduleName + "/smithy_to_dafny.py",
+          "",
+          conversionWriter -> {
+            LocalServiceToDafnyConversionFunctionWriter.writeConverterForShapeAndMembers(
+              shapeToGenerate,
+              directive.context(),
+              conversionWriter
+            );
+          });
+      }
     }
   }
 
@@ -597,6 +621,13 @@ public class DirectedDafnyPythonLocalServiceCodegen
 
     protocolGenerator.generateSharedDeserializerComponents(directive.context());
     protocolGenerator.generateResponseDeserializers(directive.context());
+
+    // Generate any missing converison functions
+    // This MUST run after RequestSerialization and ResponseSerialization generation
+    // to preserve topological ordering of generated functions.
+    // (An orphaned conversion function MAY depend on a non-orphaned conversion function,
+    //  but never the other way around.)
+    generateOrphanedConversionMethods(directive);
 
     protocolGenerator.generateProtocolTests(directive.context());
   }
