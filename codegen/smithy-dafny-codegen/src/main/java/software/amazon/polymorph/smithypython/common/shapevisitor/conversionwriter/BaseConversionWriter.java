@@ -13,6 +13,7 @@ import software.amazon.smithy.model.shapes.StringShape;
 import software.amazon.smithy.model.shapes.StructureShape;
 import software.amazon.smithy.model.shapes.UnionShape;
 import software.amazon.smithy.model.traits.EnumTrait;
+import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.python.codegen.GenerationContext;
 import software.amazon.smithy.python.codegen.PythonWriter;
 
@@ -121,4 +122,19 @@ public abstract class BaseConversionWriter {
   protected abstract void writeStringEnumShapeConverter(
     StringShape stringShapeWithEnumTrait
   );
+
+  public static boolean shapeShouldHaveConversionFunction(Shape shape) {
+    if (shape.isStructureShape()) {
+      if (shape.hasTrait(ErrorTrait.class)) {
+        return false;
+      }
+    } else if (shape.isUnionShape()) {
+      return true;
+    } else if (
+      (shape.isStringShape() && shape.hasTrait(EnumTrait.class))
+      || shape.isEnumShape()) {
+      return true;
+    }
+    return false;
+  }
 }

@@ -5,6 +5,8 @@ package software.amazon.polymorph.smithypython.localservice.extensions;
 
 import static java.lang.String.format;
 import static software.amazon.polymorph.utils.ModelUtils.getTopologicallyOrderedOrphanedShapesForService;
+import static software.amazon.polymorph.smithypython.common.shapevisitor.conversionwriter.BaseConversionWriter.shapeShouldHaveConversionFunction;
+
 
 import java.nio.file.Path;
 import java.util.List;
@@ -542,7 +544,7 @@ public class DirectedDafnyPythonLocalServiceCodegen
    *
    * @param directive
    */
-  protected void generateOrphanedConversionMethods(
+  protected void generateOrphanedShapeConversionMethods(
     GenerateServiceDirective<GenerationContext, PythonSettings> directive
   ) {
     List<Shape> orderedShapes = getTopologicallyOrderedOrphanedShapesForService(
@@ -552,9 +554,7 @@ public class DirectedDafnyPythonLocalServiceCodegen
 
     for (Shape shapeToGenerate : orderedShapes) {
 
-      if (shapeToGenerate.isStructureShape()
-      || shapeToGenerate.isEnumShape()
-      || shapeToGenerate.isStringShape() && shapeToGenerate.hasTrait(EnumTrait.class))
+      if (shapeShouldHaveConversionFunction(shapeToGenerate))
       {
         final WriterDelegator<PythonWriter> delegator = directive.context().writerDelegator();
         final String moduleName =
@@ -622,12 +622,15 @@ public class DirectedDafnyPythonLocalServiceCodegen
     protocolGenerator.generateSharedDeserializerComponents(directive.context());
     protocolGenerator.generateResponseDeserializers(directive.context());
 
-    // Generate any missing converison functions
-    // This MUST run after RequestSerialization and ResponseSerialization generation
+    // Generate any missing conversion. functions
+    // This SHOULD run after generateRequestSerializers and generateResponseDeserializers
     // to preserve topological ordering of generated functions.
+    // I don't think that topological ordering is required here
+    // (no function's top-level definition depend on another function in this file)
+    // but this could change in the far future, so best to preserve the correct ordering.
     // (An orphaned conversion function MAY depend on a non-orphaned conversion function,
     //  but never the other way around.)
-    generateOrphanedConversionMethods(directive);
+    generateOrphanedShapeConversionMethods(directive);
 
     protocolGenerator.generateProtocolTests(directive.context());
   }
