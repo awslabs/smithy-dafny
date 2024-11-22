@@ -421,9 +421,12 @@ public class ValidationGenerator {
           return fmt.Errorf(\"%s is required but has a nil value.\")
       }
       """;
-    if (SmithyNameResolver.isShapeFromAWSSDK(targetShape) && memberShape.isOptional()) {
-        requiredCheck.append(nilCheck.formatted(dataSource, dataSource));
-        return requiredCheck;
+    if (
+      SmithyNameResolver.isShapeFromAWSSDK(targetShape) &&
+      memberShape.isOptional()
+    ) {
+      requiredCheck.append(nilCheck.formatted(dataSource, dataSource));
+      return requiredCheck;
     }
     // other cases will itself panic because shape with required trait in local service won't get pointer shape and can't be nil
     if (
