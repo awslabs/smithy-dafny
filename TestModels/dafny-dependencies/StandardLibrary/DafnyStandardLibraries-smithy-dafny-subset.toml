@@ -1,7 +1,13 @@
 includes = [
+  "../dafny/Source/DafnyStandardLibraries/src/Std/Actions/Actions.dfy",
+  "../dafny/Source/DafnyStandardLibraries/src/Std/Actions/Aggregators.dfy",
+  "../dafny/Source/DafnyStandardLibraries/src/Std/Actions/Enumerators.dfy",
+  "../dafny/Source/DafnyStandardLibraries/src/Std/Actions/GenericAction.dfy",
   "../dafny/Source/DafnyStandardLibraries/src/Std/BoundedInts.dfy",
   "../dafny/Source/DafnyStandardLibraries/src/Std/Collections/Seq.dfy",
+  "../dafny/Source/DafnyStandardLibraries/src/Std/DecreasesClauses.dfy",
   "../dafny/Source/DafnyStandardLibraries/src/Std/DynamicArray.dfy",
+  "../dafny/Source/DafnyStandardLibraries/src/Std/Frames.dfy",
   "../dafny/Source/DafnyStandardLibraries/src/Std/Math.dfy",
   "../dafny/Source/DafnyStandardLibraries/src/Std/Relations.dfy",
   "../dafny/Source/DafnyStandardLibraries/src/Std/Wrappers.dfy"
@@ -16,6 +22,9 @@ reads-clauses-on-methods = true
 
 # Options that differ from Dafny's
 unicode-char = false
+
+# TODO
+allow-warnings = true
 
 # Options important for sustainable development
 # of the libraries themselves.
