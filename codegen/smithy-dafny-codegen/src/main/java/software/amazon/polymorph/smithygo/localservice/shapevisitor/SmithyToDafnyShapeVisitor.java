@@ -415,11 +415,16 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
       someWrapIfRequired = "Wrappers.Companion_Option_.Create_Some_(%s)";
       returnType = "Wrappers.Option";
     }
+    var nilCheck = "";
+    if (isPointerType) {
+      nilCheck =
+        "if %s == nil {return %s}".formatted(dataSource, nilWrapIfRequired);
+    }
 
     typeConversionMethodBuilder.append(
       """
       func () %s {
-             if %s == nil { return %s }
+             %s
              var fieldValue []interface{} = make([]interface{}, 0)
              for _, val := range %s {
                  element := %s
@@ -428,8 +433,7 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
              return %s
       }()""".formatted(
           returnType,
-          dataSource,
-          nilWrapIfRequired,
+          nilCheck,
           dataSource,
           ShapeVisitorHelper.toDafnyShapeVisitorWriter(
             memberShape,
@@ -778,12 +782,13 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
                 return %s
           }
       }()""".formatted(
-        someWrapIfRequired.formatted(
-          DafnyNameResolver.getDafnyUnionBaseStructType(
-            shape,
-            shape.getId().getName()
-          ).concat(".Default"),""
-        ));
+          someWrapIfRequired.formatted(
+            DafnyNameResolver
+              .getDafnyUnionBaseStructType(shape, shape.getId().getName())
+              .concat(".Default"),
+            ""
+          )
+        );
     return """
     %s
     %s
