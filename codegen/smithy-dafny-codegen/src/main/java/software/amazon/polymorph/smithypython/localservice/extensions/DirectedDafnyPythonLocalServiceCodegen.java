@@ -508,15 +508,20 @@ public class DirectedDafnyPythonLocalServiceCodegen
           directive.context()
         );
       } else if (shapeToGenerate.isStringShape()) {
-        // Classes are not generated for strings
+        // Neither classes nor converisons are generated for strings
+        continue;
       } else if (shapeToGenerate.isIntegerShape()) {
-        // Classes are not generated for ints
+        // Neither classes nor converisons are generated for ints
+        continue;
       } else if (shapeToGenerate.isListShape()) {
-        // Classes are not generated for lists
+        // Neither classes nor converisons are generated for lists
+        continue;
       } else if (shapeToGenerate.isMapShape()) {
-        // Classes are not generated for maps
+        // Neither classes nor converisons are generated for maps
+        continue;
       } else if (shapeToGenerate.isLongShape()) {
-        // Classes are not generated for longs
+        // Neither classes nor converisons are generated for longs
+        continue;
       } else {
         // Add more as needed...
         throw new ClassCastException(
