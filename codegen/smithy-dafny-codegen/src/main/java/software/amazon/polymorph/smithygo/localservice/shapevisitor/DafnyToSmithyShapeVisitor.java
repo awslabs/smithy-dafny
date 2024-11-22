@@ -434,12 +434,17 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       .expectShape(memberShape.getTarget());
     final var symbol = context.symbolProvider().toSymbol(shape);
     final boolean assertionRequired = targetShape.isStructureShape();
+    if (isOptional) {
+      typeConversionMethodBuilder.append("""
+        if %s == nil {
+          return nil
+        }
+        """.formatted(dataSource)
+      );
+    }
     typeConversionMethodBuilder.append(
       """
-       var fieldValue %s
-      if %s == nil {
-          return nil
-      }
+      fieldValue := make(%s, 0)
       for i := dafny.Iterate(%s.(dafny.Sequence)); ; {
       	val, ok := i()
       	if !ok {
@@ -448,7 +453,6 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       	fieldValue = append(fieldValue, %s)}
       	""".formatted(
           GoCodegenUtils.getType(symbol, shape, true),
-          dataSource,
           dataSource,
           ShapeVisitorHelper.toNativeShapeVisitorWriter(
             memberShape,
