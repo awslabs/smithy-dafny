@@ -410,15 +410,13 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     String nilWrapIfRequired = "nil";
     String someWrapIfRequired = "%s";
     String returnType = "dafny.Sequence";
+    var nilCheck = "";
     if (this.isOptional) {
       nilWrapIfRequired = "Wrappers.Companion_Option_.Create_None_()";
-      someWrapIfRequired = "Wrappers.Companion_Option_.Create_Some_(%s)";
-      returnType = "Wrappers.Option";
-    }
-    var nilCheck = "";
-    if (isPointerType) {
       nilCheck =
         "if %s == nil {return %s}".formatted(dataSource, nilWrapIfRequired);
+      someWrapIfRequired = "Wrappers.Companion_Option_.Create_Some_(%s)";
+      returnType = "Wrappers.Option";
     }
 
     typeConversionMethodBuilder.append(
