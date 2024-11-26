@@ -328,10 +328,10 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     final String referenceType = (this.isOptional) ? "&" : "";
 
     final var typeConversionMethodBuilder = new StringBuilder();
-    final String unAssertedDataSource = dataSource.startsWith("input.(")
-      ? "input"
-      : dataSource;
     if (this.isOptional) {
+      final String unAssertedDataSource = dataSource.startsWith("input.(")
+        ? "input"
+        : dataSource;
       typeConversionMethodBuilder.append(
         """
           if %s == nil {
