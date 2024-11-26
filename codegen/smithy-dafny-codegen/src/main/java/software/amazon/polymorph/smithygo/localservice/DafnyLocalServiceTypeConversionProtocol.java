@@ -3,12 +3,15 @@ package software.amazon.polymorph.smithygo.localservice;
 import static software.amazon.polymorph.smithygo.codegen.SymbolUtils.POINTABLE;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import software.amazon.polymorph.smithygo.codegen.ApplicationProtocol;
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoDelegator;
+import software.amazon.polymorph.smithygo.codegen.GoWriter;
+import software.amazon.polymorph.smithygo.codegen.SmithyGoDependency;
 import software.amazon.polymorph.smithygo.codegen.integration.ProtocolGenerator;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
@@ -19,11 +22,14 @@ import software.amazon.polymorph.smithygo.utils.Constants;
 import software.amazon.polymorph.smithygo.utils.GoCodegenUtils;
 import software.amazon.polymorph.traits.ExtendableTrait;
 import software.amazon.polymorph.traits.LocalServiceTrait;
+import software.amazon.polymorph.traits.PositionalTrait;
 import software.amazon.polymorph.traits.ReferenceTrait;
 import software.amazon.smithy.aws.traits.ServiceTrait;
+import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.ResourceShape;
 import software.amazon.smithy.model.shapes.ServiceShape;
+import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.shapes.ShapeId;
 import software.amazon.smithy.model.shapes.StructureShape;
 import software.amazon.smithy.model.traits.ErrorTrait;
@@ -75,6 +81,29 @@ public class DafnyLocalServiceTypeConversionProtocol
             final var inputToDafnyMethodName =
               SmithyNameResolver.getToDafnyMethodName(serviceShape, input, "");
             final var inputSymbol = symbolProvider.toSymbol(input);
+            final String outputType;
+            if (input.hasTrait(PositionalTrait.class)) {
+              // Output type in To Dafny should be unwrapped
+              Shape inputForPositional = model.expectShape(
+                input
+                  .getAllMembers()
+                  .values()
+                  .stream()
+                  .findFirst()
+                  .get()
+                  .getTarget()
+              );
+              Symbol symbolForPositional = symbolProvider.toSymbol(
+                inputForPositional
+              );
+              outputType =
+                DafnyNameResolver.getDafnyType(
+                  inputForPositional,
+                  symbolForPositional
+                );
+            } else {
+              outputType = DafnyNameResolver.getDafnyType(input, inputSymbol);
+            }
             writerDelegator.useFileWriter(
               "%s/%s".formatted(
                   SmithyNameResolver.shapeNamespace(serviceShape),
@@ -95,7 +124,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                   }""",
                   inputToDafnyMethodName,
                   SmithyNameResolver.getSmithyType(input, inputSymbol),
-                  DafnyNameResolver.getDafnyType(input, inputSymbol),
+                  outputType,
                   writer.consumer(w ->
                     generateRequestSerializer(
                       context,
@@ -110,7 +139,10 @@ public class DafnyLocalServiceTypeConversionProtocol
         }
 
         final var output = model.expectShape(operation.getOutputShape());
-        if (!alreadyVisited.contains(output.toShapeId())) {
+        if (
+          !alreadyVisited.contains(output.toShapeId()) &&
+          !output.hasTrait(PositionalTrait.class)
+        ) {
           alreadyVisited.add(output.toShapeId());
           if (
             !output.hasTrait(UnitTypeTrait.class) &&
@@ -303,8 +335,9 @@ public class DafnyLocalServiceTypeConversionProtocol
                       if ok {
                       	return val.Impl
                       }
-                      return %s{&NativeWrapper{Impl: nativeResource}}.Impl
+                      return %s{&%sNativeWrapper{Impl: nativeResource}}.Impl
                                                          """.formatted(
+                          resourceShape.getId().getName(),
                           resourceShape.getId().getName(),
                           resourceShape.getId().getName()
                         );
@@ -367,6 +400,31 @@ public class DafnyLocalServiceTypeConversionProtocol
                 ""
               );
             final var inputSymbol = context.symbolProvider().toSymbol(input);
+            final String inputType;
+            if (input.hasTrait(PositionalTrait.class)) {
+              // Input type in To native should be unwrapped
+              Shape inputForPositional = context
+                .model()
+                .expectShape(
+                  input
+                    .getAllMembers()
+                    .values()
+                    .stream()
+                    .findFirst()
+                    .get()
+                    .getTarget()
+                );
+              Symbol symbolForPositional = context
+                .symbolProvider()
+                .toSymbol(inputForPositional);
+              inputType =
+                DafnyNameResolver.getDafnyType(
+                  inputForPositional,
+                  symbolForPositional
+                );
+            } else {
+              inputType = DafnyNameResolver.getDafnyType(input, inputSymbol);
+            }
             delegator.useFileWriter(
               "%s/%s".formatted(
                   SmithyNameResolver.shapeNamespace(serviceShape),
@@ -387,7 +445,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                       ${C|}
                   }""",
                   inputFromDafnyMethodName,
-                  DafnyNameResolver.getDafnyType(input, inputSymbol),
+                  inputType,
                   SmithyNameResolver.getSmithyType(input, inputSymbol),
                   writer.consumer(w ->
                     generateRequestDeserializer(
@@ -405,7 +463,10 @@ public class DafnyLocalServiceTypeConversionProtocol
         final var output = context
           .model()
           .expectShape(operation.getOutputShape());
-        if (!alreadyVisited.contains(output.toShapeId())) {
+        if (
+          !alreadyVisited.contains(output.toShapeId()) &&
+          !output.hasTrait(PositionalTrait.class)
+        ) {
           alreadyVisited.add(output.toShapeId());
           if (
             !output.hasTrait(UnitTypeTrait.class) &&
@@ -608,11 +669,11 @@ public class DafnyLocalServiceTypeConversionProtocol
                   if (resourceShape.hasTrait(ExtendableTrait.class)) {
                     extendableResourceWrapperCheck =
                       """
-                      val, ok := dafnyResource.(*NativeWrapper)
+                      val, ok := dafnyResource.(*%sNativeWrapper)
                       if ok {
                           return val.Impl
                       }
-                      """;
+                      """.formatted(resourceShape.getId().getName());
                   }
                   writer.write(
                     """
@@ -901,7 +962,7 @@ public class DafnyLocalServiceTypeConversionProtocol
             	return $L.Companion_Error_.Create_CollectionOfErrors_(dafny.SeqOf(e...), dafny.SeqOfChars([]dafny.Char(nativeInput.Message)...))
             }
             func OpaqueError_Input_ToDafny(nativeInput $L.OpaqueError)($L.Error) {
-            	return $L.Companion_Error_.Create_Opaque_(nativeInput.ErrObject, dafny.SeqOfChars([]dafny.Char(nativeInput.Error())...))
+            	return $L.Companion_Error_.Create_Opaque_(nativeInput.ErrObject)
             }""",
             SmithyNameResolver.smithyTypesNamespace(serviceShape),
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
@@ -985,20 +1046,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                   .getDependencies()
                 : new LinkedList<ShapeId>();
               if (dependencies != null) {
-                for (final var dep : dependencies) {
-                  final var depShape = context.model().expectShape(dep);
-                  w.write(
-                    """
-                    case $L.$LBaseException:
-                        return $L.Create_$L_($L.Error_ToDafny(err))
-                    """,
-                    SmithyNameResolver.smithyTypesNamespace(depShape),
-                    dep.getName(),
-                    DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
-                    dep.getName(),
-                    SmithyNameResolver.shapeNamespace(depShape)
-                  );
-                }
+                handleDepErrorSerializer(context, w, dependencies);
               }
             }),
             SmithyNameResolver.smithyTypesNamespace(serviceShape),
@@ -1007,6 +1055,98 @@ public class DafnyLocalServiceTypeConversionProtocol
           );
         }
       );
+  }
+
+  private void handleDepErrorSerializer(
+    final GenerationContext context,
+    final GoWriter w,
+    final Collection<ShapeId> dependencies
+  ) {
+    final var sdkErrHandler = new StringBuilder();
+    final var sdkOpaqueErrHandler = new StringBuilder();
+    final var serviceShape = context.settings().getService(context.model());
+    Boolean sdkDepFound = false;
+    for (final var dep : dependencies) {
+      final var depShape = context.model().expectShape(dep);
+      if (depShape.hasTrait(ServiceTrait.class)) {
+        if (sdkDepFound == false) {
+          w.addImport(SmithyGoDependency.SMITHY_SOURCE_PATH);
+          sdkErrHandler.append(
+            """
+            case smithy.APIError:
+            """
+          );
+          sdkOpaqueErrHandler.append(
+            """
+            case *smithy.OperationError:
+            """
+          );
+        }
+        w.addImportFromModule(
+          SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+            depShape.getId().getNamespace()
+          ),
+          SmithyNameResolver.shapeNamespace(depShape)
+        );
+        sdkDepFound = true;
+        final var sdkDepErrorVar = depShape
+          .expectTrait(ServiceTrait.class)
+          .getSdkId()
+          .concat("Error");
+        sdkOpaqueErrHandler.append(
+          """
+            if (err.(*smithy.OperationError).Service() == "%s") {
+              %s := %s.Error_ToDafny(err)
+              return %s.Create_%s_(%s)
+            }
+          """.formatted(
+              depShape.expectTrait(ServiceTrait.class).getSdkId(),
+              sdkDepErrorVar,
+              SmithyNameResolver.shapeNamespace(depShape),
+              DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
+              DafnyNameResolver.dafnyNamespace(depShape),
+              sdkDepErrorVar
+            )
+        );
+        sdkErrHandler.append(
+          """
+          %s := %s.Error_ToDafny(err)
+          if(!%s.Is_Opaque()) {
+            return %s.Create_%s_(%s)
+          }
+          """.formatted(
+              sdkDepErrorVar,
+              SmithyNameResolver.shapeNamespace(depShape),
+              sdkDepErrorVar,
+              DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
+              DafnyNameResolver.dafnyNamespace(depShape),
+              sdkDepErrorVar
+            )
+        );
+      } else {
+        w.write(
+          """
+          case $L.$LBaseException:
+              return $L.Create_$L_($L.Error_ToDafny(err))
+          """,
+          SmithyNameResolver.smithyTypesNamespace(depShape),
+          dep.getName(),
+          DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
+          DafnyNameResolver.dafnyDependentErrorName(depShape),
+          SmithyNameResolver.shapeNamespace(depShape)
+        );
+      }
+    }
+    if (sdkDepFound) {
+      final var createOpaqueError =
+        """
+        return %s.Companion_Error_.Create_Opaque_(err)
+        """.formatted(DafnyNameResolver.dafnyTypesNamespace(serviceShape));
+      sdkErrHandler.append(createOpaqueError);
+      sdkOpaqueErrHandler.append(createOpaqueError);
+      w.write(sdkOpaqueErrHandler.toString());
+      w.write(sdkErrHandler.toString());
+    }
   }
 
   private void generateConfigDeserializer(final GenerationContext context) {
@@ -1255,21 +1395,15 @@ public class DafnyLocalServiceTypeConversionProtocol
                 final var depService = context
                   .model()
                   .expectShape(dep, ServiceShape.class);
-                final var sdkId = depService.hasTrait(LocalServiceTrait.class)
-                  ? depService.expectTrait(LocalServiceTrait.class).getSdkId()
-                  : depService
-                    .expectTrait(ServiceTrait.class)
-                    .getSdkId()
-                    .toLowerCase();
                 w.write(
                   """
                   if err.Is_$L() {
                       return $L.Error_FromDafny(err.Dtor_$L())
                   }
                   """,
-                  sdkId,
+                  DafnyNameResolver.dafnyDependentErrorName(depService),
                   SmithyNameResolver.shapeNamespace(depService),
-                  sdkId
+                  DafnyNameResolver.dafnyDependentErrorName(depService)
                 );
               }
             })
@@ -1318,7 +1452,8 @@ public class DafnyLocalServiceTypeConversionProtocol
           inputType =
             GoCodegenUtils.getType(
               context.symbolProvider().toSymbol(visitingShape),
-              visitingShape
+              visitingShape,
+              true
             );
           if (
             context
@@ -1335,7 +1470,11 @@ public class DafnyLocalServiceTypeConversionProtocol
                 return $L
             }
             """,
-            Constants.funcNameGenerator(visitingMemberShape, "ToDafny"),
+            Constants.funcNameGenerator(
+              visitingMemberShape,
+              "ToDafny",
+              context.model()
+            ),
             inputType,
             outputType,
             SmithyToDafnyShapeVisitor.getConversionFunc(visitingMemberShape)
@@ -1375,8 +1514,14 @@ public class DafnyLocalServiceTypeConversionProtocol
           alreadyVisited.add(visitingMemberShape.toShapeId());
           var outputType = GoCodegenUtils.getType(
             context.symbolProvider().toSymbol(visitingShape),
-            visitingShape
+            visitingShape,
+            true
           );
+          Boolean isPointable = context
+            .symbolProvider()
+            .toSymbol(visitingMemberShape)
+            .getProperty(POINTABLE, Boolean.class)
+            .orElse(false);
           if (visitingShape.hasTrait(ReferenceTrait.class)) {
             final var referenceTrait = visitingShape.expectTrait(
               ReferenceTrait.class
@@ -1384,35 +1529,46 @@ public class DafnyLocalServiceTypeConversionProtocol
             final var resourceOrService = context
               .model()
               .expectShape(referenceTrait.getReferentId());
-            outputType =
-              GoCodegenUtils.getType(
-                context.symbolProvider().toSymbol(visitingShape),
-                visitingShape
-              );
             if (resourceOrService.isServiceShape()) {
-              final var namespace = SmithyNameResolver
-                .shapeNamespace(resourceOrService)
-                .concat(".");
-              outputType =
-                namespace.concat(
-                  context.symbolProvider().toSymbol(resourceOrService).getName()
-                );
+              isPointable =
+                context
+                  .symbolProvider()
+                  .toSymbol(resourceOrService)
+                  .getProperty(POINTABLE, Boolean.class)
+                  .orElse(false);
+              if (resourceOrService.hasTrait(ServiceTrait.class)) {
+                outputType =
+                  SmithyNameResolver.getAwsServiceClient(
+                    resourceOrService.expectTrait(ServiceTrait.class)
+                  );
+              } else {
+                final var namespace = SmithyNameResolver
+                  .shapeNamespace(resourceOrService)
+                  .concat(".");
+                outputType =
+                  namespace.concat(
+                    context
+                      .symbolProvider()
+                      .toSymbol(resourceOrService)
+                      .getName()
+                  );
+              }
             }
           }
-          if (
-            context
-              .symbolProvider()
-              .toSymbol(visitingMemberShape)
-              .getProperty(POINTABLE, Boolean.class)
-              .orElse(false)
-          ) outputType = "*".concat(outputType);
+          if (isPointable) {
+            outputType = "*".concat(outputType);
+          }
           // TODO: we should be able to change input type to specific shape from interface {}
           writer.write(
             """
             func $L(input interface{})($L) {
                 $L
             }""",
-            Constants.funcNameGenerator(visitingMemberShape, "FromDafny"),
+            Constants.funcNameGenerator(
+              visitingMemberShape,
+              "FromDafny",
+              context.model()
+            ),
             outputType,
             DafnyToSmithyShapeVisitor.getConversionFunc(visitingMemberShape)
           );

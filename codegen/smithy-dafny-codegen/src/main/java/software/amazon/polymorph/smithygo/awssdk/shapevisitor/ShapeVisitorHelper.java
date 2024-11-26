@@ -6,7 +6,6 @@ import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoWriter;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.utils.Constants;
-import software.amazon.polymorph.traits.ReferenceTrait;
 import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.traits.EnumTrait;

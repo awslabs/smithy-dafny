@@ -689,6 +689,8 @@ public class GoWriter extends SymbolWriter<GoWriter, ImportDeclarations> {
     public String apply(Object type, String indent) {
       if (type instanceof Symbol) {
         Symbol resolvedSymbol = (Symbol) type;
+        // get symbol name for literal
+        // Note: This literal could be changed in upcoming codes in this if block
         String literal = resolvedSymbol.getName();
 
         boolean isSlice = resolvedSymbol
@@ -712,6 +714,7 @@ public class GoWriter extends SymbolWriter<GoWriter, ImportDeclarations> {
           !SymbolUtils.isUniverseType(resolvedSymbol) &&
           isExternalNamespace(resolvedSymbol.getNamespace())
         ) {
+          // Change the literal to use namespace as well for symbol with external namespace
           literal = formatWithNamespace(resolvedSymbol);
         }
         addUseImports(resolvedSymbol);

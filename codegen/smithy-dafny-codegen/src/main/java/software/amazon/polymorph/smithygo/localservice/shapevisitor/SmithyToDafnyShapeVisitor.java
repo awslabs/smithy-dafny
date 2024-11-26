@@ -12,7 +12,9 @@ import software.amazon.polymorph.smithygo.codegen.SmithyGoDependency;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
 import software.amazon.polymorph.traits.DafnyUtf8BytesTrait;
+import software.amazon.polymorph.traits.PositionalTrait;
 import software.amazon.polymorph.traits.ReferenceTrait;
+import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.CodegenException;
 import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.model.shapes.BlobShape;
@@ -144,7 +146,7 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
         final var goCodeBlock =
           """
           func () Wrappers.Option {
-              if %s == nil {
+              if (%s) == nil {
               return Wrappers.Companion_Option_.Create_None_()
               }
               return Wrappers.Companion_Option_.Create_Some_(%s)
@@ -161,18 +163,34 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
 
     //Handle @reference{Service} shape
     if (resourceOrService.asServiceShape().isPresent()) {
+      var clientConversion = dataSource.concat(".DafnyClient");
+      if (resourceOrService.hasTrait(ServiceTrait.class)) {
+        writer.addImportFromModule(
+          SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+            resourceOrService.toShapeId().getNamespace()
+          ),
+          DafnyNameResolver.dafnyTypesNamespace(resourceOrService)
+        );
+        final var shim =
+          "%swrapped.Shim".formatted(
+              DafnyNameResolver.dafnyNamespace(
+                resourceOrService.expectTrait(ServiceTrait.class)
+              )
+            );
+        clientConversion = "&%s{Client: %s}".formatted(shim, dataSource);
+      }
       if (!this.isOptional) {
-        return dataSource;
+        return clientConversion;
       } else {
         final var goCodeBlock =
           """
           func () Wrappers.Option {
-              if %s == nil {
+              if (%s) == nil {
               return Wrappers.Companion_Option_.Create_None_()
               }
               return Wrappers.Companion_Option_.Create_Some_(%s)
           }()""";
-        return goCodeBlock.formatted(dataSource, dataSource);
+        return goCodeBlock.formatted(dataSource, clientConversion);
       }
     }
 
@@ -278,15 +296,26 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
       nilCheck =
         "if %s == nil {return %s}".formatted(dataSource, nilWrapIfRequired);
     }
-    final var goCodeBlock =
-      """
-      func () %s {
-          %s
-          return %s
-      }()""";
-
-    typeConversionMethodBuilder.append("%1$s(".formatted(companionStruct));
-    final String fieldSeparator = ",";
+    final String goCodeBlock;
+    final String fieldSeparator;
+    if (!shape.hasTrait(PositionalTrait.class)) {
+      typeConversionMethodBuilder.append("%1$s(".formatted(companionStruct));
+      goCodeBlock =
+        """
+        func () %s {
+            %s
+            return %s
+        }()""";
+      fieldSeparator = ",";
+    } else {
+      // Positional trait can only have one variable.
+      fieldSeparator = "";
+      // Don't unwrap position trait shape
+      goCodeBlock =
+        """
+                %s
+        """;
+    }
     for (final var memberShapeEntry : shape.getAllMembers().entrySet()) {
       final var memberName = memberShapeEntry.getKey();
       final var memberShape = memberShapeEntry.getValue();
@@ -308,6 +337,9 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
             fieldSeparator
           )
       );
+    }
+    if (shape.hasTrait(PositionalTrait.class)) {
+      return goCodeBlock.formatted(typeConversionMethodBuilder.toString());
     }
 
     return goCodeBlock.formatted(
@@ -667,11 +699,6 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
 
   @Override
   public String unionShape(final UnionShape shape) {
-    final String internalDafnyType = DafnyNameResolver.getDafnyType(
-      shape,
-      context.symbolProvider().toSymbol(shape)
-    );
-
     String someWrapIfRequired = "%s(%s)";
     String returnType = DafnyNameResolver.getDafnyType(
       shape,
@@ -692,7 +719,6 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
 
     final StringBuilder eachMemberInUnion = new StringBuilder();
     for (final var member : shape.getAllMembers().values()) {
-      final String memberName = context.symbolProvider().toMemberName(member);
       final Shape targetShape = context.model().expectShape(member.getTarget());
 
       final var refShape = targetShape.hasTrait(ReferenceTrait.class)
@@ -716,16 +742,11 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
       eachMemberInUnion.append(
         """
         case *%s.%s:
-            var companion = %s
             var inputToConversion = %s
             return %s
         """.formatted(
             SmithyNameResolver.smithyTypesNamespace(shape),
             context.symbolProvider().toMemberName(member),
-            internalDafnyType.replace(
-              shape.getId().getName(),
-              "CompanionStruct_".concat(shape.getId().getName()).concat("_{}")
-            ),
             ShapeVisitorHelper.toDafnyShapeVisitorWriter(
               member,
               context,
@@ -743,7 +764,7 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
             someWrapIfRequired.formatted(
               DafnyNameResolver.getDafnyCreateFuncForUnionMemberShape(
                 shape,
-                memberName
+                member.getMemberName()
               ),
               "inputToConversion.UnwrapOr(nil).(%s)".formatted(baseType)
             )
@@ -761,5 +782,42 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     %s
     %s
     %s""".formatted(functionInit, eachMemberInUnion, defaultCase);
+  }
+
+  @Override
+  public String timestampShape(final TimestampShape shape) {
+    writer.addImport("time");
+    writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+
+    String nilWrapIfRequired = "dafny.SeqOf()";
+    String someWrapIfRequired = "%s";
+    String returnType = "dafny.Sequence";
+    if (this.isOptional) {
+      nilWrapIfRequired = "Wrappers.Companion_Option_.Create_None_()";
+      someWrapIfRequired = "Wrappers.Companion_Option_.Create_Some_(%s)";
+      returnType = "Wrappers.Option";
+    }
+
+    var nilCheck = "";
+    if (isPointerType) {
+      nilCheck =
+        "if %s == nil {return %s}".formatted(dataSource, nilWrapIfRequired);
+    }
+
+    var conversionCode =
+      """
+      func () %s {
+        %s
+        formattedTime := %s.Format(\"2006-01-02T15:04:05.999999Z\")
+        return %s
+      }()""".formatted(
+          returnType,
+          nilCheck,
+          dataSource,
+          someWrapIfRequired.formatted(
+            "dafny.SeqOfChars([]dafny.Char(formattedTime)...)"
+          )
+        );
+    return conversionCode;
   }
 }
