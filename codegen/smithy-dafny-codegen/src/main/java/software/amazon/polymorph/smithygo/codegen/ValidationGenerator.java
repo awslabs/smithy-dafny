@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import software.amazon.polymorph.smithygo.codegen.knowledge.GoPointableIndex;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
 import software.amazon.polymorph.smithygo.utils.Constants;
 import software.amazon.polymorph.smithygo.utils.GoCodegenUtils;
@@ -15,7 +14,12 @@ import software.amazon.polymorph.traits.ReferenceTrait;
 import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.codegen.core.SymbolProvider;
 import software.amazon.smithy.model.Model;
-import software.amazon.smithy.model.shapes.*;
+import software.amazon.smithy.model.shapes.ListShape;
+import software.amazon.smithy.model.shapes.MapShape;
+import software.amazon.smithy.model.shapes.MemberShape;
+import software.amazon.smithy.model.shapes.Shape;
+import software.amazon.smithy.model.shapes.SimpleShape;
+import software.amazon.smithy.model.shapes.UnionShape;
 import software.amazon.smithy.model.traits.LengthTrait;
 import software.amazon.smithy.model.traits.RangeTrait;
 import software.amazon.smithy.model.traits.RequiredTrait;
@@ -196,10 +200,28 @@ public class ValidationGenerator {
         break;
       case STRUCTURE:
         if (!currentShape.hasTrait(ReferenceTrait.class)) {
+          final boolean needsWrapping =
+            memberShape.isOptional() &&
+            !dataSource.equals(LIST_ITEM) &&
+            !dataSource.equals(MAP_KEY) &&
+            !dataSource.equals(MAP_VALUE) &&
+            !dataSource.equals(UNION_DATASOURCE);
           final var funcCall = dataSource.concat(".Validate()");
-          validationCode.append(
-            CHECK_AND_RETURN_ERROR.formatted(funcCall, funcCall)
+          final String checkForError = CHECK_AND_RETURN_ERROR.formatted(
+            funcCall,
+            funcCall
           );
+          if (needsWrapping) {
+            validationCode.append(
+              """
+              if (%s != nil) {
+                %s
+              }
+              """.formatted(dataSource, checkForError)
+            );
+          } else {
+            validationCode.append(checkForError);
+          }
         }
         break;
       default:
@@ -392,20 +414,22 @@ public class ValidationGenerator {
   ) {
     final Shape targetShape = model.expectShape(memberShape.getTarget());
     final StringBuilder requiredCheck = new StringBuilder();
-    if (
-      !(memberShape.hasTrait(RequiredTrait.class) ||
-        targetShape.hasTrait(RequiredTrait.class))
-    ) {
+    if (!memberShape.hasTrait(RequiredTrait.class)) {
       return requiredCheck;
     }
-    if (GoPointableIndex.of(model).isPointable(memberShape)) {
-      requiredCheck.append(
-        """
-        if ( %s == nil ) {
-            return fmt.Errorf(\"%s is required but has a nil value.\")
-        }
-        """.formatted(dataSource, dataSource)
-      );
+    final String nilCheck =
+      """
+      if ( %s == nil ) {
+          return fmt.Errorf(\"%s is required but has a nil value.\")
+      }
+      """;
+    // other cases will itself panic because shape with required trait in local service won't get pointer shape and can't be nil
+    if (
+      targetShape.isListShape() ||
+      targetShape.isMapShape() ||
+      targetShape.isUnionShape()
+    ) {
+      requiredCheck.append(nilCheck.formatted(dataSource, dataSource));
     }
     return requiredCheck;
   }
@@ -487,7 +511,7 @@ public class ValidationGenerator {
         final Boolean isExternalShape = !currServiceShapeNamespace.equals(
           currShapeNamespace
         );
-        var inputType = GoCodegenUtils.getType(
+        final var inputType = GoCodegenUtils.getType(
           symbolProvider.toSymbol(currentShape),
           currentShape,
           isExternalShape
@@ -584,7 +608,7 @@ public class ValidationGenerator {
         final Boolean isExternalShape = !currServiceShapeNamespace.equals(
           currShapeNamespace
         );
-        var inputType = GoCodegenUtils.getType(
+        final var inputType = GoCodegenUtils.getType(
           symbolProvider.toSymbol(currentShape),
           currentShape,
           isExternalShape
@@ -657,7 +681,7 @@ public class ValidationGenerator {
       final Boolean isExternalShape =
         !currServiceShapeNamespace.equals(currShapeNamespace) &&
         !currShapeNamespace.startsWith("smithy");
-      var inputType = GoCodegenUtils.getType(
+      final var inputType = GoCodegenUtils.getType(
         symbolProvider.toSymbol(currentShape),
         currentShape,
         isExternalShape
@@ -691,8 +715,11 @@ public class ValidationGenerator {
       final var unionValidation = new StringBuilder();
       unionValidation.append(
         """
+        if (%s == nil) {
+            return nil
+        }
         switch unionType := %s.(type) {
-            """.formatted(dataSourceForUnion)
+            """.formatted(dataSourceForUnion, dataSourceForUnion)
       );
       for (final var memberInUnion : currentShape.getAllMembers().values()) {
         final var currMemberNamespace = SmithyNameResolver.smithyTypesNamespace(
