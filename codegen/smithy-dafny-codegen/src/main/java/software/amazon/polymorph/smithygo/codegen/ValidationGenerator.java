@@ -414,10 +414,7 @@ public class ValidationGenerator {
   ) {
     final Shape targetShape = model.expectShape(memberShape.getTarget());
     final StringBuilder requiredCheck = new StringBuilder();
-    if (
-      !(memberShape.hasTrait(RequiredTrait.class) ||
-        targetShape.hasTrait(RequiredTrait.class))
-    ) {
+    if (!(memberShape.hasTrait(RequiredTrait.class))) {
       return requiredCheck;
     }
     final String nilCheck =
@@ -426,13 +423,6 @@ public class ValidationGenerator {
           return fmt.Errorf(\"%s is required but has a nil value.\")
       }
       """;
-    if (
-      SmithyNameResolver.isShapeFromAWSSDK(targetShape) &&
-      memberShape.isOptional()
-    ) {
-      requiredCheck.append(nilCheck.formatted(dataSource, dataSource));
-      return requiredCheck;
-    }
     // other cases will itself panic because shape with required trait in local service won't get pointer shape and can't be nil
     if (
       targetShape.isListShape() ||
