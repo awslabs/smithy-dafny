@@ -414,7 +414,7 @@ public class ValidationGenerator {
   ) {
     final Shape targetShape = model.expectShape(memberShape.getTarget());
     final StringBuilder requiredCheck = new StringBuilder();
-    if (!(memberShape.hasTrait(RequiredTrait.class))) {
+    if (!memberShape.hasTrait(RequiredTrait.class)) {
       return requiredCheck;
     }
     final String nilCheck =
