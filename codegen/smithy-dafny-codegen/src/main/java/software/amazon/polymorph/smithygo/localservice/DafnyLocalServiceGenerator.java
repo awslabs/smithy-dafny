@@ -472,9 +472,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
               operation,
               OperationShape.class
             );
-            final var inputShape = model.expectShape(
-              operationShape.getInputShape()
-            );
+            var inputShape = model.expectShape(operationShape.getInputShape());
             var outputShape = model.expectShape(
               operationShape.getOutputShape()
             );
@@ -525,27 +523,9 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   )
                 );
             final String inputType;
-            final var typeConversion = inputShape.hasTrait(UnitTypeTrait.class)
-              ? ""
-              : "var native_request = %s(input)".formatted(
-                  SmithyNameResolver.getFromDafnyMethodName(inputShape, "")
-                );
             final String inputToClient;
             if (inputShape.hasTrait(UnitTypeTrait.class)) {
               inputToClient = "";
-            } else if (inputShape.hasTrait(PositionalTrait.class)) {
-              inputToClient =
-                ", native_request.%s".formatted(
-                    StringUtils.capitalize(
-                      inputShape
-                        .getAllMembers()
-                        .values()
-                        .stream()
-                        .findFirst()
-                        .get()
-                        .getMemberName()
-                    )
-                  );
             } else {
               inputToClient = ", native_request";
             }
@@ -570,31 +550,53 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     isMemberShapePointable ? "*" : ""
                   );
             }
+            var fromDafnyConvMethodName =
+              SmithyNameResolver.getFromDafnyMethodName(inputShape, "");
             if (inputShape.hasTrait(PositionalTrait.class)) {
               writer.addImportFromModule(
                 DAFNY_RUNTIME_GO_LIBRARY_MODULE,
                 "dafny"
               );
-              final Shape inputForPositional = model.expectShape(
-                inputShape
-                  .getAllMembers()
-                  .values()
-                  .stream()
-                  .findFirst()
-                  .get()
-                  .getTarget()
-              );
+              final MemberShape postionalMemShape = inputShape
+                .getAllMembers()
+                .values()
+                .stream()
+                .findFirst()
+                .get();
+              inputShape = model.expectShape(postionalMemShape.getTarget());
+              if (inputShape.hasTrait(ReferenceTrait.class)) {
+                inputShape =
+                  model.expectShape(
+                    inputShape.expectTrait(ReferenceTrait.class).getReferentId()
+                  );
+              }
+              fromDafnyConvMethodName =
+                SmithyNameResolver
+                  .shapeNamespace(postionalMemShape)
+                  .concat(".")
+                  .concat(
+                    Constants.funcNameGenerator(
+                      postionalMemShape,
+                      "FromDafny",
+                      model
+                    )
+                  );
               final Symbol symbolForPositional = symbolProvider.toSymbol(
-                inputForPositional
+                inputShape
               );
               final String dafnyType = DafnyNameResolver.getDafnyType(
-                inputForPositional,
+                inputShape,
                 symbolForPositional
               );
               inputType = "input %s".formatted(dafnyType);
             } else {
               inputType = maybeInputType;
             }
+            final var typeConversion = inputShape.hasTrait(UnitTypeTrait.class)
+              ? ""
+              : "var native_request = %s(input)".formatted(
+                  fromDafnyConvMethodName
+                );
             writer.write(
               """
                 func (shim *Shim) $L($L) Wrappers.Result {
