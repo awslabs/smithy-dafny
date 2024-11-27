@@ -369,7 +369,7 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
   public String stringShape(final StringShape shape) {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
 
-    // Enum is hard because we need to travers all the values, do an equal check and find the index.
+    // Enum is hard because we need to traverse all the values, do an equal check and find the index.
     if (shape.hasTrait(EnumTrait.class)) {
       String someWrapIfRequired = "%s";
       String returnType = DafnyNameResolver.getDafnyType(

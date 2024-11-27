@@ -13,7 +13,9 @@ import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameRes
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
 import software.amazon.polymorph.smithygo.utils.GoCodegenUtils;
 import software.amazon.polymorph.traits.DafnyUtf8BytesTrait;
+import software.amazon.polymorph.traits.PositionalTrait;
 import software.amazon.polymorph.traits.ReferenceTrait;
+import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.CodegenException;
 import software.amazon.smithy.model.shapes.BlobShape;
 import software.amazon.smithy.model.shapes.BooleanShape;
@@ -23,6 +25,7 @@ import software.amazon.smithy.model.shapes.ListShape;
 import software.amazon.smithy.model.shapes.LongShape;
 import software.amazon.smithy.model.shapes.MapShape;
 import software.amazon.smithy.model.shapes.MemberShape;
+import software.amazon.smithy.model.shapes.ServiceShape;
 import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.shapes.ShapeVisitor;
 import software.amazon.smithy.model.shapes.StringShape;
@@ -153,12 +156,32 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       namespace =
         SmithyNameResolver.shapeNamespace(resourceOrService).concat(".");
     }
+    if (serviceShape.hasTrait(ServiceTrait.class)) {
+      writer.addImport(
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          serviceShape.getId().getNamespace()
+        )
+      );
+      return """
+      shim, ok := %1$s.(*%2$swrapped.Shim)
+      if !ok {
+          panic("Not able to convert client to native")
+      }
+      return shim.Client
+      """.formatted(
+          dataSource,
+          DafnyNameResolver.dafnyNamespace(
+            resourceOrService.expectTrait(ServiceTrait.class)
+          )
+        );
+    }
     if (!this.isOptional) {
-      return "return %1$s{%2$s}".formatted(
+      return "return &%s{%s.(*%s)}".formatted(
           namespace.concat(
             context.symbolProvider().toSymbol(serviceShape).getName()
           ),
-          dataSource
+          dataSource,
+          DafnyNameResolver.getDafnyClient(serviceShape.toShapeId().getName())
         );
     }
     return """
@@ -240,6 +263,15 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
 
   @Override
   public String blobShape(final BlobShape shape) {
+    if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
+      );
+    }
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
     // Blob shape is inherently value type
     return """
@@ -261,6 +293,15 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
 
   @Override
   public String structureShape(final StructureShape shape) {
+    if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
+      );
+    }
     if (shape.hasTrait(ReferenceTrait.class)) {
       return referenceStructureShape(shape);
     }
@@ -294,6 +335,16 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       final var targetShape = context
         .model()
         .expectShape(memberShape.getTarget());
+      final String DtorConversion;
+      if (!shape.hasTrait(PositionalTrait.class)) {
+        DtorConversion =
+          ".Dtor_%s()".formatted(
+              DafnyNameResolver.dafnyCompilesExtra_(memberName)
+            );
+      } else {
+        // Shapes with PositionalTrait already gets input unwrapped so no conversion needed.
+        DtorConversion = "";
+      }
 
       // If a value is a generic type or optional, we need type casting. Dafny doesn't support generics yet.
       //TODO: Is it ever possible for structure to be nil?
@@ -316,7 +367,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         "%1$s%2$s%3$s%4$s%5$s".formatted(
             dataSource,
             maybeAssertion,
-            ".Dtor_%s()".formatted(memberName),
+            DtorConversion,
             memberShape.isOptional() ? ".UnwrapOr(nil)" : "",
             assertionRequired
               ? ".(%s)".formatted(
@@ -349,9 +400,19 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     return typeConversionMethodBuilder.append("}").toString();
   }
 
+  // TODO: smithy-dafny-conversion library
   @Override
   public String listShape(final ListShape shape) {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+    if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
+      );
+    }
     final StringBuilder typeConversionMethodBuilder = new StringBuilder();
     final MemberShape memberShape = shape.getMember();
     final Shape targetShape = context
@@ -372,7 +433,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       	}
       	fieldValue = append(fieldValue, %s)}
       	""".formatted(
-          GoCodegenUtils.getType(symbol, shape),
+          GoCodegenUtils.getType(symbol, shape, true),
           dataSource,
           dataSource,
           ShapeVisitorHelper.toNativeShapeVisitorWriter(
@@ -393,6 +454,15 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
   @Override
   public String mapShape(final MapShape shape) {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+    if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
+      );
+    }
     final StringBuilder typeConversionMethodBuilder = new StringBuilder();
     final MemberShape keyMemberShape = shape.getKey();
     final MemberShape valueMemberShape = shape.getValue();
@@ -449,6 +519,15 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
   @Override
   public String booleanShape(final BooleanShape shape) {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+    if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
+      );
+    }
     if (this.isOptional) {
       return """
       return func() *bool {
@@ -474,46 +553,93 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
   @Override
   public String stringShape(final StringShape shape) {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+    if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
+      );
+    }
     if (shape.hasTrait(EnumTrait.class)) {
-      return """
-         return func () *%s.%s {
-         var u %s.%s
-                     if %s == nil {
-                         return nil
-                     }
-      	inputEnum := %s.(%s)
-      	index := -1;
-      	for allEnums := dafny.Iterate(%s{}.AllSingletonConstructors()); ; {
-      		enum, ok := allEnums()
-      		if ok {
-      			index++
-      			if enum.(%s).Equals(inputEnum) {
-      				break;
-      			}
-      		}
-      	}
+      if (this.isOptional) {
+        return """
+          return func () *%s.%s {
+          var u %s.%s
+          if %s == nil {
+              return nil
+          }
+        	inputEnum := %s.(%s)
+        	index := -1;
+        	for allEnums := dafny.Iterate(%s{}.AllSingletonConstructors()); ; {
+        		enum, ok := allEnums()
+        		if ok {
+        			index++
+        			if enum.(%s).Equals(inputEnum) {
+        				break;
+        			}
+        		}
+        	}
 
-      	return &u.Values()[index]
-      }()""".formatted(
-          SmithyNameResolver.smithyTypesNamespace(shape),
-          context.symbolProvider().toSymbol(shape).getName(),
-          SmithyNameResolver.smithyTypesNamespace(shape),
-          context.symbolProvider().toSymbol(shape).getName(),
-          dataSource,
-          dataSource,
-          DafnyNameResolver.getDafnyType(
-            shape,
-            context.symbolProvider().toSymbol(shape)
-          ),
-          DafnyNameResolver.getDafnyCompanionStructType(
-            shape,
-            context.symbolProvider().toSymbol(shape)
-          ),
-          DafnyNameResolver.getDafnyType(
-            shape,
-            context.symbolProvider().toSymbol(shape)
-          )
-        );
+        	return &u.Values()[index]
+        }()""".formatted(
+            SmithyNameResolver.smithyTypesNamespace(shape),
+            context.symbolProvider().toSymbol(shape).getName(),
+            SmithyNameResolver.smithyTypesNamespace(shape),
+            context.symbolProvider().toSymbol(shape).getName(),
+            dataSource,
+            dataSource,
+            DafnyNameResolver.getDafnyType(
+              shape,
+              context.symbolProvider().toSymbol(shape)
+            ),
+            DafnyNameResolver.getDafnyCompanionStructType(
+              shape,
+              context.symbolProvider().toSymbol(shape)
+            ),
+            DafnyNameResolver.getDafnyType(
+              shape,
+              context.symbolProvider().toSymbol(shape)
+            )
+          );
+      } else {
+        return """
+          return func () %s.%s {
+          var u %s.%s
+        	inputEnum := %s.(%s)
+        	index := -1;
+        	for allEnums := dafny.Iterate(%s{}.AllSingletonConstructors()); ; {
+        		enum, ok := allEnums()
+        		if ok {
+        			index++
+        			if enum.(%s).Equals(inputEnum) {
+        				break;
+        			}
+        		}
+        	}
+
+        	return u.Values()[index]
+        }()""".formatted(
+            SmithyNameResolver.smithyTypesNamespace(shape),
+            context.symbolProvider().toSymbol(shape).getName(),
+            SmithyNameResolver.smithyTypesNamespace(shape),
+            context.symbolProvider().toSymbol(shape).getName(),
+            dataSource,
+            DafnyNameResolver.getDafnyType(
+              shape,
+              context.symbolProvider().toSymbol(shape)
+            ),
+            DafnyNameResolver.getDafnyCompanionStructType(
+              shape,
+              context.symbolProvider().toSymbol(shape)
+            ),
+            DafnyNameResolver.getDafnyType(
+              shape,
+              context.symbolProvider().toSymbol(shape)
+            )
+          );
+      }
     }
 
     //Handle the @utf8Bytes Trait
@@ -568,6 +694,15 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
   @Override
   public String integerShape(final IntegerShape shape) {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+    if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
+      );
+    }
     if (isOptional) {
       return (
         """
@@ -592,6 +727,15 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
   @Override
   public String longShape(final LongShape shape) {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+    if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
+      );
+    }
     if (isOptional) {
       return (
         """
@@ -617,6 +761,15 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
   @Override
   public String doubleShape(final DoubleShape shape) {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+    if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
+      );
+    }
     writer.addUseImports(SmithyGoDependency.MATH);
     if (isOptional) {
       return """
@@ -653,6 +806,15 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
   @Override
   public String unionShape(final UnionShape shape) {
     writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+    if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSdkNamespace(
+          shape.getId().getNamespace()
+        ),
+        "types",
+        SmithyNameResolver.smithyTypesNamespace(shape)
+      );
+    }
 
     String nilCheck = "";
     if (isOptional) {
@@ -687,18 +849,17 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       // unwrap union type, assert it then convert it to its member type with Dtor_ (example: Dtor_BlobValue()). unionDataSource is not a wrapper object until now.
       String unionDataSource =
         rawUnionDataSource +
-        ".Dtor_" +
-        memberName.replace(shape.getId().getName().concat("Member"), "") +
-        "()";
-
+        ".Dtor_%s()".formatted(
+            DafnyNameResolver.dafnyCompilesExtra_(member.getMemberName())
+          );
       final boolean isMemberShapePointable =
         (GoPointableIndex.of(context.model()).isPointable(member)) &&
         !targetShape.isStructureShape();
       final String pointerForPointableShape = isMemberShapePointable ? "*" : "";
       final String isMemberCheck =
-        "if ((%s).%s()) {".formatted(
+        "if ((%s).Is_%s()) {".formatted(
             rawUnionDataSource,
-            memberName.replace(shape.getId().getName().concat("Member"), "Is_")
+            DafnyNameResolver.dafnyCompilesExtra_(member.getMemberName())
           );
 
       String wrappedDataSource = "";
@@ -745,5 +906,59 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         %s
         return union
     """.formatted(functionInit, eachMemberInUnion);
+  }
+
+  @Override
+  public String timestampShape(final TimestampShape shape) {
+    writer.addImport("time");
+    if (isOptional) {
+      return """
+      	return func() *time.Time {
+      	var s string
+      	if %s == nil {
+      		return nil
+      	}
+      	for i := dafny.Iterate(%s.(dafny.Sequence)); ; {
+      		val, ok := i()
+      		if !ok {
+      			break
+      		} else {
+      			s = s + string(val.(dafny.Char))
+      		}
+      	}
+      	if len(s) == 0 {
+      		return nil
+      	} else {
+      		t, err := time.Parse("2006-01-02T15:04:05.999999Z", s)
+      		if err != nil {
+      			panic(err)
+      		}
+      		return &t
+      	}
+      }()""".formatted(dataSource, dataSource);
+    } else {
+      return """
+      	return func() time.Time {
+      	var s string
+
+      	for i := dafny.Iterate(%s); ; {
+      		val, ok := i()
+      		if !ok {
+      			break
+      		} else {
+      			s = s + string(val.(dafny.Char))
+      		}
+      	}
+      	if len(s) == 0 {
+      		panic("timestamp string is empty")
+      	} else {
+      		t, err := time.Parse("2006-01-02T15:04:05.999999Z", s)
+      		if err != nil {
+      			panic(err)
+      		}
+      		return t
+      	}
+      }()""".formatted(dataSource);
+    }
   }
 }

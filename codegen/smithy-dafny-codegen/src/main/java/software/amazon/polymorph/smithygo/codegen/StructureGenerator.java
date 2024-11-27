@@ -15,26 +15,18 @@
 
 package software.amazon.polymorph.smithygo.codegen;
 
-import static software.amazon.polymorph.smithygo.codegen.SymbolUtils.POINTABLE;
-
-import java.math.BigDecimal;
 import java.util.HashSet;
-import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
+import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
-import software.amazon.polymorph.traits.DafnyUtf8BytesTrait;
 import software.amazon.polymorph.traits.ReferenceTrait;
+import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.codegen.core.SymbolProvider;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.shapes.MemberShape;
-import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.shapes.StructureShape;
 import software.amazon.smithy.model.traits.ErrorTrait;
-import software.amazon.smithy.model.traits.LengthTrait;
-import software.amazon.smithy.model.traits.RangeTrait;
-import software.amazon.smithy.model.traits.RequiredTrait;
 import software.amazon.smithy.model.traits.StreamingTrait;
 import software.amazon.smithy.utils.SetUtils;
 
@@ -66,8 +58,7 @@ public final class StructureGenerator implements Runnable {
     this.symbolProvider = context.symbolProvider();
     this.writer = writer;
     this.shape = shape;
-    this.validationGenerator =
-      new ValidationGenerator(model, symbolProvider, writer);
+    this.validationGenerator = new ValidationGenerator(context, writer);
   }
 
   @Override
@@ -135,6 +126,17 @@ public final class StructureGenerator implements Runnable {
               SmithyNameResolver.shapeNamespace(
                 model.expectShape(refShape.getReferentId())
               );
+            if (
+              model
+                .expectShape(refShape.getReferentId())
+                .hasTrait(ServiceTrait.class)
+            ) {
+              writer.addImport(
+                SmithyNameResolver.getGoModuleNameForSdkNamespace(
+                  refShape.getReferentId().getNamespace()
+                )
+              );
+            }
           }
           if (
             !member
@@ -150,7 +152,15 @@ public final class StructureGenerator implements Runnable {
             );
           }
         } else {
-          if (
+          if (SmithyNameResolver.isShapeFromAWSSDK(targetShape)) {
+            writer.addImportFromModule(
+              SmithyNameResolver.getGoModuleNameForSdkNamespace(
+                targetShape.getId().getNamespace()
+              ),
+              "types",
+              SmithyNameResolver.smithyTypesNamespace(targetShape)
+            );
+          } else if (
             !member
               .toShapeId()
               .getNamespace()

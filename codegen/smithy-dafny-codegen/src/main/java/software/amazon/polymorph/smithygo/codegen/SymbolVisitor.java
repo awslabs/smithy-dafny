@@ -20,8 +20,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 import software.amazon.polymorph.smithygo.codegen.knowledge.GoPointableIndex;
+import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
 import software.amazon.polymorph.traits.ReferenceTrait;
+import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.CodegenException;
 import software.amazon.smithy.codegen.core.ReservedWordSymbolProvider;
 import software.amazon.smithy.codegen.core.ReservedWords;
@@ -261,7 +263,7 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
     return String.format(
       "%sMember%s",
       getDefaultShapeName(union),
-      getDefaultMemberName(member)
+      member.getMemberName()
     );
   }
 
@@ -270,6 +272,9 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
       settings.getService(),
       ServiceShape.class
     );
+    if (shape.hasTrait(ServiceTrait.class)) {
+      return SmithyNameResolver.getAwsServiceClientName();
+    }
     return StringUtils.capitalize(
       removeLeadingInvalidIdentCharacters(shape.getId().getName(serviceShape))
     );
@@ -354,6 +359,16 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
     Symbol reference = toSymbol(shape.getMember());
     // Shape name will be unused for symbols that represent a slice, but in the event it does we set the collection
     // shape's name to make debugging simpler.
+    if (
+      model
+        .expectShape(shape.getMember().getTarget())
+        .hasTrait(ReferenceTrait.class)
+    ) {
+      reference =
+        toSymbol(model.expectShape(shape.getMember().getTarget()))
+          .getProperty("Referred", Symbol.class)
+          .get();
+    }
     return symbolBuilderFor(shape, getDefaultShapeName(shape))
       .putProperty(SymbolUtils.GO_SLICE, true)
       .putProperty(
@@ -384,19 +399,21 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
   }
 
   private Symbol.Builder symbolBuilderFor(Shape shape, String typeName) {
+    final String namespace;
+    if (shape.hasTrait(ServiceTrait.class)) {
+      namespace =
+        shape.expectTrait(ServiceTrait.class).getSdkId().toLowerCase();
+    } else {
+      namespace = SmithyNameResolver.smithyTypesNamespace(shape);
+    }
     if (pointableIndex.isPointable(shape)) {
       return SymbolUtils.createPointableSymbolBuilder(
         shape,
         typeName,
-        SmithyNameResolver.smithyTypesNamespace(shape)
+        namespace
       );
     }
-
-    return SymbolUtils.createValueSymbolBuilder(
-      shape,
-      typeName,
-      SmithyNameResolver.smithyTypesNamespace(shape)
-    );
+    return SymbolUtils.createValueSymbolBuilder(shape, typeName, namespace);
   }
 
   private Symbol.Builder symbolBuilderFor(
@@ -524,7 +541,7 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
       return symbolBuilderFor(
         shape,
         name,
-        SmithyNameResolver.smithyTypesNamespace(settings.getService(model))
+        SmithyNameResolver.smithyTypesNamespace(shape)
       )
         .definitionFile(
           "./%s/enums.go".formatted(
@@ -574,8 +591,21 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
       var referredShape = model.expectShape(
         shape.expectTrait(ReferenceTrait.class).getReferentId()
       );
-      var isService = shape.expectTrait(ReferenceTrait.class).isService();
-      if (isService) {
+      var isResource = !shape.expectTrait(ReferenceTrait.class).isService();
+      if (isResource || referredShape.hasTrait(ServiceTrait.class)) {
+        final var typeName = referredShape.hasTrait(ServiceTrait.class)
+          ? getDefaultShapeName(referredShape)
+          : "I".concat(getDefaultShapeName(referredShape));
+        final var isPointable = referredShape.hasTrait(ServiceTrait.class)
+          ? true
+          : false;
+        builder.putProperty(
+          "Referred",
+          symbolBuilderFor(referredShape, typeName)
+            .putProperty(SymbolUtils.POINTABLE, isPointable)
+            .build()
+        );
+      } else {
         builder.putProperty(
           "Referred",
           symbolBuilderFor(
@@ -584,16 +614,6 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
             SmithyNameResolver.shapeNamespace(referredShape)
           )
             .putProperty(SymbolUtils.POINTABLE, true)
-            .build()
-        );
-      } else {
-        builder.putProperty(
-          "Referred",
-          symbolBuilderFor(
-            referredShape,
-            "I".concat(getDefaultShapeName(referredShape))
-          )
-            .putProperty(SymbolUtils.POINTABLE, false)
             .build()
         );
       }
@@ -626,7 +646,7 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
     return symbolBuilderFor(
       shape,
       name,
-      SmithyNameResolver.smithyTypesNamespace(settings.getService(model))
+      SmithyNameResolver.smithyTypesNamespace(shape)
     )
       .definitionFile("./types/types.go")
       .build();
