@@ -105,6 +105,7 @@ transpile_implementation:
 
 build_dafny_stdlibs:
 	dafny build -t:lib --output DafnyStandardLibraries-smithy-dafny-subset.doo DafnyStandardLibraries-smithy-dafny-subset.toml
+	rm -rf DafnyStandardLibraries-smithy-dafny-subset-lib
 
 # Override SharedMakefile's build_java to not install
 # StandardLibrary as a dependency
