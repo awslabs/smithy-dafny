@@ -6,7 +6,10 @@ include "../src/Index.dfy"
 module TestComAmazonawsS3 {
     import Com.Amazonaws.S3
     import opened StandardLibrary.UInt
+    import opened StandardLibrary.Streams
     import opened Wrappers
+    import opened Std.Enumerators
+    import opened Std.Aggregators
 
     const testBucket := "s3-dafny-test-bucket"
     const testObjectKey := "smithy-dafny-test-model-object-key"
@@ -18,11 +21,12 @@ module TestComAmazonawsS3 {
                 Key := testObjectKey
             )
         );
+        var s := new SeqDataStream([ 97, 115, 100, 102 ], 2);
         PutObjectTest(
             input := S3.Types.PutObjectRequest(
                 Bucket := testBucket,
                 Key := testObjectKey,
-                Body := Wrappers.Some([ 97, 115, 100, 102 ])
+                Body := Wrappers.Some(s)
             )
         );
         GetObjectTest(
@@ -48,7 +52,7 @@ module TestComAmazonawsS3 {
 
     method GetObjectTest(
         nameonly input: S3.Types.GetObjectRequest,
-        nameonly expectedBody: S3.Types.StreamingBlob
+        nameonly expectedBody: BoundedInts.bytes
     )
     {
         var client :- expect S3.S3Client();
@@ -60,7 +64,13 @@ module TestComAmazonawsS3 {
         // we only care about the Body
         var MyBody := ret.value.Body;
         expect MyBody.Some?;
-        expect MyBody.value == expectedBody;
+
+        // TODO: These need to be generated as postconditions on GetObject instead
+        assume {:axiom} fresh(MyBody.value.Repr);
+        assume {:axiom} MyBody.value.Valid();
+        
+        var bodyValue := Collect(MyBody.value);
+        expect bodyValue == expectedBody;
     }
 
     method GetObjectTestFailureNoSuchKey(
@@ -100,5 +110,14 @@ module TestComAmazonawsS3 {
         var ret := client.DeleteObject(input);
 
         expect(ret.Success?);
+    }
+
+    method Collect(e: DataStream) returns (s: BoundedInts.bytes) 
+        requires e.Valid()
+        modifies e.Repr
+    {
+        var a := new Collector();
+        ForEach(e, a);
+        return Seq.Flatten(a.values);
     }
 }

@@ -182,7 +182,7 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
   /*
    * Rewindable stream of a sequence with a configured chunk size.
    */
-  class SeqDataStream<bytes> extends DataStream {
+  class SeqDataStream extends DataStream {
 
     const s: BoundedInts.bytes
     const chunkSize: uint64
