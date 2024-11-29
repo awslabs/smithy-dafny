@@ -67,6 +67,9 @@ public class SmithyNameResolver {
       final String sdkName = shapeNameSpace
         .substring(shapeNameSpace.lastIndexOf(".") + 1)
         .toLowerCase();
+      if (shape.hasTrait(ServiceTrait.class)) {
+        return sdkName;
+      }
       return sdkName.concat("types");
     }
     return shapeNameSpace
