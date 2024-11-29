@@ -59,7 +59,7 @@ module SimpleStreamingImpl refines AbstractSimpleStreamingOperations {
     // TODO: Actually compute the binary
     var fakeBinary: seq<BoundedInts.bytes> := [[12], [34, 56]];
     var fakeBinaryEnumerator := new SeqEnumerator(fakeBinary);
-    var fakeBinaryStream := new EnumeratorDataStream(fakeBinaryEnumerator, 3 as BoundedInts.uint64, [12, 34, 56]);
+    var fakeBinaryStream := new EnumeratorDataStream(fakeBinaryEnumerator, 3 as BoundedInts.uint64);
     
     return Success(BinaryOfOutput(binary := fakeBinaryStream));
   }
@@ -71,8 +71,10 @@ module SimpleStreamingImpl refines AbstractSimpleStreamingOperations {
   method Chunks ( config: InternalConfig , input: ChunksInput )
     returns (output: Result<ChunksOutput, Error>)
   {
+    // TODO: for now
+    assume {:axiom} input.bytesIn.history == [];
     var chunker := new Chunker(input.bytesIn, input.chunkSize);
-    var chunkerStream := new EnumeratorDataStream(chunker, input.bytesIn.ContentLength(), [12, 34, 56]);
+    var chunkerStream := new EnumeratorDataStream(chunker, input.bytesIn.ContentLength());
     
     return Success(ChunksOutput(bytesOut := chunkerStream));
   }
@@ -95,12 +97,18 @@ module Chunker {
     var chunkBuffer: BoundedInts.bytes
 
     constructor(upstream: Enumerator<BoundedInts.bytes>, chunkSize: CountingInteger)
+      ensures Valid()
+      ensures history == []
     {
       this.buffer := new Collector<BoundedInts.bytes>();
       this.upstream := upstream;
 
       this.chunkSize := chunkSize;
       chunkBuffer := [];
+      history := [];
+      Repr := {this} + upstream.Repr;
+      new;
+      assume {:axiom} Valid();
     }
 
     method Process(event: Option<BoundedInts.bytes>, a: Accumulator<BoundedInts.bytes>)

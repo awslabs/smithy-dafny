@@ -21,7 +21,8 @@ module TestComAmazonawsS3 {
                 Key := testObjectKey
             )
         );
-        var s := new SeqDataStream([ 97, 115, 100, 102 ], 2);
+        var s: DataStream := new SeqDataStream([ 97, 115, 100, 102 ], 2);
+        expect s is RewindableDataStream;
         PutObjectTest(
             input := S3.Types.PutObjectRequest(
                 Bucket := testBucket,

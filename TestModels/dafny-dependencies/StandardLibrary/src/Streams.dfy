@@ -11,6 +11,19 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
   type EventStream<T> = Enumerator<T>
 
   trait DataStream extends Enumerator<BoundedInts.bytes> {
+    // TODO: This should be an Option<uint64>, 
+    // but that ends up running into a conflict
+    // when trying to import Wrappers and Std.Wrappers at the same time.
+    function ContentLength(): (res: uint64)
+      requires Valid()
+      reads this, Repr
+
+    function ConcatenatedOutputs(history: seq<((), Option<bytes>)>): bytes {
+      Flatten(Enumerated(Outputs(history)))
+    }
+  }
+
+  trait RewindableDataStream extends DataStream {
 
     ghost const data: BoundedInts.bytes
 
@@ -22,13 +35,6 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
       ensures Valid() ==> CanProduce(history)
       decreases height, 0
 
-    function ConcatenatedOutputs(history: seq<((), Option<bytes>)>): bytes {
-      Flatten(Enumerated(Outputs(history)))
-    }
-
-    // TODO: This should be an Option<uint64>, 
-    // but that ends up running into a conflict
-    // when trying to import Wrappers and Std.Wrappers at the same time.
     function ContentLength(): (res: uint64)
       requires Valid()
       reads this, Repr
@@ -104,8 +110,12 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
       && this in Repr
       && ValidComponent(wrapped)
       && CanProduce(history)
-      && |data| <= UINT64_MAX as int
-      && length as int == |data|
+    }
+
+    ghost predicate CanProduce(history: seq<((), Option<bytes>)>)
+      decreases height
+    {
+      && (forall o <- Enumerated(Outputs(history)) :: 0 < |o|)
     }
 
     lemma {:axiom} ProducesTerminated(history: seq<((), Option<BoundedInts.bytes>)>)
@@ -117,16 +127,14 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
       wrapped.Limit()
     }
 
-    constructor(wrapped: Enumerator<BoundedInts.bytes>, length: uint64, ghost data: BoundedInts.bytes) 
+    constructor(wrapped: Enumerator<BoundedInts.bytes>, length: uint64) 
       requires wrapped.Valid()
       requires wrapped.history == []
-      requires |data| <= UINT64_MAX as int
-      requires length as int == |data|
       ensures Valid()
+      ensures fresh(Repr - wrapped.Repr)
     {
       this.wrapped := wrapped;
       this.length := length;
-      this.data := data;
 
       this.history := [];
       this.Repr := {this} + wrapped.Repr;
@@ -136,7 +144,6 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
     function ContentLength(): (res: uint64)
       requires Valid()
       reads this, Repr
-      ensures res as int == |data|
     {
       length
     }
@@ -145,27 +152,6 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
       decreases height, 1
     {
       false
-    }
-
-    function Position(): (res: uint64)
-      requires Rewindable()
-      reads this, Repr
-      ensures res as int <= |data|
-    {
-      // Unreachable
-      assert false;
-      0
-    }
-
-    method Seek(newPosition: uint64)
-      requires Valid()
-      requires Rewindable()
-      requires newPosition as int <= |data|
-      ensures Valid()
-      ensures Position() == newPosition
-    {
-      // Unreachable
-      assert false;
     }
 
     method Invoke(t: ()) returns (r: Option<BoundedInts.bytes>) 
@@ -182,12 +168,25 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
       // TODO: Work to do
       assume {:axiom} Ensures(t, r);
     }
+
+    method RepeatUntil(t: (), stop: Option<bytes> -> bool, ghost eventuallyStopsProof: ProducesTerminatedProof<(), Option<bytes>>)
+      requires Valid()
+      requires eventuallyStopsProof.Action() == this
+      requires eventuallyStopsProof.FixedInput() == t
+      requires eventuallyStopsProof.StopFn() == stop
+      requires forall i <- Consumed() :: i == t
+      modifies Repr
+      decreases Repr
+      ensures Valid()
+    {
+      DefaultRepeatUntil(this, t, stop, eventuallyStopsProof);
+    }
   }
 
   /*
    * Rewindable stream of a sequence with a configured chunk size.
    */
-  class SeqDataStream extends DataStream {
+  class SeqDataStream extends RewindableDataStream {
 
     const s: BoundedInts.bytes
     const chunkSize: uint64

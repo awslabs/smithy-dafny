@@ -1,7 +1,7 @@
 
 from _dafny import Seq
 from smithy_python.interfaces.blobs import ByteStream
-from smithy_dafny_standard_library.internaldafny.generated.StandardLibrary_Streams import DataStream
+from smithy_dafny_standard_library.internaldafny.generated.StandardLibrary_Streams import DataStream, RewindableDataStream
 from smithy_dafny_standard_library.internaldafny.generated.Std_Enumerators import Enumerator
 from smithy_dafny_standard_library.internaldafny.generated.Std_Wrappers import Option, Option_Some, Option_None
 
@@ -9,10 +9,12 @@ from smithy_dafny_standard_library.internaldafny.generated.Std_Wrappers import O
 class DataStreamByteStream(ByteStream):
   
   def __init__(self, dafny_data_stream):
-    if not dafny_data_stream.Rewindable():
+    # TODO: This check could be more specific,
+    # since it's actually only a boto3 restriction.
+    if not isinstance(dafny_data_stream, RewindableDataStream):
       raise ValueError("Python requires rewindable streams")
-    if not dafny_data_stream.ContentLength().is_Some:
-      raise ValueError("Python requires streams with known lengths")
+    # if not dafny_data_stream.ContentLength().is_Some:
+    #   raise ValueError("Python requires streams with known lengths")
     self.dafny_data_stream = dafny_data_stream
 
   def read(self, size: int = -1) -> bytes:
@@ -34,7 +36,7 @@ class DataStreamByteStream(ByteStream):
       case 1:
         position = self.dafny_data_stream.Position() + offset
       case 2:
-        position = self.dafny_data_stream.ContentLength().value + offset
+        position = self.dafny_data_stream.ContentLength() + offset
     self.dafny_data_stream.Seek(position)
 
 

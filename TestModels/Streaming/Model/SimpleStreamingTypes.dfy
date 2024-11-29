@@ -338,6 +338,8 @@ abstract module AbstractSimpleStreamingOperations {
     returns (output: Result<ChunksOutput, Error>)
     requires
       && ValidInternalConfig?(config)
+      // TODO: smithy-dafny isn't yet generating this
+      && input.bytesIn.Valid() 
     modifies ModifiesInternalConfig(config)
     // Dafny will skip type parameters when generating a default decreases clause.
     decreases ModifiesInternalConfig(config)
