@@ -6,8 +6,8 @@ module SimpleStreamingTypes
 {
   import opened Wrappers
   import opened StandardLibrary.UInt
+  import opened StandardLibrary.Streams
   import opened UTF8
-  import opened Std.Enumerators
     // Generic helpers for verification of mock/unit tests.
   datatype DafnyCallEvent<I, O> = DafnyCallEvent(input: I, output: O)
 
@@ -17,17 +17,17 @@ module SimpleStreamingTypes
     nameonly number: int32
   )
   datatype BinaryOfOutput = | BinaryOfOutput (
-    nameonly binary: Enumerator<bytes>
+    nameonly binary: DataStream
   )
   datatype ChunksInput = | ChunksInput (
-    nameonly bytesIn: Enumerator<bytes> ,
+    nameonly bytesIn: DataStream ,
     nameonly chunkSize: CountingInteger
   )
   datatype ChunksOutput = | ChunksOutput (
-    nameonly bytesOut: Enumerator<bytes>
+    nameonly bytesOut: DataStream
   )
   datatype CountBitsInput = | CountBitsInput (
-    nameonly bits: Enumerator<bytes>
+    nameonly bits: DataStream
   )
   datatype CountBitsOutput = | CountBitsOutput (
     nameonly sum: int32
@@ -127,7 +127,7 @@ module SimpleStreamingTypes
   datatype SimpleStreamingConfig = | SimpleStreamingConfig (
 
                                    )
-  type StreamingBlob = Enumerator<bytes>
+  type StreamingBlob = DataStream
   datatype Error =
       // Local Error structures are listed here
     | OverflowError (
@@ -161,7 +161,9 @@ module SimpleStreamingTypes
     | CollectionOfErrors(list: seq<Error>, nameonly message: string)
       // The Opaque error, used for native, extern, wrapped or unknown errors
     | Opaque(obj: object)
-  type OpaqueError = e: Error | e.Opaque? witness *
+      // A better Opaque, with a visible string representation.
+    | OpaqueWithText(obj: object, objMessage : string)
+  type OpaqueError = e: Error | e.Opaque? || e.OpaqueWithText? witness *
   // This dummy subset type is included to make sure Dafny
   // always generates a _ExternBase___default.java class.
   type DummySubsetType = x: int | IsDummySubsetType(x) witness 1
@@ -174,8 +176,8 @@ abstract module AbstractSimpleStreamingService
 {
   import opened Wrappers
   import opened StandardLibrary.UInt
+  import opened StandardLibrary.Streams
   import opened UTF8
-  import opened Std.Enumerators
   import opened Types = SimpleStreamingTypes
   import Operations : AbstractSimpleStreamingOperations
   function method DefaultSimpleStreamingConfig(): SimpleStreamingConfig
@@ -278,8 +280,8 @@ abstract module AbstractSimpleStreamingService
 abstract module AbstractSimpleStreamingOperations {
   import opened Wrappers
   import opened StandardLibrary.UInt
+  import opened StandardLibrary.Streams
   import opened UTF8
-  import opened Std.Enumerators
   import opened Types = SimpleStreamingTypes
   type InternalConfig
   predicate ValidInternalConfig?(config: InternalConfig)

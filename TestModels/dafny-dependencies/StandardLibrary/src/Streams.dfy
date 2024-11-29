@@ -13,6 +13,8 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
   trait DataStream extends Enumerator<BoundedInts.bytes> {
 
     ghost const data: BoundedInts.bytes
+
+    // TODO: Probably need content type too
     
     ghost predicate Valid() 
       reads this, Repr 
