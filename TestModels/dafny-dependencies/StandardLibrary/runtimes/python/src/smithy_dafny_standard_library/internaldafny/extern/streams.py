@@ -9,12 +9,6 @@ from smithy_dafny_standard_library.internaldafny.generated.Std_Wrappers import O
 class DataStreamByteStream(ByteStream):
   
   def __init__(self, dafny_data_stream):
-    # TODO: This check could be more specific,
-    # since it's actually only a boto3 restriction.
-    if not isinstance(dafny_data_stream, RewindableDataStream):
-      raise ValueError("Python requires rewindable streams")
-    # if not dafny_data_stream.ContentLength().is_Some:
-    #   raise ValueError("Python requires streams with known lengths")
     self.dafny_data_stream = dafny_data_stream
 
   def read(self, size: int = -1) -> bytes:
@@ -25,6 +19,14 @@ class DataStreamByteStream(ByteStream):
       next = self.dafny_data_stream.Next()
     # Do NOT return None, because that indicates "no data right now, might be more later"
     return bytes(next.value) if next.is_Some else bytes()
+
+
+class RewindableDataStreamByteStream(DataStreamByteStream):
+
+  def __init__(self, dafny_data_stream):
+    if not isinstance(dafny_data_stream, RewindableDataStream):
+      raise ValueError("Rewindable stream required")
+    super().__init__(dafny_data_stream)
 
   def tell(self) -> int:
     return self.dafny_data_stream.Position()
@@ -37,7 +39,7 @@ class DataStreamByteStream(ByteStream):
         position = self.dafny_data_stream.Position() + offset
       case 2:
         position = self.dafny_data_stream.ContentLength() + offset
-    self.dafny_data_stream.Seek(position)
+    return self.dafny_data_stream.Seek(position)
 
 
 class StreamingBlobDataStream(DataStream):
@@ -54,4 +56,3 @@ class StreamingBlobDataStream(DataStream):
       return Option_Some(Seq(next))
     else:
       return Option_None()
-    
