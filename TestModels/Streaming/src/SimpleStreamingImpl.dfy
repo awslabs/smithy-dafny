@@ -4,6 +4,7 @@
 include "../Model/SimpleStreamingTypes.dfy"
 module SimpleStreamingImpl refines AbstractSimpleStreamingOperations {
 
+  import opened Std.Enumerators
   import opened Std.Aggregators
   import Std.Collections.Seq
   import opened Chunker
@@ -20,7 +21,7 @@ module SimpleStreamingImpl refines AbstractSimpleStreamingOperations {
   method CountBits ( config: InternalConfig , input: CountBitsInput )
     returns (output: Result<CountBitsOutput, Error>)
   {
-    var counter := new Folder<bytes, int>(0, (sum, byte) => sum + BytesBitCount(byte));
+    var counter := new Folder<BoundedInts.bytes, int>(0, (sum, byte) => sum + BytesBitCount(byte));
  
     ForEach(input.bits, counter);
 
@@ -33,11 +34,11 @@ module SimpleStreamingImpl refines AbstractSimpleStreamingOperations {
     }
   }
 
-  function method BytesBitCount(b: bytes): int {
+  function method BytesBitCount(b: BoundedInts.bytes): int {
     Seq.FoldLeft((sum, byte) => sum + BitCount(byte), 0 as int, b)
   }
 
-  function method BitCount(x: uint8): int {
+  function method BitCount(x: BoundedInts.uint8): int {
     if x == 0 then
       0
     else if x % 2 == 1 then
@@ -56,10 +57,11 @@ module SimpleStreamingImpl refines AbstractSimpleStreamingOperations {
 
   {
     // TODO: Actually compute the binary
-    var fakeBinary: seq<bytes> := [[12], [34, 56]];
+    var fakeBinary: seq<BoundedInts.bytes> := [[12], [34, 56]];
     var fakeBinaryEnumerator := new SeqEnumerator(fakeBinary);
+    var fakeBinaryStream := new EnumeratorDataStream(fakeBinaryEnumerator, 3 as BoundedInts.uint64, [12, 34, 56]);
     
-    return Success(BinaryOfOutput(binary := fakeBinaryEnumerator));
+    return Success(BinaryOfOutput(binary := fakeBinaryStream));
   }
 
 
@@ -70,25 +72,16 @@ module SimpleStreamingImpl refines AbstractSimpleStreamingOperations {
     returns (output: Result<ChunksOutput, Error>)
   {
     var chunker := new Chunker(input.bytesIn, input.chunkSize);
-
-    return Success(ChunksOutput(bytesOut := chunker));
+    var chunkerStream := new EnumeratorDataStream(chunker, input.bytesIn.ContentLength(), [12, 34, 56]);
+    
+    return Success(ChunksOutput(bytesOut := chunkerStream));
   }
 
-  method ChunksAlt ( config: InternalConfig , input: ChunksInput )
-    returns (output: Result<ChunksOutput, Error>)
-  {
-    var outStream := SomeOtherServiceOp(input.bytesIn);
-
-    return Success(ChunksOutput(bytesOut := outStream));
-  }
-
-  method SomeOtherServiceOp( input: StreamingBlob ) returns (r: StreamingBlob) {
-    // Imagine this was external
-    r := new SeqEnumerator([]);
-  }
 }
 
 module Chunker {
+
+  import Std.BoundedInts
 
   import opened Std.Wrappers
   import opened Types = SimpleStreamingTypes
@@ -96,21 +89,21 @@ module Chunker {
   import opened Std.Enumerators
   import opened Std.Aggregators
 
-  class Chunker extends Pipeline<bytes, bytes> {
+  class Chunker extends Pipeline<BoundedInts.bytes, BoundedInts.bytes> {
 
     const chunkSize: CountingInteger
-    var chunkBuffer: bytes
+    var chunkBuffer: BoundedInts.bytes
 
-    constructor(upstream: Enumerator<bytes>, chunkSize: CountingInteger)
+    constructor(upstream: Enumerator<BoundedInts.bytes>, chunkSize: CountingInteger)
     {
-      this.buffer := new Collector<bytes>();
+      this.buffer := new Collector<BoundedInts.bytes>();
       this.upstream := upstream;
 
       this.chunkSize := chunkSize;
       chunkBuffer := [];
     }
 
-    method Process(event: Wrappers.Option<bytes>, a: Accumulator<bytes>)
+    method Process(event: Option<BoundedInts.bytes>, a: Accumulator<BoundedInts.bytes>)
       requires Valid()
       requires a.Valid()
       requires Repr !! a.Repr

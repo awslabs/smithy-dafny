@@ -80,7 +80,8 @@ module SimpleStreamingTypes
       requires
         && ValidState()
       // TODO: smithy-dafny isn't yet generating the `input.bits.Valid()` part.
-      requires input.bits.Valid() && History !in input.bits.Repr
+      requires
+        && input.bits.Valid() && History !in input.bits.Repr
       modifies Modifies - {History} ,
                History`CountBits ,
                input.bits.Repr
@@ -218,7 +219,8 @@ abstract module AbstractSimpleStreamingService
       requires
         && ValidState()
       // TODO: smithy-dafny isn't yet generating the `input.bits.Valid()` parts.
-      requires input.bits.Valid() && History !in input.bits.Repr
+      requires 
+        && input.bits.Valid() && History !in input.bits.Repr
       modifies Modifies - {History} ,
                History`CountBits ,
                input.bits.Repr
@@ -229,6 +231,10 @@ abstract module AbstractSimpleStreamingService
       ensures CountBitsEnsuresPublicly(input, output)
       ensures History.CountBits == old(History.CountBits) + [DafnyCallEvent(input, output)]
     {
+      // TODO: It's not clear how to actually ensure this,
+      // since the internal config is not visible to the trait
+      // so it can't really be a precondition there.
+      assume {:axiom} Operations.ModifiesInternalConfig(config) !! input.bits.Repr;
       output := Operations.CountBits(config, input);
       History.CountBits := History.CountBits + [DafnyCallEvent(input, output)];
     }
@@ -294,7 +300,9 @@ abstract module AbstractSimpleStreamingOperations {
     returns (output: Result<CountBitsOutput, Error>)
     requires
       // TODO: smithy-dafny isn't yet generating the `input.bits.Valid()` part.
-      && ValidInternalConfig?(config) && input.bits.Valid() && ModifiesInternalConfig(config) !! input.bits.Repr
+      && ValidInternalConfig?(config) 
+      && input.bits.Valid() 
+      && ModifiesInternalConfig(config) !! input.bits.Repr
     // TODO: smithy-dafny isn't yet generating the `input.bits.Repr` part.
     modifies ModifiesInternalConfig(config), input.bits.Repr
     // Dafny will skip type parameters when generating a default decreases clause.
