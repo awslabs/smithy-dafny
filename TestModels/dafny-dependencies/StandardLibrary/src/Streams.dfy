@@ -10,17 +10,39 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
   // Alias just for clarity
   type EventStream<T> = Enumerator<T>
 
+  //
+  // A Smithy data stream.
+  //
+  // Allows for streams that can only be read once,
+  // but see RewindableDataStream for a more specific trait
+  // that requires the ability to replay the enumeration,
+  // or seek to an arbitrary position (although this may take linear time).
+  // That requirement is not in this trait
+  // because there are lots of ways to implement a stream
+  // where having to replay forces buffering all previous values in memory,
+  // which often defeats the purpose of streaming in the first place.
+  // In particular, boto3 currently (quite implicitly)
+  // requires file-like streams with the ability to seek,
+  // but we don't want to force the same requirements on all streams.
+  //
+  // Known limitations:
+  //
+  //  * ContentLength should be an Option<uint64>, 
+  //    but that currently ends up running into a conflict
+  //    when trying to import Wrappers and Std.Wrappers at the same time.
+  //
   trait DataStream extends Enumerator<BoundedInts.bytes> {
-    // TODO: This should be an Option<uint64>, 
-    // but that ends up running into a conflict
-    // when trying to import Wrappers and Std.Wrappers at the same time.
+
     function ContentLength(): (res: uint64)
       requires Valid()
       reads this, Repr
 
-    function ConcatenatedOutputs(history: seq<((), Option<bytes>)>): bytes {
+    ghost function ConcatenatedOutputs(history: seq<((), Option<bytes>)>): bytes {
       Flatten(Enumerated(Outputs(history)))
     }
+
+    // TODO: refine the specification to relate ContentLength()
+    // to ConcatenatedOutputs(history)
   }
 
   trait RewindableDataStream extends DataStream {
@@ -68,25 +90,14 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
       DefaultRepeatUntil(this, t, stop, eventuallyStopsProof);
     }
 
-    /*
-     * Whether this stream can be read multiple times.
-     * If this is true, it is at least possible to seek to earlier positions.
-     * This does not necessarily mean seeking is constant time,
-     * because it may mean re-reading from the start of the stream.
-     */
-    predicate Rewindable()
-      decreases height, 1
-
     function Position(): (res: uint64)
       requires Valid()
-      requires Rewindable()
       reads this, Repr
       decreases height, 2
       ensures res as int <= |data|
 
     method Seek(newPosition: uint64)
       requires Valid()
-      requires Rewindable()
       requires newPosition as int <= |data|
       modifies Repr
       ensures Valid()
