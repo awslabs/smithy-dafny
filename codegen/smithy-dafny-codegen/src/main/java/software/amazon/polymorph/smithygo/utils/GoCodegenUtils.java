@@ -1,15 +1,26 @@
 package software.amazon.polymorph.smithygo.utils;
 
+import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
+
+import software.amazon.polymorph.smithygo.codegen.GoWriter;
 import software.amazon.polymorph.smithygo.codegen.SymbolUtils;
+import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
+import software.amazon.polymorph.traits.PositionalTrait;
+import software.amazon.polymorph.traits.ReferenceTrait;
 import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.Symbol;
+import software.amazon.smithy.codegen.core.SymbolProvider;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.knowledge.NeighborProviderIndex;
 import software.amazon.smithy.model.neighbor.NeighborProvider;
 import software.amazon.smithy.model.neighbor.Relationship;
 import software.amazon.smithy.model.neighbor.RelationshipType;
+import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.Shape;
+import software.amazon.smithy.model.shapes.ShapeType;
+import software.amazon.smithy.model.traits.EnumTrait;
+import software.amazon.smithy.model.traits.UnitTypeTrait;
 
 public class GoCodegenUtils {
 
@@ -95,5 +106,86 @@ public class GoCodegenUtils {
     }
 
     return false;
+  }
+
+  public static void importNamespace(final Shape shape, final GoWriter writer) {
+    var type = shape.getType();
+    if (shape.hasTrait(EnumTrait.class)) {
+      type = ShapeType.ENUM;
+    }
+    switch (type) {
+      case DOUBLE, STRING, BLOB, LIST, TIMESTAMP, MAP:
+        writer.addImportFromModule(DAFNY_RUNTIME_GO_LIBRARY_MODULE, "dafny");
+      case ENUM, STRUCTURE, UNION, RESOURCE:
+        writer.addImportFromModule(
+          SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+            shape.toShapeId().getNamespace()
+          ),
+          DafnyNameResolver.dafnyTypesNamespace(shape)
+        );
+    }
+  }
+
+  public static String getOperationalShapeInputName(
+    final Model model,
+    final OperationShape operationShape,
+    final SymbolProvider symbolProvider
+  ) {
+    return (
+      getInputOrOutputName(
+        model,
+        model.expectShape(operationShape.getInputShape()),
+        symbolProvider,
+        false
+      )
+    );
+  }
+
+  public static String getOperationalShapeOutputName(
+    final Model model,
+    final OperationShape operationShape,
+    final SymbolProvider symbolProvider
+  ) {
+    return (
+      getInputOrOutputName(
+        model,
+        model.expectShape(operationShape.getOutputShape()),
+        symbolProvider,
+        true
+      )
+    );
+  }
+
+  private static String getInputOrOutputName(
+    final Model model,
+    final Shape shape,
+    final SymbolProvider symbolProvider,
+    final Boolean includeDeference
+  ) {
+    if (shape.hasTrait(UnitTypeTrait.class)) {
+      return "";
+    } else if (shape.hasTrait(PositionalTrait.class)) {
+      Shape curShape = model.expectShape(
+        shape.getAllMembers().values().stream().findFirst().get().getTarget()
+      );
+      if (curShape.hasTrait(ReferenceTrait.class)) {
+        curShape =
+          model.expectShape(
+            curShape.expectTrait(ReferenceTrait.class).getReferentId()
+          );
+      }
+      return (
+        SmithyNameResolver.getSmithyType(
+          curShape,
+          symbolProvider.toSymbol(curShape)
+        )
+      );
+    } else {
+      return (
+        includeDeference
+          ? "*".concat(shape.getId().getName())
+          : shape.getId().getName()
+      );
+    }
   }
 }

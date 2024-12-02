@@ -410,8 +410,11 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     String nilWrapIfRequired = "nil";
     String someWrapIfRequired = "%s";
     String returnType = "dafny.Sequence";
+    var nilCheck = "";
     if (this.isOptional) {
       nilWrapIfRequired = "Wrappers.Companion_Option_.Create_None_()";
+      nilCheck =
+        "if %s == nil {return %s}".formatted(dataSource, nilWrapIfRequired);
       someWrapIfRequired = "Wrappers.Companion_Option_.Create_Some_(%s)";
       returnType = "Wrappers.Option";
     }
@@ -419,7 +422,7 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     typeConversionMethodBuilder.append(
       """
       func () %s {
-             if %s == nil { return %s }
+             %s
              var fieldValue []interface{} = make([]interface{}, 0)
              for _, val := range %s {
                  element := %s
@@ -428,8 +431,7 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
              return %s
       }()""".formatted(
           returnType,
-          dataSource,
-          nilWrapIfRequired,
+          nilCheck,
           dataSource,
           ShapeVisitorHelper.toDafnyShapeVisitorWriter(
             memberShape,
@@ -705,7 +707,13 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
       context.symbolProvider().toSymbol(shape)
     );
 
+    String nilCheck = "";
     if (this.isOptional) {
+      nilCheck =
+        """
+        if %s == nil {
+          return Wrappers.Companion_Option_.Create_None_()
+        }""".formatted(dataSource);
       someWrapIfRequired = "Wrappers.Companion_Option_.Create_Some_(%s(%s))";
       returnType = "Wrappers.Option";
     }
@@ -715,7 +723,8 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     final String functionInit =
       """
       func() %s {
-          switch %s.(type) {""".formatted(returnType, dataSource);
+          %s
+          switch %s.(type) {""".formatted(returnType, nilCheck, dataSource);
 
     final StringBuilder eachMemberInUnion = new StringBuilder();
     for (final var member : shape.getAllMembers().values()) {
@@ -775,7 +784,7 @@ public class SmithyToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     final String defaultCase =
       """
               default:
-      panic("Unhandled union type")
+                panic("Unhandled union type")
           }
       }()""";
     return """

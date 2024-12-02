@@ -66,7 +66,12 @@ public class DafnyNameResolver {
       // TODO: Figure out the dafny type for TIMESTAMP
       case DOUBLE, STRING, BLOB, LIST, TIMESTAMP:
         return "dafny.Sequence";
-      // default catches a case where users may author their own classes that implement and extend resource (ExtendableTrait)
+      case RESOURCE:
+        return DafnyNameResolver
+          .dafnyTypesNamespace(shape)
+          .concat(DOT)
+          .concat("I")
+          .concat(dafnyCompilesExtra_(shape.toShapeId().getName()));
       // ENUM, STRUCTURE, UNION can be removed but for posterity it looks great to see all the shapes being covered.
       case ENUM, STRUCTURE, UNION:
       default:

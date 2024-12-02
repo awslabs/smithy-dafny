@@ -176,12 +176,18 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         );
     }
     if (!this.isOptional) {
-      return "return &%s{%s.(*%s)}".formatted(
+      return """
+      value, ok := %s.(%s)
+      if !ok {
+        panic("invalid type found.")
+      }
+      return &%s{value}
+      """.formatted(
+          dataSource,
+          DafnyNameResolver.getDafnyInterfaceClient(serviceShape),
           namespace.concat(
             context.symbolProvider().toSymbol(serviceShape).getName()
-          ),
-          dataSource,
-          DafnyNameResolver.getDafnyClient(serviceShape.toShapeId().getName())
+          )
         );
     }
     return """
@@ -189,17 +195,21 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         if %s == nil {
             return nil;
         }
-        return &%s{%s.(*%s)}
+        value, ok := %s.(%s)
+        if !ok {
+          panic("invalid type found.")
+        }
+        return &%s{value}
     }()""".formatted(
         namespace.concat(
           context.symbolProvider().toSymbol(serviceShape).getName()
         ),
         dataSource,
+        dataSource,
+        DafnyNameResolver.getDafnyInterfaceClient(serviceShape),
         namespace.concat(
           context.symbolProvider().toSymbol(serviceShape).getName()
-        ),
-        dataSource,
-        DafnyNameResolver.getDafnyClient(serviceShape.toShapeId().getName())
+        )
       );
   }
 
@@ -318,6 +328,18 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
     final String referenceType = (this.isOptional) ? "&" : "";
 
     final var typeConversionMethodBuilder = new StringBuilder();
+    if (this.isOptional) {
+      final String unAssertedDataSource = dataSource.startsWith("input.(")
+        ? "input"
+        : dataSource;
+      typeConversionMethodBuilder.append(
+        """
+          if %s == nil {
+              return nil
+          }
+        """.formatted(unAssertedDataSource)
+      );
+    }
     typeConversionMethodBuilder.append(
       "return %1$s%2$s{".formatted(
           referenceType,
@@ -364,19 +386,11 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         targetShape.isStructureShape() &&
         !targetShape.hasTrait(ReferenceTrait.class);
       final var derivedDataSource =
-        "%1$s%2$s%3$s%4$s%5$s".formatted(
+        "%1$s%2$s%3$s%4$s".formatted(
             dataSource,
             maybeAssertion,
             DtorConversion,
-            memberShape.isOptional() ? ".UnwrapOr(nil)" : "",
-            assertionRequired
-              ? ".(%s)".formatted(
-                  DafnyNameResolver.getDafnyType(
-                    targetShape,
-                    context.symbolProvider().toSymbol(memberShape)
-                  )
-                )
-              : ""
+            memberShape.isOptional() ? ".UnwrapOr(nil)" : ""
           );
 
       typeConversionMethodBuilder.append(
@@ -420,12 +434,18 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       .expectShape(memberShape.getTarget());
     final var symbol = context.symbolProvider().toSymbol(shape);
     final boolean assertionRequired = targetShape.isStructureShape();
+    if (isOptional) {
+      typeConversionMethodBuilder.append(
+        """
+        if %s == nil {
+          return nil
+        }
+        """.formatted(dataSource)
+      );
+    }
     typeConversionMethodBuilder.append(
       """
-       var fieldValue %s
-      if %s == nil {
-          return nil
-      }
+      fieldValue := make(%s, 0)
       for i := dafny.Iterate(%s.(dafny.Sequence)); ; {
       	val, ok := i()
       	if !ok {
@@ -434,7 +454,6 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       	fieldValue = append(fieldValue, %s)}
       	""".formatted(
           GoCodegenUtils.getType(symbol, shape, true),
-          dataSource,
           dataSource,
           ShapeVisitorHelper.toNativeShapeVisitorWriter(
             memberShape,
