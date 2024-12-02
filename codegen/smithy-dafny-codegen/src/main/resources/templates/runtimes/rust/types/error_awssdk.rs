@@ -3,7 +3,10 @@ pub enum Error {
     $modeledErrorVariants:L
     Opaque {
         obj: ::dafny_runtime::Object<dyn ::std::any::Any>,
-	alt_text : String
+    },
+    OpaqueWithText {
+        obj: ::dafny_runtime::Object<dyn ::std::any::Any>,
+        objMessage: ::std::string::String,
     },
 }
 

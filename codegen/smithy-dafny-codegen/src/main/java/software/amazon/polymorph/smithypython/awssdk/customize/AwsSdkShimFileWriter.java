@@ -86,6 +86,7 @@ public class AwsSdkShimFileWriter implements CustomFileWriter {
       );
   }
 
+  // create a Dafny string from the repr of `e`
   private static final String DAFNY_STRING_E =
     """
             _dafny.Seq(
@@ -163,10 +164,10 @@ public class AwsSdkShimFileWriter implements CustomFileWriter {
     writer.addStdlibImport("_dafny");
     if (hasOpenedIfBlock) {
       // If `hasOpenedIfBlock` is false, then codegen never wrote any errors,
-      // and this function should only cast to Opaque errors
+      // and this function should only cast to OpaqueWithText errors
       writer.write(
         """
-        return $L.Error_Opaque(obj=e, alt__text=$L)
+        return $L.Error_OpaqueWithText(obj=e, objMessage=$L)
         """,
         DafnyNameResolver.getDafnyPythonTypesModuleNameForShape(
           serviceShape.getId(),
@@ -176,11 +177,11 @@ public class AwsSdkShimFileWriter implements CustomFileWriter {
       );
     } else {
       // If `hasOpenedIfBlock` is true, then codegen wrote at least one error,
-      // and this function should only cast to Opaque error via `else`
+      // and this function should only cast to OpaqueWithText error via `else`
       writer.write(
         """
         else:
-          return $L.Error_Opaque(obj=e, alt__text=$L)
+            return $L.Error_OpaqueWithText(obj=e, objMessage=$L)
         """,
         DafnyNameResolver.getDafnyPythonTypesModuleNameForShape(
           serviceShape.getId(),

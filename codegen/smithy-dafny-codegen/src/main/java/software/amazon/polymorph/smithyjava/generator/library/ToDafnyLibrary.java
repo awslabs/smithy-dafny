@@ -25,6 +25,7 @@ import software.amazon.polymorph.smithyjava.nameresolver.Dafny;
 import software.amazon.polymorph.smithyjava.nameresolver.Native;
 import software.amazon.polymorph.smithyjava.unmodeled.CollectionOfErrors;
 import software.amazon.polymorph.smithyjava.unmodeled.OpaqueError;
+import software.amazon.polymorph.smithyjava.unmodeled.OpaqueWithTextError;
 import software.amazon.polymorph.traits.DafnyUtf8BytesTrait;
 import software.amazon.polymorph.traits.PositionalTrait;
 import software.amazon.polymorph.utils.ModelUtils;
@@ -83,6 +84,7 @@ public class ToDafnyLibrary extends ToDafny {
     toDafnyMethods.add(runtimeException());
     // OpaqueError
     toDafnyMethods.add(opaqueError());
+    toDafnyMethods.add(opaqueWithTextError());
     // CollectionError
     toDafnyMethods.add(collectionError());
     // Structures
@@ -161,6 +163,11 @@ public class ToDafnyLibrary extends ToDafny {
       OpaqueError.nativeClassName(subject.nativeNameResolver.modelPackage)
     );
     allNativeErrors.add(
+      OpaqueWithTextError.nativeClassName(
+        subject.nativeNameResolver.modelPackage
+      )
+    );
+    allNativeErrors.add(
       CollectionOfErrors.nativeClassName(
         subject.nativeNameResolver.modelPackage
       )
@@ -177,13 +184,7 @@ public class ToDafnyLibrary extends ToDafny {
         .endControlFlow()
     );
     return method
-      .addStatement(
-        "return $T.create_Opaque($L, dafny.DafnySequence.asString(java.util.Objects.nonNull($L.getMessage()) ? $L.getMessage() : \"\"))",
-        dafnyError,
-        VAR_INPUT,
-        VAR_INPUT,
-        VAR_INPUT
-      )
+      .addStatement("return $T.create_Opaque($L)", dafnyError, VAR_INPUT)
       .build();
   }
 
@@ -197,10 +198,23 @@ public class ToDafnyLibrary extends ToDafny {
       .returns(dafnyError)
       .addModifiers(PUBLIC_STATIC)
       .addParameter(opaqueError, VAR_INPUT)
+      .addStatement("return $T.create_Opaque($L.obj())", dafnyError, VAR_INPUT)
+      .build();
+  }
+
+  MethodSpec opaqueWithTextError() {
+    TypeName dafnyError = subject.dafnyNameResolver.abstractClassForError();
+    ClassName opaqueWithTextError = OpaqueWithTextError.nativeClassName(
+      subject.nativeNameResolver.modelPackage
+    );
+    return MethodSpec
+      .methodBuilder("Error")
+      .returns(dafnyError)
+      .addModifiers(PUBLIC_STATIC)
+      .addParameter(opaqueWithTextError, VAR_INPUT)
       .addStatement(
-        "return $T.create_Opaque($L.obj(), dafny.DafnySequence.asString(java.util.Objects.nonNull($L.altText()) ? $L.altText() : \"\"))",
+        "return $T.create_OpaqueWithText($L.obj(), dafny.DafnySequence.asString($L.objMessage()))",
         dafnyError,
-        VAR_INPUT,
         VAR_INPUT,
         VAR_INPUT
       )
