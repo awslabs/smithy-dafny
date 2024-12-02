@@ -1606,6 +1606,14 @@ public class TypeConversionCodegen {
         "return new %1$s(dafnyVal._obj);".formatted(
             DotNetNameResolver.baseClassForUnknownError()
           ),
+        "case %1$s dafnyVal:".formatted(
+            DotNetNameResolver.dafnyUnknownWithTextErrorTypeForServiceShape(
+              serviceShape
+            )
+          ),
+        "return new %1$s(dafnyVal._obj, dafnyVal._obj.ToString());".formatted(
+            DotNetNameResolver.baseClassForUnknownWithTextError()
+          ),
         "default:",
         "// The switch MUST be complete for _IError, so `value` MUST NOT be an _IError. (How did you get here?)",
         "return new %1$s();".formatted(
@@ -1718,20 +1726,20 @@ public class TypeConversionCodegen {
         "case %1$s exception:".formatted(
             DotNetNameResolver.baseClassForUnknownError()
           ),
-        "return new %1$s(exception, Dafny.Sequence<char>.FromString(exception.ToString()));".formatted(
+        "return new %1$s(exception);".formatted(
             DotNetNameResolver.dafnyUnknownErrorTypeForServiceShape(
               serviceShape
             )
           ),
         "case %1$s exception:".formatted(C_SHARP_SYSTEM_EXCEPTION),
-        "return new %1$s(exception, Dafny.Sequence<char>.FromString(exception.ToString()));".formatted(
+        "return new %1$s(exception);".formatted(
             DotNetNameResolver.dafnyUnknownErrorTypeForServiceShape(
               serviceShape
             )
           ),
         "default:",
         "// The switch MUST be complete for System.Exception, so `value` MUST NOT be an System.Exception. (How did you get here?)",
-        "return new %1$s(value, Dafny.Sequence<char>.FromString(value.ToString()));".formatted(
+        "return new %1$s(value);".formatted(
             DotNetNameResolver.dafnyUnknownErrorTypeForServiceShape(
               serviceShape
             )

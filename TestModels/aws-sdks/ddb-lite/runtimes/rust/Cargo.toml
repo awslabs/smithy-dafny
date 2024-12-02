@@ -17,6 +17,3 @@ aws-config = "1.5.4"
 [dependencies.tokio]
 version = "1.26.0"
 features = ["full"]
-
-[lib]
-path = "src/implementation_from_dafny.rs"

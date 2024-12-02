@@ -156,12 +156,10 @@ public class ErrorsFileWriter implements CustomFileWriter {
                 def __init__(
                     self,
                     *,
-                    obj,
-                    alt_text
+                    obj
                 ):
                     super().__init__("")
                     self.obj = obj
-                    self.alt_text = alt_text
 
                 def as_dict(self) -> Dict[str, Any]:
                     ""\"Converts the OpaqueError to a dictionary.
@@ -173,7 +171,6 @@ public class ErrorsFileWriter implements CustomFileWriter {
                         'message': self.message,
                         'code': self.code,
                         'obj': self.obj,
-                        'alt_text': self.alt_text,
                     }
 
                 @staticmethod
@@ -185,8 +182,7 @@ public class ErrorsFileWriter implements CustomFileWriter {
                     ""\"
                     kwargs: Dict[str, Any] = {
                         'message': d['message'],
-                        'obj': d['obj'],
-                        'alt_text': d['alt_text']
+                        'obj': d['obj']
                     }
 
                     return OpaqueError(**kwargs)
@@ -196,12 +192,76 @@ public class ErrorsFileWriter implements CustomFileWriter {
                     result += f'message={self.message},'
                     if self.message is not None:
                         result += f"message={repr(self.message)}"
-                    result += f'obj={self.alt_text}'
+                    result += f'obj={self.obj}'
                     result += ")"
                     return result
 
                 def __eq__(self, other: Any) -> bool:
                     if not isinstance(other, OpaqueError):
+                        return False
+                    if not (self.obj == other.obj):
+                        return False
+                    attributes: list[str] = ['message','message']
+                    return all(
+                        getattr(self, a) == getattr(other, a)
+                        for a in attributes
+                    )
+
+            class OpaqueWithTextError(ApiError[Literal["OpaqueWithTextError"]]):
+                code: Literal["OpaqueWithTextError"] = "OpaqueWithTextError"
+                obj: Any  # As an OpaqueWithTextError, type of obj is unknown
+                obj_message: str # obj_message is a message representing the details of obj
+
+                def __init__(
+                    self,
+                    *,
+                    obj,
+                    obj_message
+                ):
+                    super().__init__("")
+                    self.obj = obj
+                    self.obj_message = obj_message
+
+                def as_dict(self) -> Dict[str, Any]:
+                    ""\"Converts the OpaqueWithTextError to a dictionary.
+
+                    The dictionary uses the modeled shape names rather than the parameter names as
+                    keys to be mostly compatible with boto3.
+                    ""\"
+                    return {
+                        'message': self.message,
+                        'code': self.code,
+                        'obj': self.obj,
+                        'obj_message': self.obj_message,
+                    }
+
+                @staticmethod
+                def from_dict(d: Dict[str, Any]) -> "OpaqueWithTextError":
+                    ""\"Creates a OpaqueWithTextError from a dictionary.
+
+                    The dictionary is expected to use the modeled shape names rather than the
+                    parameter names as keys to be mostly compatible with boto3.
+                    ""\"
+                    kwargs: Dict[str, Any] = {
+                        'message': d['message'],
+                        'obj': d['obj'],
+                        'obj_message': d['obj_message']
+                    }
+
+                    return OpaqueWithTextError(**kwargs)
+
+                def __repr__(self) -> str:
+                    result = "OpaqueWithTextError("
+                    result += f'message={self.message},'
+                    if self.message is not None:
+                        result += f"message={repr(self.message)}"
+                    result += f'obj={self.obj}'
+                    result += f'obj_message={self.obj_message}'
+                    result += ")"
+                    return result
+
+                def __eq__(self, other: Any) -> bool:
+                    if not isinstance(other, OpaqueWithTextError):
                         return False
                     if not (self.obj == other.obj):
                         return False
@@ -412,7 +472,17 @@ public class ErrorsFileWriter implements CustomFileWriter {
     writer.write(
       """
       if isinstance(e, OpaqueError):
-          return $L.Error_Opaque(obj=e.obj, alt__text=e.alt_text)
+          return $L.Error_Opaque(obj=e.obj)
+      """,
+      DafnyNameResolver.getDafnyPythonTypesModuleNameForShape(
+        serviceShape.getId(),
+        codegenContext
+      )
+    );
+    writer.write(
+      """
+      if isinstance(e, OpaqueWithTextError):
+          return $L.Error_OpaqueWithText(obj=e.obj, objMessage=e.obj_message)
       """,
       DafnyNameResolver.getDafnyPythonTypesModuleNameForShape(
         serviceShape.getId(),
@@ -424,21 +494,11 @@ public class ErrorsFileWriter implements CustomFileWriter {
         serviceShape.getId().getNamespace()
       )
     );
-    writer.addStdlibImport("_dafny");
     // Nothing found, we know nothing about this error. Cast as opaque
     writer.write(
       """
       else:
-          return $L.Error_Opaque(obj=e, alt__text=_dafny.Seq(
-            "".join(
-                [
-                    chr(int.from_bytes(pair, "big"))
-                    for pair in zip(
-                        *[iter(repr(e).encode("utf-16-be"))] * 2
-                    )
-                ]
-            )
-        ))
+          return $L.Error_Opaque(obj=e)
       """,
       DafnyNameResolver.getDafnyPythonTypesModuleNameForShape(
         serviceShape.getId(),

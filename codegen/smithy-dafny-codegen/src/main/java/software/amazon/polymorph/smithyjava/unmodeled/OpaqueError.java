@@ -93,7 +93,6 @@ public class OpaqueError {
         BuilderSpecs.BUILDER_VAR,
         BuilderSpecs.BUILDER_VAR
       )
-      .addStatement("this.altText = builder.altText()")
       .addStatement("this.obj = builder.obj()");
     return method.build();
   }
