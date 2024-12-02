@@ -139,7 +139,10 @@ public class DafnyLocalServiceTypeConversionProtocol
         }
 
         final var output = model.expectShape(operation.getOutputShape());
-        if (!alreadyVisited.contains(output.toShapeId())) {
+        if (
+          !alreadyVisited.contains(output.toShapeId()) &&
+          !output.hasTrait(PositionalTrait.class)
+        ) {
           alreadyVisited.add(output.toShapeId());
           if (
             !output.hasTrait(UnitTypeTrait.class) &&
@@ -510,7 +513,10 @@ public class DafnyLocalServiceTypeConversionProtocol
         final var output = context
           .model()
           .expectShape(operation.getOutputShape());
-        if (!alreadyVisited.contains(output.toShapeId())) {
+        if (
+          !alreadyVisited.contains(output.toShapeId()) &&
+          !output.hasTrait(PositionalTrait.class)
+        ) {
           alreadyVisited.add(output.toShapeId());
           if (
             !output.hasTrait(UnitTypeTrait.class) &&
