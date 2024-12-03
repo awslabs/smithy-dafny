@@ -67,6 +67,9 @@ public class SmithyNameResolver {
       final String sdkName = shapeNameSpace
         .substring(shapeNameSpace.lastIndexOf(".") + 1)
         .toLowerCase();
+      if (shape.hasTrait(ServiceTrait.class)) {
+        return sdkName;
+      }
       return sdkName.concat("types");
     }
     return shapeNameSpace
@@ -104,7 +107,7 @@ public class SmithyNameResolver {
         .smithyTypesNamespace(shape)
         .concat(DOT)
         .concat("I")
-        .concat(symbol.getName());
+        .concat(shape.toShapeId().getName());
     }
     // TODO: Figure out the type of timestamp
     if (shape.isTimestampShape()) {
