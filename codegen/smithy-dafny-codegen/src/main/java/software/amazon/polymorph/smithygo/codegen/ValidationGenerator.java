@@ -211,7 +211,7 @@ public class ValidationGenerator {
             funcCall,
             funcCall
           );
-          if (needsWrapping) {
+          if (maybeNull) {
             validationCode.append(
               """
               if (%s != nil) {
