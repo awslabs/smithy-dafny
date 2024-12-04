@@ -8,7 +8,7 @@ replace github.com/dafny-lang/DafnyStandardLibGo => ../../../../../dafny-depende
 
 require (
 	github.com/aws/aws-sdk-go-v2/service/kms v1.35.5
-	github.com/dafny-lang/DafnyRuntimeGo/v4 v4.8.0
+	github.com/dafny-lang/DafnyRuntimeGo/v4 v4.9.1
 	github.com/dafny-lang/DafnyStandardLibGo v0.0.0-00010101000000-000000000000
 	github.com/smithy-lang/smithy-dafny/kmsv2 v0.0.0
 )
