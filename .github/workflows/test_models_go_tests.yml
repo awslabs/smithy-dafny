@@ -71,12 +71,6 @@ jobs:
           distribution: "corretto"
           java-version: 17
 
-      - name: Setup smithy-dafny-conversion
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: publishToMavenLocal
-          build-root-directory: smithy-dafny-conversion
-
       - name: Install Smithy-Dafny codegen dependencies
         uses: ./.github/actions/install_smithy_dafny_codegen_dependencies
 
