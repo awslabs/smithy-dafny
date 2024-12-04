@@ -54,7 +54,7 @@ jobs:
       - name: Setup Dafny
         uses: dafny-lang/setup-dafny-action@v1.7.0
         with:
-          dafny-version: "nightly-latest"
+          dafny-version: "nightly-2024-12-04-bf1aac6"
 
       - name: Install Go
         uses: actions/setup-go@v2
