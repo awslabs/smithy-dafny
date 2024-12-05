@@ -96,6 +96,12 @@ public abstract class BaseConversionWriter {
       Shape toGenerate = shapesToGenerate.remove(0);
       generatedShapes.add(toGenerate);
 
+      if (!shapeShouldHaveConversionFunction(toGenerate)) {
+        throw new IllegalArgumentException(
+          "Unsupported shape passed to ConversionWriter: " + toGenerate
+        );
+      }
+
       if (toGenerate.isStructureShape()) {
         writeStructureShapeConverter(toGenerate.asStructureShape().get());
       } else if (toGenerate.isUnionShape()) {
@@ -123,6 +129,16 @@ public abstract class BaseConversionWriter {
     StringShape stringShapeWithEnumTrait
   );
 
+  /**
+   * Returns true if a conversion function should be written for the shape, false otherwise.
+   * Conversion functions are only written for "complex" shapes:
+   *  - StructureShapes ("complex" because StructureShapes can be recursive)
+   *    - except for StructureShapes with ErrorTrait; these aren't "complex"
+   *  - UnionShapes ("complex" because the conversion is not a one-liner)
+   *  - EnumShapes or StringShapes with EnumTrait ("complex" because the conversion is not a one-liner)
+   * @param shape
+   * @return
+   */
   public static boolean shapeShouldHaveConversionFunction(Shape shape) {
     if (shape.isStructureShape()) {
       if (shape.hasTrait(ErrorTrait.class)) {

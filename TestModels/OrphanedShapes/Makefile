@@ -8,16 +8,16 @@ TRANSPILE_TESTS_IN_RUST=1
 
 include ../SharedMakefile.mk
 
-NAMESPACE=simple.positional
+NAMESPACE=simple.orphaned
 
 PROJECT_SERVICES := \
-	SimplePositional
+	SimpleOrphaned
 
-MAIN_SERVICE_FOR_RUST := SimplePositional
+MAIN_SERVICE_FOR_RUST := SimpleOrphaned
 
-SERVICE_NAMESPACE_SimplePositional=simple.positional
+SERVICE_NAMESPACE_SimpleOrphaned=simple.orphaned
 
-SERVICE_DEPS_SimplePositional :=
+SERVICE_DEPS_SimpleOrphaned :=
 
 SMITHY_DEPS=dafny-dependencies/Model/traits.smithy
 
@@ -28,21 +28,21 @@ POLYMORPH_OPTIONS=--generate project-files,client-constructors
 
 # Python
 
-PYTHON_MODULE_NAME=simple_positional
+PYTHON_MODULE_NAME=simple_orphaned
 
 TRANSLATION_RECORD_PYTHON := \
     --translation-record ../dafny-dependencies/StandardLibrary/runtimes/python/src/smithy_dafny_standard_library/internaldafny/generated/dafny_src-py.dtr
 
 # Constants for languages that drop extern names (Python, Go)
 
-TYPES_FILE_PATH=Model/SimplePositionalTypes.dfy
-TYPES_FILE_WITH_EXTERN_STRING="module {:extern \"simple.positional.internaldafny.types\" } SimplePositionalTypes"
-TYPES_FILE_WITHOUT_EXTERN_STRING="module SimplePositionalTypes"
+TYPES_FILE_PATH=Model/SimpleOrphanedTypes.dfy
+TYPES_FILE_WITH_EXTERN_STRING="module {:extern \"simple.orphaned.internaldafny.types\" } SimpleOrphanedTypes"
+TYPES_FILE_WITHOUT_EXTERN_STRING="module SimpleOrphanedTypes"
 
 INDEX_FILE_PATH=src/Index.dfy
-INDEX_FILE_WITH_EXTERN_STRING="module {:extern \"simple.positional.internaldafny\" } SimplePositional refines AbstractSimplePositionalService {"
-INDEX_FILE_WITHOUT_EXTERN_STRING="module SimplePositional refines AbstractSimplePositionalService {"
+INDEX_FILE_WITH_EXTERN_STRING="module {:extern \"simple.orphaned.internaldafny\" } SimpleOrphaned refines AbstractSimpleOrphanedService {"
+INDEX_FILE_WITHOUT_EXTERN_STRING="module SimpleOrphaned refines AbstractSimpleOrphanedService {"
 
-WRAPPED_INDEX_FILE_PATH=src/WrappedSimplePositionalImpl.dfy
-WRAPPED_INDEX_FILE_WITH_EXTERN_STRING="module {:options \"--function-syntax:4\"} {:extern \"simple.positional.internaldafny.wrapped\"} WrappedSimplePositionalService refines WrappedAbstractSimplePositionalService {"
-WRAPPED_INDEX_FILE_WITHOUT_EXTERN_STRING="module {:options \"--function-syntax:4\"} WrappedSimplePositionalService refines WrappedAbstractSimplePositionalService {"
+WRAPPED_INDEX_FILE_PATH=src/WrappedSimpleOrphanedImpl.dfy
+WRAPPED_INDEX_FILE_WITH_EXTERN_STRING="module {:options \"--function-syntax:4\"} {:extern \"simple.orphaned.internaldafny.wrapped\"} WrappedSimpleOrphanedService refines WrappedAbstractSimpleOrphanedService {"
+WRAPPED_INDEX_FILE_WITHOUT_EXTERN_STRING="module {:options \"--function-syntax:4\"} WrappedSimpleOrphanedService refines WrappedAbstractSimpleOrphanedService {"
