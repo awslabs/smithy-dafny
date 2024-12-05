@@ -2,14 +2,11 @@ module github.com/smithy-lang/smithy-dafny/ddb
 
 go 1.23.0
 
-//TODO: Drop this after Dafny fixes the https://t.corp.amazon.com/P150784381
-replace github.com/dafny-lang/DafnyRuntimeGo => ../../../../../../DafnyRuntimeGo/
-
 replace github.com/dafny-lang/DafnyStandardLibGo => ../../../../../dafny-dependencies/StandardLibrary/runtimes/go/ImplementationFromDafny-go/
 
 require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.9
-	github.com/dafny-lang/DafnyRuntimeGo v0.0.0-00010101000000-000000000000
+	github.com/dafny-lang/DafnyRuntimeGo/v4 v4.9.1
 	github.com/dafny-lang/DafnyStandardLibGo v0.0.0-00010101000000-000000000000
 )
 

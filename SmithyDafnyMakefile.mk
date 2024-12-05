@@ -476,22 +476,6 @@ run_goimports:
 		cd runtimes/go/TestsFromDafny-go && goimports -w . ; \
 	fi
 
-_gomod_init:
-	#TODO: Think about handwritten go.mod
-	@(cd $(LIBRARY_ROOT)/runtimes/go/TestsFromDafny-go && \
-		if [ -f go.mod ]; then rm -f go.mod; fi && \
-		go mod init $(GO_MODULE_NAME) && \
-		echo "require github.com/dafny-lang/DafnyStandardLibGo v0.0.0" >> go.mod && \
-		echo "require github.com/dafny-lang/DafnyRuntimeGo v0.0.0" >> go.mod && \
-		if [ $$(basename $$(dirname $(LIBRARY_ROOT))) == "SimpleTypes" ]; then \
-			echo "replace github.com/dafny-lang/DafnyRuntimeGo => ../../../../../../DafnyRuntimeGo/" >> go.mod; \
-			echo "replace github.com/dafny-lang/DafnyStandardLibGo => ../../../../../dafny-dependencies/StandardLibrary/runtimes/go/ImplementationFromDafny-go/" >> go.mod; \
-		else \
-			echo "replace github.com/dafny-lang/DafnyRuntimeGo => ../../../../../DafnyRuntimeGo/" >> go.mod; \
-			echo "replace github.com/dafny-lang/DafnyStandardLibGo => ../../../../dafny-dependencies/StandardLibrary/runtimes/go/ImplementationFromDafny-go/" >> go.mod; \
-		fi && \
-		go mod tidy)
-
 _mv_polymorph_go:
 	@for dir in $(LIBRARY_ROOT)/runtimes/go/* ; do \
         if [ "$$(basename $$dir)" != "ImplementationFromDafny-go" ] && [ "$$(basename $$dir)" != "TestsFromDafny-go" ]; then \

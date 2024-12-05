@@ -762,7 +762,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       """,
                       operationShape.getId().getName(),
                       input,
-                      output.equals("") ? "" : output.concat(",")
+                      // If output is not empty append the `,` to separate return types
+                      output.isEmpty() ? "" : output.concat(",")
                     );
                   });
               })

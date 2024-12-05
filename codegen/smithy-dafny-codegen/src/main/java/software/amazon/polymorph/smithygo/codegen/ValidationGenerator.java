@@ -200,7 +200,7 @@ public class ValidationGenerator {
         break;
       case STRUCTURE:
         if (!currentShape.hasTrait(ReferenceTrait.class)) {
-          final boolean needsWrapping =
+          final boolean maybeNull =
             memberShape.isOptional() &&
             !dataSource.equals(LIST_ITEM) &&
             !dataSource.equals(MAP_KEY) &&
@@ -211,7 +211,7 @@ public class ValidationGenerator {
             funcCall,
             funcCall
           );
-          if (needsWrapping) {
+          if (maybeNull) {
             validationCode.append(
               """
               if (%s != nil) {
