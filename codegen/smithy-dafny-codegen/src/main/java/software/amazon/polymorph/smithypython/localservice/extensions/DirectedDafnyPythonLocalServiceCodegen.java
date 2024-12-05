@@ -535,6 +535,35 @@ public class DirectedDafnyPythonLocalServiceCodegen
           shapeToGenerate
         );
       }
+
+      final WriterDelegator<PythonWriter> delegator = directive.context().writerDelegator();
+      final String moduleName =
+        SmithyNameResolver.getServiceSmithygeneratedDirectoryNameForNamespace(
+          directive.context().settings().getService().getNamespace()
+        );
+
+      delegator.useFileWriter(
+        moduleName + "/dafny_to_smithy.py",
+        "",
+        conversionWriter -> {
+          DafnyToLocalServiceConversionFunctionWriter.writeConverterForShapeAndMembers(
+            shapeToGenerate,
+            directive.context(),
+            conversionWriter
+          );
+        });
+
+      delegator.useFileWriter(
+        moduleName + "/smithy_to_dafny.py",
+        "",
+        conversionWriter -> {
+          LocalServiceToDafnyConversionFunctionWriter.writeConverterForShapeAndMembers(
+            shapeToGenerate,
+            directive.context(),
+            conversionWriter
+          );
+        });
+
     }
   }
 
