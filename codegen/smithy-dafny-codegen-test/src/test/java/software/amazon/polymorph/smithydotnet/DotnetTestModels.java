@@ -29,9 +29,6 @@ class DotnetTestModels extends TestModelTest {
 
     //TODO: Add support for Recursive shapes.
     DISABLED_TESTS.add("RecursiveShape");
-    // V2 Models are not yet supported in Net.
-    DISABLED_TESTS.add("aws-sdks/ddbv2");
-    DISABLED_TESTS.add("aws-sdks/kmsv2");
     DISABLED_TESTS.add("SQSExtended");
     // S3 is not yet supported
     DISABLED_TESTS.add("aws-sdks/s3");
