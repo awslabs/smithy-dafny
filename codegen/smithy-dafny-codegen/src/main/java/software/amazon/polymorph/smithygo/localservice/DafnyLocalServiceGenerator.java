@@ -106,7 +106,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
       SmithyNameResolver.getGoModuleNameForSmithyNamespace(
         context.settings().getService().getNamespace()
       ),
-      DafnyNameResolver.dafnyNamespace(serviceTrait)
+      DafnyNameResolver.dafnyNamespace(service)
     );
     writer.addImportFromModule(
       SmithyNameResolver.getGoModuleNameForSmithyNamespace(
