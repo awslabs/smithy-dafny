@@ -116,25 +116,6 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
    * @return String representing the conversion function.
    */
   protected String referenceStructureShape(final StructureShape shape) {
-    final var currServiceShapeNamespace = SmithyNameResolver.shapeNamespace(
-          context.settings().getService(context.model())
-        );
-    final var currShapeNamespace = SmithyNameResolver.shapeNamespace(
-      shape
-    );
-    final Boolean isExternalShape = !currServiceShapeNamespace.equals(
-          currShapeNamespace
-    );
-    if (isExternalShape) {
-      // System.out.println("isExternalShape");
-      // System.out.println(shape);
-      // writer.addImportFromModule(
-      //   SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-      //     shape.toShapeId().getNamespace()
-      //   ),
-      //   SmithyNameResolver.shapeNamespace(shape)
-      // );
-    }
     final ReferenceTrait referenceTrait = shape.expectTrait(
       ReferenceTrait.class
     );
@@ -142,10 +123,6 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       .model()
       .expectShape(referenceTrait.getReferentId());
     if (resourceOrService.asResourceShape().isPresent()) {
-      if (isExternalShape) {
-        // System.out.println("isExternalShape");
-        // System.out.println(shape);
-      }
       return referencedResourceShape(resourceOrService);
     }
 
