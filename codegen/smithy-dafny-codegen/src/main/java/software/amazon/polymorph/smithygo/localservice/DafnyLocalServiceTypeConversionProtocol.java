@@ -1217,16 +1217,16 @@ public class DafnyLocalServiceTypeConversionProtocol
         );
       } else {
         w.addImportFromModule(
-            SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-              depShape.toShapeId().getNamespace()
-            ),
-            SmithyNameResolver.smithyTypesNamespace(depShape)
+          SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+            depShape.toShapeId().getNamespace()
+          ),
+          SmithyNameResolver.smithyTypesNamespace(depShape)
         );
         w.addImportFromModule(
-            SmithyNameResolver.getGoModuleNameForSmithyNamespace(
-              depShape.toShapeId().getNamespace()
-            ),
-            SmithyNameResolver.shapeNamespace(depShape)
+          SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+            depShape.toShapeId().getNamespace()
+          ),
+          SmithyNameResolver.shapeNamespace(depShape)
         );
         w.write(
           """
