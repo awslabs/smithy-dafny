@@ -1216,6 +1216,18 @@ public class DafnyLocalServiceTypeConversionProtocol
             )
         );
       } else {
+        w.addImportFromModule(
+            SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+              depShape.toShapeId().getNamespace()
+            ),
+            SmithyNameResolver.smithyTypesNamespace(depShape)
+        );
+        w.addImportFromModule(
+            SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+              depShape.toShapeId().getNamespace()
+            ),
+            SmithyNameResolver.shapeNamespace(depShape)
+        );
         w.write(
           """
           case $L.$LBaseException:
@@ -1487,6 +1499,12 @@ public class DafnyLocalServiceTypeConversionProtocol
                 final var depService = context
                   .model()
                   .expectShape(dep, ServiceShape.class);
+                writer.addImportFromModule(
+                  SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+                    depService.toShapeId().getNamespace()
+                  ),
+                  SmithyNameResolver.shapeNamespace(depService)
+                );
                 w.write(
                   """
                   if err.Is_$L() {

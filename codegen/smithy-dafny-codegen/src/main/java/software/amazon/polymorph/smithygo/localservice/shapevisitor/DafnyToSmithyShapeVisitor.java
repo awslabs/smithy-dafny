@@ -116,6 +116,25 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
    * @return String representing the conversion function.
    */
   protected String referenceStructureShape(final StructureShape shape) {
+    final var currServiceShapeNamespace = SmithyNameResolver.shapeNamespace(
+          context.settings().getService(context.model())
+        );
+    final var currShapeNamespace = SmithyNameResolver.shapeNamespace(
+      shape
+    );
+    final Boolean isExternalShape = !currServiceShapeNamespace.equals(
+          currShapeNamespace
+    );
+    if (isExternalShape) {
+      // System.out.println("isExternalShape");
+      // System.out.println(shape);
+      // writer.addImportFromModule(
+      //   SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+      //     shape.toShapeId().getNamespace()
+      //   ),
+      //   SmithyNameResolver.shapeNamespace(shape)
+      // );
+    }
     final ReferenceTrait referenceTrait = shape.expectTrait(
       ReferenceTrait.class
     );
@@ -123,6 +142,10 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       .model()
       .expectShape(referenceTrait.getReferentId());
     if (resourceOrService.asResourceShape().isPresent()) {
+      if (isExternalShape) {
+        // System.out.println("isExternalShape");
+        // System.out.println(shape);
+      }
       return referencedResourceShape(resourceOrService);
     }
 
@@ -230,6 +253,12 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
           resourceOrService.toShapeId().getNamespace()
         ),
         SmithyNameResolver.shapeNamespace(resourceShape)
+      );
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+          resourceOrService.toShapeId().getNamespace()
+        ),
+        SmithyNameResolver.smithyTypesNamespace(resourceShape)
       );
       namespace =
         SmithyNameResolver.shapeNamespace(resourceOrService).concat(".");
@@ -582,6 +611,19 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       );
     }
     if (shape.hasTrait(EnumTrait.class)) {
+      if (
+      !shape
+        .toShapeId()
+        .getNamespace()
+        .equals(context.settings().getService().getNamespace())
+    ) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+          shape.toShapeId().getNamespace()
+        ),
+        DafnyNameResolver.dafnyTypesNamespace(shape)
+      );
+    }
       if (this.isOptional) {
         return """
           return func () *%s.%s {
