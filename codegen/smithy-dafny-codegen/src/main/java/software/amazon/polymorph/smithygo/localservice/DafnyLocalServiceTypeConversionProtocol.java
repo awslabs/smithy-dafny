@@ -1203,7 +1203,7 @@ public class DafnyLocalServiceTypeConversionProtocol
         sdkErrHandler.append(
           """
           %s := %s.Error_ToDafny(err)
-          if(!%s.Is_Opaque()) {
+          if(!%s.Is_OpaqueWithText()) {
             return %s.Create_%s_(%s)
           }
           """.formatted(
