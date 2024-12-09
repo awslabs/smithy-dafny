@@ -73,7 +73,7 @@ module {:extern} SimpleOrphanedImpl refines AbstractSimpleOrphanedOperations  {
   //   and wouldn't be useful in an "orphaned shapes" TestModel.
   // Putting all usage of the orphaned shape outside the model's knowledge
   //   lets us test orphaned shape model/conversion generation.
-  method {:extern} CallNativeOrphanedResource( input: OrphanedResource.OrphanedResource )
+  method {:extern} CallNativeOrphanedResource( input: Types.IOrphanedResource )
     returns (output: Result<Types.OrphanedResourceOperationOutput, Types.Error>)
 
   method CreateOrphanedError ( config: InternalConfig,  input: CreateOrphanedErrorInput )

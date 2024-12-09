@@ -94,7 +94,6 @@ structure OrphanedStructure {
     //  bigDecimalValue: OrphanedBigDecimal,
     //  timestampValue: OrphanedTimestamp,
     unionValue: OrphanedUnion,
-    structureValue: OrphanedStructure,
     enumValue: OrphanedV1Enum,
     mapValue: OrphanedMap,
     listValue: OrphanedList
