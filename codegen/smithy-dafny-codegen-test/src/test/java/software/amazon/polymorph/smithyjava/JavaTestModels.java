@@ -18,6 +18,7 @@ class JavaTestModels extends TestModelTest {
   static {
     DISABLED_TESTS.add("Aggregate");
     DISABLED_TESTS.add("AggregateReferences");
+    DISABLED_TESTS.add("CallingAWSSDKFromLocalService");
     DISABLED_TESTS.add("Constructor");
     DISABLED_TESTS.add("Dependencies");
     DISABLED_TESTS.add("Extern");
@@ -40,8 +41,14 @@ class JavaTestModels extends TestModelTest {
     DISABLED_TESTS.add("Union");
     DISABLED_TESTS.add("aws-sdks/kms-lite");
     DISABLED_TESTS.add("aws-sdks/sqs");
+    DISABLED_TESTS.add("aws-sdks/sqs-via-cli");
+    //TODO: Add support for Recursive shapes.
+    DISABLED_TESTS.add("RecursiveShape");
     // S3 is not yet supported
     DISABLED_TESTS.add("aws-sdks/s3");
+
+    //TODO: https://github.com/smithy-lang/smithy-dafny/issues/599
+    DISABLED_TESTS.add("Positional");
   }
 
   @ParameterizedTest
