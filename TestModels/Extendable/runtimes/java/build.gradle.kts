@@ -14,7 +14,7 @@ plugins {
 }
 
 var props = Properties().apply {
-    load(FileInputStream(File(rootProject.rootDir, "../../project.properties")))
+:    load(FileInputStream(File(rootProject.rootDir, "../../project.properties")))
 }
 var dafnyVersion = props.getProperty("dafnyVersion")
 
