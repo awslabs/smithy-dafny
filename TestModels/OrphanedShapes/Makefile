@@ -24,7 +24,14 @@ SMITHY_DEPS=dafny-dependencies/Model/traits.smithy
 # This project has no dependencies 
 # DEPENDENT-MODELS:= 
 
-POLYMORPH_OPTIONS=--generate project-files,client-constructors
+POLYMORPH_OPTIONS=--generate project-files,client-constructors\
+
+# Go
+
+GO_MODULE_NAME="github.com/smithy-lang/smithy-dafny/TestModels/OrphanedShapes"
+
+TRANSLATION_RECORD_GO := \
+    dafny-dependencies/StandardLibrary/runtimes/go/ImplementationFromDafny-go/ImplementationFromDafny-go.dtr
 
 # Python
 

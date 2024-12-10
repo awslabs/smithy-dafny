@@ -57,33 +57,6 @@ impl Client {
 }
 
 impl crate::r#simple::orphaned::internaldafny::types::ISimpleOrphanedClient for Client {
-    fn CreateOrphanedResource(
-        &self,
-        input: &::std::rc::Rc<crate::r#simple::orphaned::internaldafny::types::CreateOrphanedResourceInput>,
-    ) -> std::rc::Rc<
-        crate::r#_Wrappers_Compile::Result<
-            ::std::rc::Rc<crate::r#simple::orphaned::internaldafny::types::CreateOrphanedResourceOutput>,
-            std::rc::Rc<crate::r#simple::orphaned::internaldafny::types::Error>,
-        >,
-    >{
-        let inner_input = crate::conversions::create_orphaned_resource::_create_orphaned_resource_input::from_dafny(input.clone());
-        let result = tokio::task::block_in_place(|| {
-            dafny_tokio_runtime.block_on(crate::operation::create_orphaned_resource::CreateOrphanedResource::send(&self.wrapped, inner_input))
-        });
-        match result {
-            Err(error) => ::std::rc::Rc::new(
-                crate::_Wrappers_Compile::Result::Failure {
-                    error: crate::conversions::error::to_dafny(error),
-                },
-            ),
-            Ok(inner_result) => ::std::rc::Rc::new(
-                crate::_Wrappers_Compile::Result::Success {
-                    value: crate::conversions::create_orphaned_resource::_create_orphaned_resource_output::to_dafny(inner_result),
-                },
-            ),
-        }
-    }
-
     fn CreateOrphanedError(
         &self,
         input: &::std::rc::Rc<crate::r#simple::orphaned::internaldafny::types::CreateOrphanedErrorInput>,
@@ -133,6 +106,33 @@ impl crate::r#simple::orphaned::internaldafny::types::ISimpleOrphanedClient for 
             Ok(inner_result) => ::std::rc::Rc::new(
                 crate::_Wrappers_Compile::Result::Success {
                     value: crate::conversions::create_orphaned_structure::_create_orphaned_structure_output::to_dafny(inner_result),
+                },
+            ),
+        }
+    }
+
+    fn CreateOrphanedResource(
+        &self,
+        input: &::std::rc::Rc<crate::r#simple::orphaned::internaldafny::types::CreateOrphanedResourceInput>,
+    ) -> std::rc::Rc<
+        crate::r#_Wrappers_Compile::Result<
+            ::std::rc::Rc<crate::r#simple::orphaned::internaldafny::types::CreateOrphanedResourceOutput>,
+            std::rc::Rc<crate::r#simple::orphaned::internaldafny::types::Error>,
+        >,
+    >{
+        let inner_input = crate::conversions::create_orphaned_resource::_create_orphaned_resource_input::from_dafny(input.clone());
+        let result = tokio::task::block_in_place(|| {
+            dafny_tokio_runtime.block_on(crate::operation::create_orphaned_resource::CreateOrphanedResource::send(&self.wrapped, inner_input))
+        });
+        match result {
+            Err(error) => ::std::rc::Rc::new(
+                crate::_Wrappers_Compile::Result::Failure {
+                    error: crate::conversions::error::to_dafny(error),
+                },
+            ),
+            Ok(inner_result) => ::std::rc::Rc::new(
+                crate::_Wrappers_Compile::Result::Success {
+                    value: crate::conversions::create_orphaned_resource::_create_orphaned_resource_output::to_dafny(inner_result),
                 },
             ),
         }

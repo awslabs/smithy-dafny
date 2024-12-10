@@ -12,9 +12,9 @@ service SimpleOrphaned {
   version: "2021-11-01",
   resources: [],
   operations: [
-    CreateOrphanedStructure,
-    CreateOrphanedResource,
-    CreateOrphanedError,
+    // CreateOrphanedStructure,
+    // CreateOrphanedResource,
+    // CreateOrphanedError,
   ],
 }
 
