@@ -831,7 +831,7 @@ public abstract class AbstractRustShimGenerator {
     final String snakeCaseMemberName = toSnakeCase(member.getMemberName());
     return toDafny(
       targetShape,
-      "value." + snakeCaseMemberName,
+      "value." + RustUtils.escapedName(snakeCaseMemberName),
       !isRustFieldRequired(parent, member),
       !hasRequiredTrait(member)
     );
@@ -1585,8 +1585,12 @@ public abstract class AbstractRustShimGenerator {
     final HashMap<String, String> variables = new HashMap<>();
     final String memberName = memberShape.getMemberName();
     final Shape targetShape = model.expectShape(memberShape.getTarget());
-    variables.put("memberName", memberName);
+    variables.put("memberName", RustUtils.escapedName(memberName));
     variables.put("fieldName", toSnakeCase(memberName));
+    variables.put(
+      "safeFieldName",
+      RustUtils.escapedName(toSnakeCase(memberName))
+    );
     variables.put("fieldType", mergedGeneratorRustTypeForShape(targetShape));
     return variables;
   }
