@@ -7,7 +7,7 @@ TRANSPILE_TESTS_IN_RUST=1
 
 ENABLE_EXTERN_PROCESSING=1
 
-include ../../SharedMakefile.mk
+include ../SharedMakefile.mk
 
 NAMESPACE=simple.types.integer
 
