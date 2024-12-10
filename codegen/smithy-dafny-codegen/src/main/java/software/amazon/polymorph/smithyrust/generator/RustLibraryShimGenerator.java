@@ -1067,7 +1067,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       docFromShape(memberShape) +
       "\n" +
       """
-      pub $fieldName:L: ::std::option::Option<$fieldType:L>,
+      pub $safeFieldName:L: ::std::option::Option<$fieldType:L>,
       """;
     return evalTemplate(template, structureMemberVariables(memberShape));
   }
@@ -1078,8 +1078,8 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       docFromShape(memberShape) +
       "\n" +
       """
-      pub fn $fieldName:L(&self) -> &::std::option::Option<$fieldType:L> {
-          &self.$fieldName:L
+      pub fn $safeFieldName:L(&self) -> &::std::option::Option<$fieldType:L> {
+          &self.$safeFieldName:L
       }
       """;
     return evalTemplate(template, variables);
@@ -1087,7 +1087,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
 
   private String structureBuilderField(final MemberShape memberShape) {
     return evalTemplate(
-      "pub(crate) $fieldName:L: ::std::option::Option<$fieldType:L>,",
+      "pub(crate) $safeFieldName:L: ::std::option::Option<$fieldType:L>,",
       structureMemberVariables(memberShape)
     );
   }
@@ -1097,8 +1097,8 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       docFromShape(memberShape) +
       "\n" +
       """
-      pub fn $fieldName:L(mut self, input: impl ::std::convert::Into<$fieldType:L>) -> Self {
-          self.$fieldName:L = ::std::option::Option::Some(input.into());
+      pub fn $safeFieldName:L(mut self, input: impl ::std::convert::Into<$fieldType:L>) -> Self {
+          self.$safeFieldName:L = ::std::option::Option::Some(input.into());
           self
       }
       """ +
@@ -1106,7 +1106,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       "\n" +
       """
       pub fn set_$fieldName:L(mut self, input: ::std::option::Option<$fieldType:L>) -> Self {
-          self.$fieldName:L = input;
+          self.$safeFieldName:L = input;
           self
       }
       """ +
@@ -1114,7 +1114,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       "\n" +
       """
       pub fn get_$fieldName:L(&self) -> &::std::option::Option<$fieldType:L> {
-          &self.$fieldName:L
+          &self.$safeFieldName:L
       }
       """;
     return evalTemplate(template, structureMemberVariables(memberShape));
@@ -1122,7 +1122,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
 
   private String structureBuilderAssignment(final MemberShape memberShape) {
     return evalTemplate(
-      "$fieldName:L: self.$fieldName:L,",
+      "$safeFieldName:L: self.$safeFieldName:L,",
       structureMemberVariables(memberShape)
     );
   }
@@ -1163,8 +1163,8 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       docFromShape(memberShape) +
       "\n" +
       """
-      pub fn $fieldName:L(mut self, input: impl ::std::convert::Into<$fieldType:L>) -> Self {
-          self.inner = self.inner.$fieldName:L(input.into());
+      pub fn $safeFieldName:L(mut self, input: impl ::std::convert::Into<$fieldType:L>) -> Self {
+          self.inner = self.inner.$safeFieldName:L(input.into());
           self
       }
       """ +
