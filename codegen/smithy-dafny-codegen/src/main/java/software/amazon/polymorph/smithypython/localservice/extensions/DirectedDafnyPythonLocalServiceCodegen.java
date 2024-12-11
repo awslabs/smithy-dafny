@@ -513,10 +513,13 @@ public class DirectedDafnyPythonLocalServiceCodegen
         // Classes are not generated for lists
       } else if (shapeToGenerate.isMapShape()) {
         // Classes are not generated for maps
+      } else if (shapeToGenerate.isLongShape()) {
+        // Classes are not generated for longs
       } else {
         // Add more as needed...
         throw new ClassCastException(
-          "Unsupported class for orphaned shape " + shapeToGenerate
+          "Shape is not a supported shape type for orphaned shapes " +
+          shapeToGenerate
         );
       }
     }

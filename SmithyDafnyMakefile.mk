@@ -58,6 +58,7 @@ GRADLEW := $(SMITHY_DAFNY_ROOT)/codegen/gradlew
 
 include $(SMITHY_DAFNY_ROOT)/SmithyDafnySedMakefile.mk
 
+
 # This flag enables pre-processing on extern module names.
 # This pre-processing is required to compile to Python and Go.
 # This is disabled by default.
@@ -78,6 +79,7 @@ ENABLE_EXTERN_PROCESSING?=
 #  lemma Correct(cpus:nat)
 #    ensures DAFNY_PROCESSES(cpus) * Z3_PROCESSES(cpus) <= cpus
 #  {}
+
 
 # Verify the entire project
 verify:Z3_PROCESSES=$(shell echo $$(( $(CORES) >= 3 ? 2 : 1 )))
@@ -243,6 +245,7 @@ transpile_test:
 		$(if $(strip $(STD_LIBRARY)) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/src/Index.dfy, ) \
 		$(TRANSLATION_RECORD) \
 		$(SOURCE_TRANSLATION_RECORD) \
+		$(TRANSPILE_MODULE_NAME) \
 		$(TRANSPILE_DEPENDENCIES) \
 
 # If we are not the StandardLibrary, transpile the StandardLibrary.
@@ -282,6 +285,7 @@ _polymorph:
 	$(OUTPUT_JAVA) \
 	$(OUTPUT_JAVA_TEST) \
 	$(OUTPUT_DOTNET) \
+	$(OUTPUT_GO) \
 	$(OUTPUT_PYTHON) \
 	$(MODULE_NAME) \
 	$(OUTPUT_RUST) \
@@ -293,7 +297,7 @@ _polymorph:
 	$(OUTPUT_LOCAL_SERVICE_$(SERVICE)) \
 	$(AWS_SDK_CMD) \
 	$(POLYMORPH_OPTIONS) \
-	";
+    ";
 
 _polymorph_wrapped: mvn_local_deploy_polymorph_dependencies
 _polymorph_wrapped:
@@ -306,6 +310,7 @@ _polymorph_wrapped:
 	$(OUTPUT_DAFNY_WRAPPED) \
 	$(OUTPUT_DOTNET_WRAPPED) \
 	$(OUTPUT_JAVA_WRAPPED) \
+	$(OUTPUT_GO_WRAPPED) \
 	$(OUTPUT_PYTHON_WRAPPED) \
 	$(MODULE_NAME) \
 	$(OUTPUT_RUST_WRAPPED) \
@@ -345,7 +350,9 @@ _polymorph_code_gen: INPUT_DAFNY=\
 _polymorph_code_gen: OUTPUT_DOTNET=\
     $(if $(DIR_STRUCTURE_V2), --output-dotnet $(LIBRARY_ROOT)/runtimes/net/Generated/$(SERVICE)/, --output-dotnet $(LIBRARY_ROOT)/runtimes/net/Generated/)
 _polymorph_code_gen: OUTPUT_JAVA=--output-java $(LIBRARY_ROOT)/runtimes/java/src/main/smithy-generated
+_polymorph_code_gen: OUTPUT_GO=--output-go $(LIBRARY_ROOT)/runtimes/go/
 _polymorph_code_gen: OUTPUT_JAVA_TEST=--output-java-test $(LIBRARY_ROOT)/runtimes/java/src/test/smithy-generated
+_polymorph_code_gen: OUTPUT_RUST=--output-rust $(LIBRARY_ROOT)/runtimes/rust
 _polymorph_code_gen: _polymorph
 
 check_polymorph_diff:
@@ -444,6 +451,39 @@ _polymorph_rust: OUTPUT_RUST=--output-rust $(LIBRARY_ROOT)/runtimes/rust
 # For those, make polymorph_rust should just be a no-op.
 _polymorph_rust: $(if $(RUST_BENERATED), , _polymorph)
 
+###########################
+
+.PHONY: polymorph_go
+polymorph_go: POLYMORPH_LANGUAGE_TARGET=go
+polymorph_go: _polymorph_dependencies
+polymorph_go:
+	set -e; for service in $(PROJECT_SERVICES) ; do \
+		export service_deps_var=SERVICE_DEPS_$${service} ; \
+		export namespace_var=SERVICE_NAMESPACE_$${service} ; \
+		export SERVICE=$${service} ; \
+		$(MAKE) _polymorph_go ; \
+	done
+
+_polymorph_go: OUTPUT_GO=--output-go $(LIBRARY_ROOT)/runtimes/go/
+_polymorph_go: MODULE_NAME=--library-name $(GO_MODULE_NAME)
+_polymorph_go: DEPENDENCY_MODULE_NAMES = $(GO_DEPENDENCY_MODULE_NAMES)
+# TODO: run_goimports should be an independent command. Right now it is required because of import issues in polymorph_go
+_polymorph_go: _polymorph _mv_polymorph_go run_goimports
+
+run_goimports:
+	cd runtimes/go/ImplementationFromDafny-go && goimports -w .
+	@if [ -d runtimes/go/TestsFromDafny-go ]; then \
+		cd runtimes/go/TestsFromDafny-go && goimports -w . ; \
+	fi
+
+_mv_polymorph_go:
+	@for dir in $(LIBRARY_ROOT)/runtimes/go/* ; do \
+        if [ "$$(basename $$dir)" != "ImplementationFromDafny-go" ] && [ "$$(basename $$dir)" != "TestsFromDafny-go" ]; then \
+			cp -Rf $$dir runtimes/go/ImplementationFromDafny-go/; \
+			cp -Rf $$dir runtimes/go/TestsFromDafny-go/; \
+			rm -r $$dir; \
+		fi \
+    done
 ########################## .NET targets
 
 net: polymorph_dafny transpile_net polymorph_dotnet test_net
@@ -558,7 +598,10 @@ rust: polymorph_dafny transpile_rust polymorph_rust test_rust
 
 # The Dafny Rust code generator only supports a single crate for everything,
 # so (among other consequences) we compile src and test code together.
-transpile_rust: | transpile_implementation_rust
+transpile_rust: copy_rust_externs transpile_implementation_rust
+
+copy_rust_externs:
+	runtimes/rust/copy_externs.sh || true
 
 transpile_implementation_rust: TARGET=rs
 transpile_implementation_rust: OUT=implementation_from_dafny
@@ -566,7 +609,7 @@ transpile_implementation_rust: SRC_INDEX=$(RUST_SRC_INDEX)
 transpile_implementation_rust: TEST_INDEX=$(RUST_TEST_INDEX)
 # The Dafny Rust code generator is not complete yet,
 # so we want to emit code even if there are unsupported features in the input.
-transpile_implementation_rust: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix
+transpile_implementation_rust: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix --rust-module-name implementation_from_dafny
 # The Dafny Rust code generator only supports a single crate for everything,
 # so we inline all dependencies by not passing `-library` to Dafny.
 transpile_implementation_rust: TRANSPILE_DEPENDENCIES=
@@ -574,7 +617,7 @@ transpile_implementation_rust: STD_LIBRARY=
 transpile_implementation_rust: SRC_INDEX_TRANSPILE=$(if $(SRC_INDEX),$(SRC_INDEX),src)
 transpile_implementation_rust: TEST_INDEX_TRANSPILE=$(if $(TEST_INDEX),$(TEST_INDEX),test)
 transpile_implementation_rust: DAFNY_OTHER_FILES=$(RUST_OTHER_FILES)
-transpile_implementation_rust: $(if $(TRANSPILE_TESTS_IN_RUST), transpile_test, transpile_implementation) _mv_implementation_rust patch_after_transpile_rust
+transpile_implementation_rust: $(if $(TRANSPILE_TESTS_IN_RUST), transpile_test, transpile_implementation) _mv_implementation_rust
 
 transpile_dependencies_rust: LANG=rust
 transpile_dependencies_rust: transpile_dependencies
@@ -589,35 +632,13 @@ _mv_implementation_rust:
 	rustfmt --edition 2021 runtimes/rust/src/implementation_from_dafny.rs
 	rm -rf implementation_from_dafny-rust
 
-patch_after_transpile_rust:
-	export service_deps_var=SERVICE_DEPS_$(MAIN_SERVICE_FOR_RUST) ; \
-	export namespace_var=SERVICE_NAMESPACE_$(MAIN_SERVICE_FOR_RUST) ; \
-	export SERVICE=$(MAIN_SERVICE_FOR_RUST) ; \
-	$(MAKE) _patch_after_transpile_rust ; \
-
-_patch_after_transpile_rust: OUTPUT_RUST=--output-rust $(LIBRARY_ROOT)/runtimes/rust
-_patch_after_transpile_rust:
-	cd $(CODEGEN_CLI_ROOT); \
-	./../gradlew run --args="\
-	patch-after-transpile \
-	--library-root $(LIBRARY_ROOT) \
-	$(OUTPUT_RUST) \
-	--model $(if $(DIR_STRUCTURE_V2), $(LIBRARY_ROOT)/dafny/$(SERVICE)/Model, $(SMITHY_MODEL_ROOT)) \
-	--dependent-model $(PROJECT_ROOT)/$(SMITHY_DEPS) \
-	$(patsubst %, --dependent-model $(PROJECT_ROOT)/%/Model, $($(service_deps_var))) \
-	--namespace $($(namespace_var)) \
-	$(AWS_SDK_CMD) \
-	$(POLYMORPH_OPTIONS) \
-	$(if $(TRANSPILE_TESTS_IN_RUST), --local-service-test, ) \
-	";
-
 build_rust:
 	cd runtimes/rust; \
 	cargo build
 
 test_rust:
 	cd runtimes/rust; \
-	cargo test -- --nocapture
+	cargo test --release -- --nocapture
 
 ########################## Cleanup targets
 
@@ -630,6 +651,37 @@ _clean:
 	rm -rf $(LIBRARY_ROOT)/runtimes/net/tests/bin $(LIBRARY_ROOT)/runtimes/net/tests/obj
 
 clean: _clean
+
+########################## Go targets
+transpile_go: $(if $(ENABLE_EXTERN_PROCESSING), _no_extern_pre_transpile, )
+transpile_go: | transpile_dependencies_go transpile_implementation_go transpile_test_go
+transpile_go: $(if $(ENABLE_EXTERN_PROCESSING), _no_extern_post_transpile, )
+
+transpile_implementation_go: TARGET=go
+transpile_implementation_go: OUT=runtimes/go/ImplementationFromDafny
+transpile_implementation_go: DAFNY_OPTIONS=--allow-warnings
+transpile_implementation_go: TRANSPILE_DEPENDENCIES=$(patsubst %, --library:$(PROJECT_ROOT)/%, $(PROJECT_INDEX))
+transpile_implementation_go: TRANSLATION_RECORD=$(patsubst %, --translation-record:$(PROJECT_ROOT)/%, $(TRANSLATION_RECORD_GO))
+transpile_implementation_go: TRANSPILE_MODULE_NAME=--go-module-name $(GO_MODULE_NAME)
+transpile_implementation_go: _transpile_implementation_all
+
+transpile_test_go: TARGET=go
+transpile_test_go: OUT=runtimes/go/TestsFromDafny
+transpile_test_go: DAFNY_OPTIONS=--allow-warnings --include-test-runner
+transpile_test_go: TRANSPILE_DEPENDENCIES=$(patsubst %, --library:$(PROJECT_ROOT)/%, $(PROJECT_INDEX))
+transpile_test_go: TRANSLATION_RECORD=$(patsubst %, --translation-record:$(PROJECT_ROOT)/%, $(TRANSLATION_RECORD_GO)) $(patsubst %, --translation-record:$(LIBRARY_ROOT)/%, runtimes/go/ImplementationFromDafny-go/ImplementationFromDafny-go.dtr)
+transpile_test_go: TRANSPILE_MODULE_NAME=--go-module-name $(GO_MODULE_NAME)/test
+transpile_test_go: _transpile_test_all
+
+transpile_dependencies_go: LANG=go
+transpile_dependencies_go: transpile_dependencies
+
+clean_go:
+	rm -rf $(LIBRARY_ROOT)/runtimes/go/ImplementationFromDafny-go
+	rm -rf $(LIBRARY_ROOT)/runtimes/go/TestsFromDafny-go
+
+test_go:
+	cd runtimes/go/TestsFromDafny-go && go mod tidy && go run TestsFromDafny.go
 
 ########################## Python targets
 
@@ -733,7 +785,7 @@ local_transpile_impl_rust_single: DAFNY_OTHER_FILES=$(RUST_OTHER_FILES)
 local_transpile_impl_rust_single: deps_var=SERVICE_DEPS_$(SERVICE)
 local_transpile_impl_rust_single: service_deps_var=SERVICE_DEPS_$(SERVICE)
 local_transpile_impl_rust_single: namespace_var=SERVICE_NAMESPACE_$(SERVICE)
-local_transpile_impl_rust_single: $(if $(TRANSPILE_TESTS_IN_RUST), transpile_test, transpile_implementation) _mv_implementation_rust _patch_after_transpile_rust
+local_transpile_impl_rust_single: $(if $(TRANSPILE_TESTS_IN_RUST), transpile_test, transpile_implementation) _mv_implementation_rust
 
 
 local_transpile_impl_single: deps_var=SERVICE_DEPS_$(SERVICE)

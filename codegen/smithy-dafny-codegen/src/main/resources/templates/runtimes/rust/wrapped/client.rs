@@ -45,7 +45,10 @@ impl Client {
           }
         )
       },
-      Err(error) => $rustRootModuleName:L::conversions::error::to_opaque_error_result(error)
+	Err(error) => {
+          let msg = format!("{:?}", error);
+	  $rustRootModuleName:L::conversions::error::to_opaque_error_result(msg)
+	}
     }
   }
 }

@@ -42,6 +42,8 @@ import software.amazon.polymorph.smithydotnet.TypeConversionDirection;
 import software.amazon.polymorph.smithydotnet.localServiceWrapper.LocalServiceWrappedCodegen;
 import software.amazon.polymorph.smithydotnet.localServiceWrapper.LocalServiceWrappedConversionCodegen;
 import software.amazon.polymorph.smithydotnet.localServiceWrapper.LocalServiceWrappedShimCodegen;
+import software.amazon.polymorph.smithygo.awssdk.DafnyGoAwsSdkClientCodegenPlugin;
+import software.amazon.polymorph.smithygo.localservice.DafnyLocalServiceCodegenPlugin;
 import software.amazon.polymorph.smithyjava.generator.CodegenSubject.AwsSdkVersion;
 import software.amazon.polymorph.smithyjava.generator.awssdk.v1.JavaAwsSdkV1;
 import software.amazon.polymorph.smithyjava.generator.awssdk.v2.JavaAwsSdkV2;
@@ -77,6 +79,11 @@ public class CodegenEngine {
 
   private static final DafnyVersion MIN_DAFNY_VERSION = DafnyVersion.parse(
     "4.5"
+  );
+  // The highest released version of Dafny.
+  // Needed to handle pre-releases differently.
+  private static final DafnyVersion MAX_DAFNY_VERSION = DafnyVersion.parse(
+    "4.9"
   );
 
   // Used to distinguish different conventions between the CLI
@@ -197,6 +204,7 @@ public class CodegenEngine {
         case DAFNY -> generateDafny(outputDir);
         case JAVA -> generateJava(outputDir, testOutputDir);
         case DOTNET -> generateDotnet(outputDir);
+        case GO -> generateGo();
         case RUST -> generateRust(outputDir);
         case PYTHON -> generatePython();
         default -> throw new UnsupportedOperationException(
@@ -802,6 +810,41 @@ public class CodegenEngine {
     }
   }
 
+  private void generateGo() {
+    if (libraryName.isEmpty()) {
+      throw new IllegalArgumentException("Go codegen requires a library name");
+    }
+
+    ObjectNode.Builder goSettingsBuilder = ObjectNode
+      .builder()
+      .withMember("service", serviceShape.getId().toString())
+      .withMember("moduleName", libraryName.get());
+
+    final PluginContext pluginContext = PluginContext
+      .builder()
+      .model(model)
+      .fileManifest(
+        FileManifest.create(targetLangOutputDirs.get(TargetLanguage.GO))
+      )
+      .settings(goSettingsBuilder.build())
+      .build();
+
+    final Map<String, String> smithyNamespaceToGoModuleNameMap = new HashMap<>(
+      dependencyLibraryNames
+    );
+    smithyNamespaceToGoModuleNameMap.put(
+      serviceShape.getId().getNamespace(),
+      libraryName.get()
+    );
+    if (this.awsSdkStyle) {
+      new DafnyGoAwsSdkClientCodegenPlugin(smithyNamespaceToGoModuleNameMap)
+        .run(pluginContext);
+    } else {
+      new DafnyLocalServiceCodegenPlugin(smithyNamespaceToGoModuleNameMap)
+        .run(pluginContext);
+    }
+  }
+
   private void generatePython() {
     if (libraryName.isEmpty()) {
       throw new IllegalArgumentException(
@@ -1248,7 +1291,7 @@ public class CodegenEngine {
       final Map<TargetLanguage, Path> targetLangTestOutputDirs =
         ImmutableMap.copyOf(targetLangTestOutputDirsRaw);
 
-      final DafnyVersion dafnyVersion = Optional
+      DafnyVersion dafnyVersion = Optional
         .ofNullable(this.dafnyVersion)
         .orElseGet(CodegenEngine::getDafnyVersionFromDafny);
       if (dafnyVersion.compareTo(MIN_DAFNY_VERSION) < 0) {
@@ -1258,6 +1301,18 @@ public class CodegenEngine {
           " is required, but found " +
           dafnyVersion.unparse()
         );
+      }
+      // If the version has not been released yet,
+      // downgrade it. Otherwise, the system will not find runtime libraries
+      // with the same version.
+      // The better fix for this is for Dafny to pre-release
+      if (dafnyVersion.compareTo(MAX_DAFNY_VERSION) > 0) {
+        LOGGER.warn(
+          "Dafny version {} appears to be unreleased, downgrading to {} to ensure runtimes are available",
+          dafnyVersion.unparse(),
+          MAX_DAFNY_VERSION.unparse()
+        );
+        dafnyVersion = MAX_DAFNY_VERSION;
       }
 
       final Optional<Path> propertiesFile = Optional
@@ -1336,6 +1391,7 @@ public class CodegenEngine {
     DAFNY,
     JAVA,
     DOTNET,
+    GO,
     RUST,
     PYTHON,
   }

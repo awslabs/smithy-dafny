@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import software.amazon.polymorph.TestModelTest;
-import software.amazon.polymorph.smithydafny.DafnyVersion;
 
 class DotnetTestModels extends TestModelTest {
 
@@ -20,6 +19,7 @@ class DotnetTestModels extends TestModelTest {
 
   static {
     DISABLED_TESTS.add("AggregateReferences");
+    DISABLED_TESTS.add("CallingAWSSDKFromLocalService");
     DISABLED_TESTS.add("Documentation");
     DISABLED_TESTS.add("LanguageSpecificLogic");
     DISABLED_TESTS.add("LocalService");
@@ -30,6 +30,8 @@ class DotnetTestModels extends TestModelTest {
     DISABLED_TESTS.add("SimpleTypes/SimpleFloat");
     DISABLED_TESTS.add("SimpleTypes/SimpleShort");
     DISABLED_TESTS.add("Streaming");
+    //TODO: Add support for Recursive shapes.
+    DISABLED_TESTS.add("RecursiveShape");
     DISABLED_TESTS.add("SQSExtended");
     // S3 is not yet supported
     DISABLED_TESTS.add("aws-sdks/s3");

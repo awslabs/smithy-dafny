@@ -1,8 +1,11 @@
+// Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 // Annotation to ignore the case of this module
 use crate::r#_Wrappers_Compile;
-use crate::UTF8;
+use crate::implementation_from_dafny::UTF8;
 
-impl crate::UTF8::_default {
+impl crate::implementation_from_dafny::UTF8::_default {
     pub fn Encode(
         s: &::dafny_runtime::Sequence<::dafny_runtime::DafnyCharUTF16>,
     ) -> ::std::rc::Rc<
