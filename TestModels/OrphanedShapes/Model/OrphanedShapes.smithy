@@ -11,11 +11,7 @@ namespace simple.orphaned
 service SimpleOrphaned {
   version: "2021-11-01",
   resources: [],
-  operations: [
-    // CreateOrphanedStructure,
-    // CreateOrphanedResource,
-    // CreateOrphanedError,
-  ],
+  operations: [],
 }
 
 structure SimpleOrphanedConfig {
@@ -132,30 +128,3 @@ structure OrphanedResourceOperationInput {
 structure OrphanedResourceOperationOutput {
   someString: String
 }
-
-operation CreateOrphanedStructure {
-    input: CreateOrphanedStructureInput
-    output: CreateOrphanedStructureOutput
-}
-
-structure CreateOrphanedStructureInput {}
-
-structure CreateOrphanedStructureOutput {}
-
-operation CreateOrphanedResource {
-    input: CreateOrphanedResourceInput
-    output: CreateOrphanedResourceOutput
-}
-
-structure CreateOrphanedResourceInput {}
-
-structure CreateOrphanedResourceOutput {}
-
-operation CreateOrphanedError {
-    input: CreateOrphanedErrorInput
-    output: CreateOrphanedErrorOutput
-}
-
-structure CreateOrphanedErrorInput {}
-
-structure CreateOrphanedErrorOutput {}
