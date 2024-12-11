@@ -1,5 +1,5 @@
-"""Wrapper file for executing Dafny tests from pytest.
-
+"""
+Wrapper file for executing Dafny tests from pytest.
 This allows us to import modules required by Dafny-generated tests
 before executing Dafny-generated tests.
 pytest will find and execute the `test_dafny` method below,
@@ -12,7 +12,7 @@ import sys
 # and require adding Dafny-generated test code to PYTHONPATH.
 # These files are only on PYTHONPATH for tests executed from this file.
 
-internaldafny_dir = "/".join(__file__.split("/")[:-1])
+internaldafny_dir = '/'.join(__file__.split("/")[:-1])
 
 sys.path.append(internaldafny_dir + "/extern")
 sys.path.append(internaldafny_dir + "/generated")
@@ -20,6 +20,5 @@ sys.path.append(internaldafny_dir + "/generated")
 # Initialize extern for test
 from .extern import wrapped_simple_blob
 
-
 def test_dafny():
-    from .generated import __main__
+  from .generated import __main__

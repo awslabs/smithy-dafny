@@ -7,8 +7,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
-import java.util.stream.Collectors;
-
 import software.amazon.polymorph.smithygo.codegen.ApplicationProtocol;
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoDelegator;
@@ -26,7 +24,6 @@ import software.amazon.polymorph.traits.ExtendableTrait;
 import software.amazon.polymorph.traits.LocalServiceTrait;
 import software.amazon.polymorph.traits.PositionalTrait;
 import software.amazon.polymorph.traits.ReferenceTrait;
-import software.amazon.polymorph.utils.ModelUtils;
 import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.model.shapes.OperationShape;
@@ -1069,13 +1066,6 @@ public class DafnyLocalServiceTypeConversionProtocol
         }
       );
 
-    Set<StructureShape> errorShapesForNamespace = context.model().getStructureShapes()
-      .stream()
-      .filter(shape -> shape.hasTrait(ErrorTrait.class))
-      .filter(shape ->
-        ModelUtils.isInServiceNamespace(shape.getId(), context.settings().getService(context.model())))
-      .collect(Collectors.toSet());
-
     context
       .writerDelegator()
       .useFileWriter(
@@ -1113,8 +1103,7 @@ public class DafnyLocalServiceTypeConversionProtocol
             """,
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
             writer.consumer(w -> {
-              for (var errorShape : errorShapesForNamespace) {
-                var error = errorShape.getId();
+              for (var error : serviceShape.getErrors()) {
                 w.write(
                   """
                     case $L:
@@ -1435,13 +1424,6 @@ public class DafnyLocalServiceTypeConversionProtocol
         }
       );
 
-    Set<StructureShape> errorShapesForNamespace = context.model().getStructureShapes()
-      .stream()
-      .filter(shape -> shape.hasTrait(ErrorTrait.class))
-      .filter(shape ->
-        ModelUtils.isInServiceNamespace(shape.getId(), context.settings().getService(context.model())))
-      .collect(Collectors.toSet());
-
     context
       .writerDelegator()
       .useFileWriter(
@@ -1474,8 +1456,7 @@ public class DafnyLocalServiceTypeConversionProtocol
             """,
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
             writer.consumer(w -> {
-              for (final var errorShape : errorShapesForNamespace) {
-                var error = errorShape.getId();
+              for (final var error : serviceShape.getErrors()) {
                 w.write(
                   """
                   if err.Is_$L() {
