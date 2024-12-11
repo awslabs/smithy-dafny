@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import software.amazon.polymorph.smithypython.awssdk.nameresolver.AwsSdkNameResolver;
 import software.amazon.polymorph.smithypython.wrappedlocalservice.DafnyPythonWrappedLocalServiceProtocolGenerator;
 import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.shapes.StringShape;
@@ -133,7 +135,7 @@ public abstract class BaseConversionWriter {
    * Returns true if a conversion function should be written for the shape, false otherwise.
    * Conversion functions are only written for "complex" shapes:
    *  - StructureShapes ("complex" because StructureShapes can be recursive)
-   *    - except for StructureShapes with ErrorTrait; these aren't "complex"
+   *    - except for non-AWS SDK StructureShapes with ErrorTrait; these aren't "complex"
    *  - UnionShapes ("complex" because the conversion is not a one-liner)
    *  - EnumShapes or StringShapes with EnumTrait ("complex" because the conversion is not a one-liner)
    * @param shape
@@ -141,7 +143,7 @@ public abstract class BaseConversionWriter {
    */
   public static boolean shapeShouldHaveConversionFunction(Shape shape) {
     if (shape.isStructureShape()) {
-      if (shape.hasTrait(ErrorTrait.class)) {
+      if (!AwsSdkNameResolver.isAwsSdkShape(shape) && shape.hasTrait(ErrorTrait.class)) {
         return false;
       }
       return true;
