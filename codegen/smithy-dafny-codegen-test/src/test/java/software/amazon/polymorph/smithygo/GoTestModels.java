@@ -3,13 +3,16 @@
 
 package software.amazon.polymorph.smithygo;
 
-import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import software.amazon.polymorph.TestModelTest;
+
+import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
+
+import static software.amazon.smithy.dafny.codegen.TestUtils.make;
 
 class GoTestModels extends TestModelTest {
 
