@@ -1,5 +1,5 @@
-// Class _ExternBase___default
-// Dafny class __default compiled into Java
+// Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 package ExternDefinitions_Compile;
 
 import simple.orphaned.internaldafny.types.*;

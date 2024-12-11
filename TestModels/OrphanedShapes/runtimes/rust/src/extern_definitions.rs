@@ -1,3 +1,6 @@
+// Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
+
 use std::rc::Rc;
 use std::cell::UnsafeCell;
 use dafny_runtime::rcmut;
