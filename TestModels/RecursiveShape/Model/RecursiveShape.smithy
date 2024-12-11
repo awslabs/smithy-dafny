@@ -9,7 +9,7 @@ namespace simple.recursiveShape
 service SimpleRecursiveShape {
   version: "2021-11-01",
   resources: [],
-  operations: [ GetRecursiveShape, GetRecursiveStructure ],
+  operations: [ GetRecursiveShape ],
   errors: [],
 }
 
@@ -18,11 +18,6 @@ structure SimpleRecursiveShapeConfig {}
 operation GetRecursiveShape {
   input: GetRecursiveShapeInput,
   output: GetRecursiveShapeOutput,
-}
-
-operation GetRecursiveStructure {
-  input: StructureWithRecursionOne,
-  output: StructureWithRecursionOne,
 }
 
 structure GetRecursiveShapeInput {
@@ -50,12 +45,4 @@ map MapWithRecursion {
 
 structure StructureWithRecursion {
     content: RecursiveUnion
-}
-
-structure StructureWithRecursionOne {
-    content: StructureWithRecursionTwo
-}
-
-structure StructureWithRecursionTwo {
-    content: StructureWithRecursionOne
 }

@@ -34,7 +34,7 @@ func (CompanionStruct_Default___) CallNativeOrphanedResource(input *OrphanedReso
 
 func (CompanionStruct_Default___) CallNativeOrphanedError(input SimpleOrphanedTypes.Error) SimpleOrphanedTypes.Error {
 	native_error := simpleorphanedsmithygenerated.Error_FromDafny(input)
-	native_error.Message = "the extern MUST use Smithy-generated conversions to set this value in the native error"
+	native_error.Message = "the extern MUST set this string using the catch-all error converter, NOT the orphaned error-specific converter"
 	dafny_error_again := simpleorphanedsmithygenerated.Error_ToDafny(native_error)
 	return dafny_error_again
 }

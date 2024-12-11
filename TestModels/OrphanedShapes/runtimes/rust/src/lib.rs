@@ -18,7 +18,7 @@ mod standard_library_conversions;
 mod standard_library_externs;
 pub mod types;
 pub mod wrapped;
-pub mod simple_orphaned_impl;
+pub mod extern_definitions;
 pub(crate) use crate::implementation_from_dafny::r#_Wrappers_Compile;
 pub(crate) use crate::implementation_from_dafny::simple;
 pub use crate::types::simple_orphaned_config::SimpleOrphanedConfig;

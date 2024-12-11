@@ -535,34 +535,34 @@ public class DirectedDafnyPythonLocalServiceCodegen
           shapeToGenerate
         );
       }
-
-      final WriterDelegator<PythonWriter> delegator = directive.context().writerDelegator();
-      final String moduleName =
-        SmithyNameResolver.getServiceSmithygeneratedDirectoryNameForNamespace(
-          directive.context().settings().getService().getNamespace()
-        );
-
-      delegator.useFileWriter(
-        moduleName + "/dafny_to_smithy.py",
-        "",
-        conversionWriter -> {
-          DafnyToLocalServiceConversionFunctionWriter.writeConverterForShapeAndMembers(
-            shapeToGenerate,
-            directive.context(),
-            conversionWriter
-          );
-        });
-
-      delegator.useFileWriter(
-        moduleName + "/smithy_to_dafny.py",
-        "",
-        conversionWriter -> {
-          LocalServiceToDafnyConversionFunctionWriter.writeConverterForShapeAndMembers(
-            shapeToGenerate,
-            directive.context(),
-            conversionWriter
-          );
-        });
+//
+//      final WriterDelegator<PythonWriter> delegator = directive.context().writerDelegator();
+//      final String moduleName =
+//        SmithyNameResolver.getServiceSmithygeneratedDirectoryNameForNamespace(
+//          directive.context().settings().getService().getNamespace()
+//        );
+//
+//      delegator.useFileWriter(
+//        moduleName + "/dafny_to_smithy.py",
+//        "",
+//        conversionWriter -> {
+//          DafnyToLocalServiceConversionFunctionWriter.writeConverterForShapeAndMembers(
+//            shapeToGenerate,
+//            directive.context(),
+//            conversionWriter
+//          );
+//        });
+//
+//      delegator.useFileWriter(
+//        moduleName + "/smithy_to_dafny.py",
+//        "",
+//        conversionWriter -> {
+//          LocalServiceToDafnyConversionFunctionWriter.writeConverterForShapeAndMembers(
+//            shapeToGenerate,
+//            directive.context(),
+//            conversionWriter
+//          );
+//        });
 
     }
   }
@@ -651,12 +651,12 @@ public class DirectedDafnyPythonLocalServiceCodegen
     protocolGenerator.generateSharedDeserializerComponents(directive.context());
     protocolGenerator.generateResponseDeserializers(directive.context());
 
-    // Generate any missing conversion. functions
+    // Generate any missing conversion.
     // This SHOULD run after generateRequestSerializers and generateResponseDeserializers
     // to preserve topological ordering of generated functions.
     // I don't think that topological ordering is required here
-    // (no function's top-level definition depend on another function in this file)
-    // but this could change in the far future, so best to preserve the correct ordering.
+    // (no function's top-level definition depends on another function in this file)
+    // but this could change in the future, so best to preserve the correct ordering.
     // (An orphaned conversion function MAY depend on a non-orphaned conversion function,
     //  but never the other way around.)
     generateOrphanedShapeConversionMethods(directive);

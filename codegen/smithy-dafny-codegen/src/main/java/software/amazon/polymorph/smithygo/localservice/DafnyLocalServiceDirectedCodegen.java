@@ -213,11 +213,7 @@ public class DafnyLocalServiceDirectedCodegen
       ShapeType.INTEGER,
       ShapeType.UNION,
       ShapeType.STRING,
-      ShapeType.LONG,
-      ShapeType.BLOB,
-      ShapeType.BOOLEAN,
-      ShapeType.LIST,
-      ShapeType.MAP
+      ShapeType.LONG
     );
 
     for (final var shapeToGenerate : orderedShapes) {

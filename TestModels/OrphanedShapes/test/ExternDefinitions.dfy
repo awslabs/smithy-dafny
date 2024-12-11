@@ -1,7 +1,7 @@
 include "../Model/SimpleOrphanedTypes.dfy"
 include "../src/OrphanedResource.dfy"
 
-module ExternDefinitions {
+module {:extern} ExternDefinitions {
 
   import opened Wrappers
   import Types = SimpleOrphanedTypes
@@ -33,7 +33,7 @@ module ExternDefinitions {
     var out_error := CallNativeOrphanedError(error);
 
     expect out_error.OrphanedError?;
-    expect out_error.message == "the extern MUST use Smithy-generated conversions to set this value in the native error";
+    expect out_error.message == "the extern MUST set this string using the catch-all error converter, NOT the orphaned error-specific converter";
   }
 
   // This extern MUST use Smithy-generated type conversions to initialize the input in the native OrphanedStructure.

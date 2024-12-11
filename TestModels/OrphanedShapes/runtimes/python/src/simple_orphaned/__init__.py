@@ -3,6 +3,3 @@
 
 # Initialize generated Dafny
 from .internaldafny.generated import module_
-
-# Initialize externs
-from .internaldafny import extern
