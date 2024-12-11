@@ -12,6 +12,9 @@ import (
 
 var _ Wrappers.Dummy__
 
+// TODO: Finish implementation.
+// This is missing structure converter.
+
 func (CompanionStruct_Default___) InitializeOrphanedStructure(input SimpleOrphanedTypes.OrphanedStructure) SimpleOrphanedTypes.OrphanedStructure {
 	// Missing Structure converter
 	return input
@@ -19,12 +22,8 @@ func (CompanionStruct_Default___) InitializeOrphanedStructure(input SimpleOrphan
 
 func (CompanionStruct_Default___) CallNativeOrphanedResource(input *OrphanedResource.OrphanedResource) Wrappers.Result {
 	native_resource := simpleorphanedsmithygenerated.OrphanedResource_FromDafny(input)
-	fmt.Printf("Type of native_resource: %T\n", native_resource)
 	someString := "the extern MUST provide this string to the native resource's operation"
-	fmt.Printf("Type of someString: %T\n", someString)
-	fmt.Printf("Type of &someString: %T\n", &someString)
 	native_output, err := native_resource.OrphanedResourceOperation(simpleorphanedsmithygeneratedtypes.OrphanedResourceOperationInput{SomeString: &someString})
-	fmt.Printf("Type of native_output: %T\n", native_output)
 	if err != nil {
 		return Wrappers.Companion_Result_.Create_Failure_(err)
 	}

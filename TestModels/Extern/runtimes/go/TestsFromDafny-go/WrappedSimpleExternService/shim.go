@@ -5,6 +5,7 @@ package WrappedSimpleExternService
 import (
 	"context"
 
+	"github.com/dafny-lang/DafnyRuntimeGo/v4/dafny"
 	"github.com/dafny-lang/DafnyStandardLibGo/Wrappers"
 	"github.com/smithy-lang/smithy-dafny/TestModels/Extern/SimpleDafnyExternTypes"
 	"github.com/smithy-lang/smithy-dafny/TestModels/Extern/simpledafnyexternsmithygenerated"

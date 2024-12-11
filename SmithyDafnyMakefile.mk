@@ -336,7 +336,7 @@ _polymorph_dependencies:
 polymorph_code_gen: POLYMORPH_LANGUAGE_TARGET=code_gen
 polymorph_code_gen: _polymorph_dependencies
 polymorph_code_gen:
-	set -e; for service in $(PROJECT_SERVICES) ; do \go
+	set -e; for service in $(PROJECT_SERVICES) ; do \
 		export service_deps_var=SERVICE_DEPS_$${service} ; \
 		export namespace_var=SERVICE_NAMESPACE_$${service} ; \
 		export SERVICE=$${service} ; \
