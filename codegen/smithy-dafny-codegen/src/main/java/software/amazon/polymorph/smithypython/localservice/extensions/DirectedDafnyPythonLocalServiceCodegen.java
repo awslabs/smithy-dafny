@@ -4,9 +4,8 @@
 package software.amazon.polymorph.smithypython.localservice.extensions;
 
 import static java.lang.String.format;
-import static software.amazon.polymorph.utils.ModelUtils.getTopologicallyOrderedOrphanedShapesForService;
 import static software.amazon.polymorph.smithypython.common.shapevisitor.conversionwriter.BaseConversionWriter.shapeShouldHaveConversionFunction;
-
+import static software.amazon.polymorph.utils.ModelUtils.getTopologicallyOrderedOrphanedShapesForService;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -535,34 +534,34 @@ public class DirectedDafnyPythonLocalServiceCodegen
           shapeToGenerate
         );
       }
-//
-//      final WriterDelegator<PythonWriter> delegator = directive.context().writerDelegator();
-//      final String moduleName =
-//        SmithyNameResolver.getServiceSmithygeneratedDirectoryNameForNamespace(
-//          directive.context().settings().getService().getNamespace()
-//        );
-//
-//      delegator.useFileWriter(
-//        moduleName + "/dafny_to_smithy.py",
-//        "",
-//        conversionWriter -> {
-//          DafnyToLocalServiceConversionFunctionWriter.writeConverterForShapeAndMembers(
-//            shapeToGenerate,
-//            directive.context(),
-//            conversionWriter
-//          );
-//        });
-//
-//      delegator.useFileWriter(
-//        moduleName + "/smithy_to_dafny.py",
-//        "",
-//        conversionWriter -> {
-//          LocalServiceToDafnyConversionFunctionWriter.writeConverterForShapeAndMembers(
-//            shapeToGenerate,
-//            directive.context(),
-//            conversionWriter
-//          );
-//        });
+      //
+      //      final WriterDelegator<PythonWriter> delegator = directive.context().writerDelegator();
+      //      final String moduleName =
+      //        SmithyNameResolver.getServiceSmithygeneratedDirectoryNameForNamespace(
+      //          directive.context().settings().getService().getNamespace()
+      //        );
+      //
+      //      delegator.useFileWriter(
+      //        moduleName + "/dafny_to_smithy.py",
+      //        "",
+      //        conversionWriter -> {
+      //          DafnyToLocalServiceConversionFunctionWriter.writeConverterForShapeAndMembers(
+      //            shapeToGenerate,
+      //            directive.context(),
+      //            conversionWriter
+      //          );
+      //        });
+      //
+      //      delegator.useFileWriter(
+      //        moduleName + "/smithy_to_dafny.py",
+      //        "",
+      //        conversionWriter -> {
+      //          LocalServiceToDafnyConversionFunctionWriter.writeConverterForShapeAndMembers(
+      //            shapeToGenerate,
+      //            directive.context(),
+      //            conversionWriter
+      //          );
+      //        });
 
     }
   }
@@ -582,10 +581,10 @@ public class DirectedDafnyPythonLocalServiceCodegen
     );
 
     for (Shape shapeToGenerate : orderedShapes) {
-
-      if (shapeShouldHaveConversionFunction(shapeToGenerate))
-      {
-        final WriterDelegator<PythonWriter> delegator = directive.context().writerDelegator();
+      if (shapeShouldHaveConversionFunction(shapeToGenerate)) {
+        final WriterDelegator<PythonWriter> delegator = directive
+          .context()
+          .writerDelegator();
         final String moduleName =
           SmithyNameResolver.getServiceSmithygeneratedDirectoryNameForNamespace(
             directive.context().settings().getService().getNamespace()
@@ -600,7 +599,8 @@ public class DirectedDafnyPythonLocalServiceCodegen
               directive.context(),
               conversionWriter
             );
-          });
+          }
+        );
 
         delegator.useFileWriter(
           moduleName + "/smithy_to_dafny.py",
@@ -611,7 +611,8 @@ public class DirectedDafnyPythonLocalServiceCodegen
               directive.context(),
               conversionWriter
             );
-          });
+          }
+        );
       }
     }
   }

@@ -7,6 +7,7 @@ This project tests for support of "orphaned" shapes.
 An "orphaned" is a shape that exists in a Smithy model, but is not discovered by Smithy-Core's shape discovery logic.
 
 Smithy-Core will only discover and generate code for shapes that are attached to a service via the service's
+
 1. Operations
 2. Mixins
 3. Errors
@@ -43,6 +44,7 @@ and these TestModels' prerequisite TestModels.
 ## Coverage
 
 This TestModel tests some instances of orphaned shapes
+
 - LocalService Config shapes. (Config shapes are "orphaned", but are likely already handled as one-offs by any codegen that's this TestModels' prerequisites)
 - Errors
 - Resources (with @aws.polymorph#reference trait) and their operations

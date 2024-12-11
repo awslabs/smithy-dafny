@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import software.amazon.polymorph.smithypython.awssdk.nameresolver.AwsSdkNameResolver;
 import software.amazon.polymorph.smithypython.wrappedlocalservice.DafnyPythonWrappedLocalServiceProtocolGenerator;
 import software.amazon.smithy.model.shapes.Shape;
@@ -143,15 +142,19 @@ public abstract class BaseConversionWriter {
    */
   public static boolean shapeShouldHaveConversionFunction(Shape shape) {
     if (shape.isStructureShape()) {
-      if (!AwsSdkNameResolver.isAwsSdkShape(shape) && shape.hasTrait(ErrorTrait.class)) {
+      if (
+        !AwsSdkNameResolver.isAwsSdkShape(shape) &&
+        shape.hasTrait(ErrorTrait.class)
+      ) {
         return false;
       }
       return true;
     } else if (shape.isUnionShape()) {
       return true;
     } else if (
-      (shape.isStringShape() && shape.hasTrait(EnumTrait.class))
-      || shape.isEnumShape()) {
+      (shape.isStringShape() && shape.hasTrait(EnumTrait.class)) ||
+      shape.isEnumShape()
+    ) {
       return true;
     }
     return false;
