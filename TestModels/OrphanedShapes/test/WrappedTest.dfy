@@ -5,25 +5,13 @@ include "../src/WrappedSimpleOrphanedImpl.dfy"
 include "ExternDefinitions.dfy"
 
 // There are no non-wrapped tests for this TestModel.
-// This TestModel requires implementing externs that call Polymorph-generated code.
-// Polymorph must be in the mix, even for the non-wrapped client, so it is reasonable to only have wrapped tests.
+// This TestModel requires implementing externs that use Polymorph-generated code.
+// Polymorph must be in the mix, so it is reasonable to only have wrapped tests.
 
 module WrappedTest {
   import WrappedSimpleOrphanedService
   import opened Types = SimpleOrphanedTypes
   import ExternDefinitions
-
-  // method {:test} TestWrappedClient()
-  // {
-  //   // ExternDefinitions.TestOrphanedStructure();
-  //   ExternDefinitions.TestOrphanedResource();
-  //   // ExternDefinitions.TestOrphanedError();
-
-  //   // var client :- expect WrappedSimpleOrphanedService.WrappedSimpleOrphaned();
-  //   // TestCreateOrphanedStructure(client);
-  //   // TestCreateOrphanedResource(client);
-  //   // TestCreateOrphanedError(client);
-  // }
 
   method {:test} TestOrphanedStructure() {
     ExternDefinitions.TestOrphanedStructure();

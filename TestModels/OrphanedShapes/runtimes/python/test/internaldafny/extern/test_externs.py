@@ -1,3 +1,6 @@
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 import ExternDefinitions
 import simple_orphaned
 import simple_orphaned.smithygenerated.simple_orphaned.deserialize
