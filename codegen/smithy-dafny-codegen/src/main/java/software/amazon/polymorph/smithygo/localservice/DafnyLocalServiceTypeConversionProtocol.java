@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import software.amazon.polymorph.smithygo.codegen.ApplicationProtocol;
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoDelegator;
@@ -1069,11 +1068,17 @@ public class DafnyLocalServiceTypeConversionProtocol
         }
       );
 
-    Set<StructureShape> errorShapesForNamespace = context.model().getStructureShapes()
+    Set<StructureShape> errorShapesForNamespace = context
+      .model()
+      .getStructureShapes()
       .stream()
       .filter(shape -> shape.hasTrait(ErrorTrait.class))
       .filter(shape ->
-        ModelUtils.isInServiceNamespace(shape.getId(), context.settings().getService(context.model())))
+        ModelUtils.isInServiceNamespace(
+          shape.getId(),
+          context.settings().getService(context.model())
+        )
+      )
       .collect(Collectors.toSet());
 
     context
@@ -1435,11 +1440,17 @@ public class DafnyLocalServiceTypeConversionProtocol
         }
       );
 
-    Set<StructureShape> errorShapesForNamespace = context.model().getStructureShapes()
+    Set<StructureShape> errorShapesForNamespace = context
+      .model()
+      .getStructureShapes()
       .stream()
       .filter(shape -> shape.hasTrait(ErrorTrait.class))
       .filter(shape ->
-        ModelUtils.isInServiceNamespace(shape.getId(), context.settings().getService(context.model())))
+        ModelUtils.isInServiceNamespace(
+          shape.getId(),
+          context.settings().getService(context.model())
+        )
+      )
       .collect(Collectors.toSet());
 
     context
