@@ -1068,7 +1068,7 @@ public class DafnyLocalServiceTypeConversionProtocol
         }
       );
 
-    Set<StructureShape> errorShapesForNamespace = context
+    final Set<StructureShape> errorShapesForNamespace = context
       .model()
       .getStructureShapes()
       .stream()
@@ -1119,7 +1119,7 @@ public class DafnyLocalServiceTypeConversionProtocol
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
             writer.consumer(w -> {
               for (var errorShape : errorShapesForNamespace) {
-                var error = errorShape.getId();
+                final var error = errorShape.getId();
                 w.write(
                   """
                     case $L:
@@ -1440,7 +1440,7 @@ public class DafnyLocalServiceTypeConversionProtocol
         }
       );
 
-    Set<StructureShape> errorShapesForNamespace = context
+    final Set<StructureShape> errorShapesForNamespace = context
       .model()
       .getStructureShapes()
       .stream()
@@ -1486,7 +1486,7 @@ public class DafnyLocalServiceTypeConversionProtocol
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
             writer.consumer(w -> {
               for (final var errorShape : errorShapesForNamespace) {
-                var error = errorShape.getId();
+                final var error = errorShape.getId();
                 w.write(
                   """
                   if err.Is_$L() {
