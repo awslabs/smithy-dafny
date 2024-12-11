@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 namespace simple.callingawssdkfromlocalservice
 
+use aws.polymorph#reference
+use com.amazonaws.dynamodb#DynamoDB_20120810
+use com.amazonaws.kms#TrentService
+
 // We don't support @default for local services,
 // but this model reuses com.amazonaws.dynamodb#Integer.
 // Suppressing that warning to let this test model build,
 // but this may have impact in other similar models.
 // See https://github.com/smithy-lang/smithy-dafny/issues/745.
 apply CallDDBScanOutput$itemOutput @suppress(["UnsupportedFeatures"])
-
-use aws.polymorph#reference
-use com.amazonaws.dynamodb#DynamoDB_20120810
-use com.amazonaws.kms#TrentService
 
 @reference(service: DynamoDB_20120810)
 structure DdbClientReference {}
