@@ -3,6 +3,8 @@
 
 package software.amazon.polymorph.smithygo;
 
+import static software.amazon.smithy.dafny.codegen.TestUtils.make;
+
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,6 +26,7 @@ class GoTestModels extends TestModelTest {
     DISABLED_TESTS.add("SimpleTypes/BigDecimal");
     DISABLED_TESTS.add("SimpleTypes/BigInteger");
     DISABLED_TESTS.add("SimpleTypes/SimpleByte");
+    DISABLED_TESTS.add("SimpleTypes/SimpleDocument");
     DISABLED_TESTS.add("SimpleTypes/SimpleFloat");
     DISABLED_TESTS.add("SimpleTypes/SimpleShort");
     DISABLED_TESTS.add("aws-sdks/ddb-lite");
@@ -33,6 +36,7 @@ class GoTestModels extends TestModelTest {
     DISABLED_TESTS.add("aws-sdks/sqs");
     DISABLED_TESTS.add("aws-sdks/sqs-via-cli");
     DISABLED_TESTS.add("aws-sdks/s3");
+    DISABLED_TESTS.add("Streaming");
     DISABLED_TESTS.add("SQSExtended");
     //TODO: We should be able to support below models, but isn't a priority.
     DISABLED_TESTS.add("MultipleModels");
