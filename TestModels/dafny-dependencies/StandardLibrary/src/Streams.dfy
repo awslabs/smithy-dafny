@@ -27,7 +27,7 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
   //
   // Known limitations:
   //
-  //  * ContentLength should be an Option<uint64>, 
+  //  * ContentLength should be an Option<uint64>,
   //    but that currently ends up running into a conflict
   //    when trying to import Wrappers and Std.Wrappers at the same time.
   //
@@ -50,10 +50,10 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
     ghost const data: BoundedInts.bytes
 
     // TODO: Probably need content type too
-    
-    ghost predicate Valid() 
-      reads this, Repr 
-      ensures Valid() ==> this in Repr 
+
+    ghost predicate Valid()
+      reads this, Repr
+      ensures Valid() ==> this in Repr
       ensures Valid() ==> CanProduce(history)
       decreases height, 0
 
@@ -70,7 +70,7 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
     }
 
     lemma {:axiom} ProducesTerminated(history: seq<((), Option<bytes>)>)
-      requires Action().CanProduce(history) 
+      requires Action().CanProduce(history)
       requires (forall i <- Inputs(history) :: i == FixedInput())
       ensures exists n: nat | n <= Limit() :: Terminated(Outputs(history), StopFn(), n)
     // {
@@ -112,9 +112,9 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
     const wrapped: Enumerator<BoundedInts.bytes>
     const length: uint64
 
-    ghost predicate Valid() 
-      reads this, Repr 
-      ensures Valid() ==> this in Repr 
+    ghost predicate Valid()
+      reads this, Repr
+      ensures Valid() ==> this in Repr
       ensures Valid() ==> CanProduce(history)
       decreases height, 0
     {
@@ -130,7 +130,7 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
     }
 
     lemma {:axiom} ProducesTerminated(history: seq<((), Option<BoundedInts.bytes>)>)
-      requires Action().CanProduce(history) 
+      requires Action().CanProduce(history)
       requires (forall i <- Inputs(history) :: i == FixedInput())
       ensures exists n: nat | n <= Limit() :: Terminated(Outputs(history), StopFn(), n)
 
@@ -138,7 +138,7 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
       wrapped.Limit()
     }
 
-    constructor(wrapped: Enumerator<BoundedInts.bytes>, length: uint64) 
+    constructor(wrapped: Enumerator<BoundedInts.bytes>, length: uint64)
       requires wrapped.Valid()
       requires wrapped.history == []
       ensures Valid()
@@ -165,7 +165,7 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
       false
     }
 
-    method Invoke(t: ()) returns (r: Option<BoundedInts.bytes>) 
+    method Invoke(t: ()) returns (r: Option<BoundedInts.bytes>)
       requires Requires(t)
       modifies Modifies(t)
       decreases Decreases(t).Ordinal()
@@ -175,7 +175,7 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
       assume {:axiom} Valid();
       r := wrapped.Next();
       Update(t, r);
-      
+
       // TODO: Work to do
       assume {:axiom} Ensures(t, r);
     }
@@ -203,9 +203,9 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
     const chunkSize: uint64
     var position: uint64
 
-    ghost predicate Valid() 
-      reads this, Repr 
-      ensures Valid() ==> this in Repr 
+    ghost predicate Valid()
+      reads this, Repr
+      ensures Valid() ==> this in Repr
       ensures Valid() ==> CanProduce(history)
       decreases height, 0
     {
@@ -219,7 +219,7 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
     }
 
     lemma {:axiom} ProducesTerminated(history: seq<((), Option<BoundedInts.bytes>)>)
-      requires Action().CanProduce(history) 
+      requires Action().CanProduce(history)
       requires (forall i <- Inputs(history) :: i == FixedInput())
       ensures exists n: nat | n <= Limit() :: Terminated(Outputs(history), StopFn(), n)
 
@@ -280,7 +280,7 @@ module {:options "--function-syntax:4"} StandardLibrary.Streams {
       assume {:axiom} Valid();
     }
 
-    method Invoke(t: ()) returns (r: Option<BoundedInts.bytes>) 
+    method Invoke(t: ()) returns (r: Option<BoundedInts.bytes>)
       requires Requires(t)
       modifies Modifies(t)
       decreases Decreases(t).Ordinal()

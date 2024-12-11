@@ -63,6 +63,7 @@ repositories {
 dependencies {
     implementation("org.dafny:DafnyRuntime:${dafnyVersion}")
     implementation("software.amazon.smithy.dafny:conversion:0.1.1")
+    implementation("org.reactivestreams:reactive-streams:1.0.3")
 }
 publishing {
     publications.create<MavenPublication>("maven") {
