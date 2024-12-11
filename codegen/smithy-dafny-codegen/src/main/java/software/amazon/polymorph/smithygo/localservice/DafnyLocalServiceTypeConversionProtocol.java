@@ -1076,7 +1076,7 @@ public class DafnyLocalServiceTypeConversionProtocol
       .filter(shape ->
         ModelUtils.isInServiceNamespace(
           shape.getId(),
-          context.settings().getService(context.model())
+          serviceShape
         )
       )
       .collect(Collectors.toSet());
@@ -1448,7 +1448,7 @@ public class DafnyLocalServiceTypeConversionProtocol
       .filter(shape ->
         ModelUtils.isInServiceNamespace(
           shape.getId(),
-          context.settings().getService(context.model())
+          serviceShape
         )
       )
       .collect(Collectors.toSet());
