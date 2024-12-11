@@ -3,6 +3,8 @@
 
 package software.amazon.polymorph.smithyjava;
 
+import static software.amazon.smithy.dafny.codegen.TestUtils.make;
+
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,6 +31,7 @@ class JavaTestModels extends TestModelTest {
     DISABLED_TESTS.add("SimpleTypes/SimpleBlob");
     DISABLED_TESTS.add("SimpleTypes/SimpleBoolean");
     DISABLED_TESTS.add("SimpleTypes/SimpleByte");
+    DISABLED_TESTS.add("SimpleTypes/SimpleDocument");
     DISABLED_TESTS.add("SimpleTypes/SimpleDouble");
     DISABLED_TESTS.add("SimpleTypes/SimpleEnum");
     DISABLED_TESTS.add("SimpleTypes/SimpleEnumV2");
@@ -38,6 +41,7 @@ class JavaTestModels extends TestModelTest {
     DISABLED_TESTS.add("SimpleTypes/SimpleShort");
     DISABLED_TESTS.add("SimpleTypes/SimpleString");
     DISABLED_TESTS.add("SimpleTypes/SimpleTimestamp");
+    DISABLED_TESTS.add("Streaming");
     DISABLED_TESTS.add("Union");
     DISABLED_TESTS.add("aws-sdks/kms-lite");
     DISABLED_TESTS.add("aws-sdks/sqs");
