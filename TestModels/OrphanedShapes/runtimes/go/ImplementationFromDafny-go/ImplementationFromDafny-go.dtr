@@ -1,0 +1,20 @@
+file_format_version = "1.0"
+dafny_version = "4.9.0.0"
+[options_by_module.SimpleOrphanedTypes]
+go-module-name = "github.com/smithy-lang/smithy-dafny/TestModels/OrphanedShapes"
+legacy-module-names = false
+[options_by_module.AbstractSimpleOrphanedOperations]
+go-module-name = "github.com/smithy-lang/smithy-dafny/TestModels/OrphanedShapes"
+legacy-module-names = false
+[options_by_module.AbstractSimpleOrphanedService]
+go-module-name = "github.com/smithy-lang/smithy-dafny/TestModels/OrphanedShapes"
+legacy-module-names = false
+[options_by_module.SimpleOrphanedImpl]
+go-module-name = "github.com/smithy-lang/smithy-dafny/TestModels/OrphanedShapes"
+legacy-module-names = false
+[options_by_module.SimpleOrphaned]
+go-module-name = "github.com/smithy-lang/smithy-dafny/TestModels/OrphanedShapes"
+legacy-module-names = false
+[options_by_module.OrphanedResource]
+go-module-name = "github.com/smithy-lang/smithy-dafny/TestModels/OrphanedShapes"
+legacy-module-names = false
