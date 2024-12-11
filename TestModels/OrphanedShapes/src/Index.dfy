@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 include "SimpleOrphanedImpl.dfy"
 
-module SimpleOrphaned refines AbstractSimpleOrphanedService {
+module {:extern "simple.orphaned.internaldafny" } SimpleOrphaned refines AbstractSimpleOrphanedService {
   import Operations = SimpleOrphanedImpl
 
   function method DefaultSimpleOrphanedConfig(): SimpleOrphanedConfig {
