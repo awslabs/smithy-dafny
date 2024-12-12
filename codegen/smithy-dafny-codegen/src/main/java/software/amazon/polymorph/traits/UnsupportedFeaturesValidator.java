@@ -73,6 +73,13 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
       COMMON_SUPPORTED_TRAITS.stream(),
       Stream
         .of(
+          // This is not actually true at all,
+          // but Smithy liberally injects @default into Smithy 1.0 models
+          // to make implicit semantics explicit.
+          // Rather than require a ton of suppressions and risk alarm fatigue,
+          // this is tracked as a soundness bug instead:
+          // https://github.com/smithy-lang/smithy-dafny/issues/544
+          "smithy.api#default",
           // For those that literally can't be used for non-local services,
           // we probably want model validation to forbid them instead,
           "aws.polymorph#extendable",
