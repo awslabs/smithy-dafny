@@ -8,11 +8,11 @@ include ../SharedMakefile.mk
 NAMESPACE=simple.streaming
 
 PROJECT_SERVICES := \
-	Streaming
+	SimpleStreaming
 
-SERVICE_NAMESPACE_Streaming=simple.streaming
+SERVICE_NAMESPACE_SimpleStreaming=simple.streaming
 
-SERVICE_DEPS_Streaming :=
+SERVICE_DEPS_SimpleStreaming :=
 
 SMITHY_DEPS=dafny-dependencies/Model/traits.smithy
 
@@ -26,3 +26,4 @@ PYTHON_MODULE_NAME=simple_streaming
 TRANSLATION_RECORD_PYTHON := \
     --translation-record ../dafny-dependencies/StandardLibrary/runtimes/python/src/smithy_dafny_standard_library/internaldafny/generated/dafny_src-py.dtr
 
+# LIBRARIES :=
