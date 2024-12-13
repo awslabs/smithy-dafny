@@ -96,7 +96,10 @@ public class ConstrainTraitUtils {
             return validateLength(memberShape, lengthTrait);
           }
           throw new UnsupportedOperationException(
-            "Unsupported constraint trait %s on shape %s".formatted(trait)
+            "Unsupported constraint trait %s on shape %s".formatted(
+                trait,
+                structureShape.getId()
+              )
           );
         });
     }

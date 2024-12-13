@@ -5,8 +5,24 @@ mod simple_constraints_test {
     use simple_constraints::*;
 
     fn client() -> Client {
-        let config = SimpleConstraintsConfig::builder().build().expect("config");
+        let config = SimpleConstraintsConfig::builder()
+            .required_string("test string")
+            .build()
+            .expect("config");
         client::Client::from_conf(config).expect("client")
+    }
+
+    #[test]
+    fn test_config_missing_field() {
+        let config = SimpleConstraintsConfig::builder()
+            .build()
+            .expect("config");
+        let error = client::Client::from_conf(config).err().expect("err");
+        assert!(matches!(
+            error,
+            simple_constraints::types::error::Error::ValidationError(..)
+        ));
+        assert!(error.to_string().contains("required_string"));
     }
 
     #[tokio::test]

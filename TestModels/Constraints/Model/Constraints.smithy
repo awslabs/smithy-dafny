@@ -15,7 +15,10 @@ service SimpleConstraints {
   errors: [ SimpleConstraintsException ],
 }
 
-structure SimpleConstraintsConfig {}
+structure SimpleConstraintsConfig {
+  @required
+  RequiredString: String,
+}
 
 // This is just a sanity check on the smokeTests support.
 // We need to actually convert all the tests in test/WrappedSimpleConstraintsImplTest.dfy
