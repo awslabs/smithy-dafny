@@ -80,6 +80,9 @@ public class UnsupportedFeaturesValidator extends AbstractValidator {
           // this is tracked as a soundness bug instead:
           // https://github.com/smithy-lang/smithy-dafny/issues/544
           "smithy.api#default",
+          // Also not true but heavily used only as documentation.
+          // https://github.com/smithy-lang/smithy-dafny/issues/749
+          "smithy.api#sensitive",
           // For those that literally can't be used for non-local services,
           // we probably want model validation to forbid them instead,
           "aws.polymorph#extendable",
