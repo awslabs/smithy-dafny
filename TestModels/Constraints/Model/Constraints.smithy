@@ -15,7 +15,10 @@ service SimpleConstraints {
   errors: [ SimpleConstraintsException ],
 }
 
-structure SimpleConstraintsConfig {}
+structure SimpleConstraintsConfig {
+  @required
+  RequiredString: String,
+}
 
 // This is just a sanity check on the smokeTests support.
 // We need to actually convert all the tests in test/WrappedSimpleConstraintsImplTest.dfy
@@ -24,6 +27,9 @@ structure SimpleConstraintsConfig {}
 @smithy.test#smokeTests([
   {
     id: "GetConstraintsSuccess"
+    vendorParams: {
+      RequiredString: "foobar",
+    }
     params: {
       OneToTen: 5,
       GreaterThanOne: 2,
@@ -40,6 +46,9 @@ structure SimpleConstraintsConfig {}
   },
   {
     id: "GetConstraintsFailure"
+    vendorParams: {
+      RequiredString: "foobar",
+    }
     params: {
       // These two always have to be present because of https://github.com/smithy-lang/smithy-dafny/issues/278,
       // because otherwise they are interpreted as 0.
@@ -51,6 +60,14 @@ structure SimpleConstraintsConfig {}
     expect: {
         failure: {}
     }
+  },
+  {
+    id: "GetConstraintsInvalidConfig"
+    params: {}
+    expect: {
+      failure: {}
+    },
+    tags: ["INVALID_CONFIG"]
   }
 ])
 operation GetConstraints {
