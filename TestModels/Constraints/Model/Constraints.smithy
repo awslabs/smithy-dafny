@@ -27,6 +27,9 @@ structure SimpleConstraintsConfig {
 @smithy.test#smokeTests([
   {
     id: "GetConstraintsSuccess"
+    vendorParams: {
+      RequiredString: "foobar",
+    }
     params: {
       OneToTen: 5,
       GreaterThanOne: 2,
@@ -43,6 +46,9 @@ structure SimpleConstraintsConfig {
   },
   {
     id: "GetConstraintsFailure"
+    vendorParams: {
+      RequiredString: "foobar",
+    }
     params: {
       // These two always have to be present because of https://github.com/smithy-lang/smithy-dafny/issues/278,
       // because otherwise they are interpreted as 0.
@@ -54,6 +60,14 @@ structure SimpleConstraintsConfig {
     expect: {
         failure: {}
     }
+  },
+  {
+    id: "GetConstraintsInvalidConfig"
+    params: {}
+    expect: {
+      failure: {}
+    },
+    tags: ["INVALID_CONFIG"]
   }
 ])
 operation GetConstraints {
