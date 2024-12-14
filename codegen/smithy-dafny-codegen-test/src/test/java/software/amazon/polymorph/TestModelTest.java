@@ -33,7 +33,9 @@ public abstract class TestModelTest {
       .resolve("TestModels");
     var allTestModels = Files
       .walk(testModelRoot)
-      .filter(p -> Files.exists(p.resolve("Makefile")))
+      .filter(p ->
+        Files.exists(p.resolve("Makefile")) &&
+        Files.isDirectory(p.resolve("Model")))
       .map(testModelRoot::relativize)
       .map(Path::toString);
 
