@@ -119,13 +119,13 @@ build_dafny_stdlibs:
 # Override SharedMakefile's build_java to not install
 # StandardLibrary as a dependency
 build_java: transpile_java
-	gradle -p runtimes/java build
+	$(GRADLEW) -p runtimes/java build
 
 # Override SharedMakefile's mvn_local_deploy to
 # issue warning
 mvn_local_deploy:
 	@echo "${RED}Warning!!${YELLOW} Installing TestModel's STD to Maven Local replaces ESDK's STD!\n$(RESET)" >&2
-	gradle -p runtimes/java publishToMavenLocal
+	$(GRADLEW) -p runtimes/java publishToMavenLocal
 
 stdlibs:
 	dafny build -t:lib --output stdlibs DafnyStandardLibraries.toml

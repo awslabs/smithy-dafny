@@ -236,6 +236,18 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         )
         .collect(Collectors.joining("\n\n"))
     );
+
+    final StructureShape configShape = ModelUtils.getConfigShape(
+      model,
+      service
+    );
+    variables.put(
+      "inputValidations",
+      new InputValidationGenerator()
+        .generateValidations(model, configShape)
+        .collect(Collectors.joining("\n"))
+    );
+
     final String content = evalTemplateResource(
       getClass(),
       "runtimes/rust/client.rs",
@@ -853,6 +865,9 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
 
     private final Map<String, String> commonVariables;
 
+    /**
+     * Generates validation expressions for operation input structures.
+     */
     InputValidationGenerator(
       final Shape bindingShape,
       final OperationShape operationShape
@@ -861,6 +876,21 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         MapUtils.merge(
           serviceVariables(),
           operationVariables(bindingShape, operationShape)
+        );
+      this.commonVariables.put(
+          "inputStructureName",
+          commonVariables.get("pascalCaseOperationInputName")
+        );
+    }
+
+    /**
+     * Generates validation expressions for this service's client config structure.
+     */
+    InputValidationGenerator() {
+      this.commonVariables = serviceVariables();
+      this.commonVariables.put(
+          "inputStructureName",
+          commonVariables.get("qualifiedRustConfigName")
         );
     }
 
@@ -871,7 +901,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         if input.$fieldName:L.is_none() {
             return ::std::result::Result::Err(::aws_smithy_types::error::operation::BuildError::missing_field(
                 "$fieldName:L",
-                "$fieldName:L was not specified but it is required when building $pascalCaseOperationInputName:L",
+                "$fieldName:L was not specified but it is required when building $inputStructureName:L",
             )).map_err($qualifiedRustServiceErrorType:L::wrap_validation_err);
         }
         """,
@@ -1815,8 +1845,19 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       service
     );
     final String configName = configShape.getId().getName(service);
+    final String snakeCaseConfigName = toSnakeCase(configName);
+
     variables.put("configName", configName);
-    variables.put("snakeCaseConfigName", toSnakeCase(configName));
+    variables.put("snakeCaseConfigName", snakeCaseConfigName);
+    variables.put(
+      "qualifiedRustConfigName",
+      String.join(
+        "::",
+        getRustTypesModuleName(),
+        snakeCaseConfigName,
+        configName
+      )
+    );
     variables.put("rustErrorModuleName", rustErrorModuleName());
     variables.put(
       "qualifiedRustServiceErrorType",
