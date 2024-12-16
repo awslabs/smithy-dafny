@@ -130,6 +130,7 @@ public class CodegenCli {
       .withServiceModel(serviceModel)
       .withDependentModelPaths(cliArguments.dependentModelPaths)
       .withDependencyPythonModuleNames(cliArguments.dependencyPythonModuleNames)
+      .withDependencyGoModuleNames(cliArguments.dependencyGoModuleNames)
       .withNamespaces(cliArguments.namespaces)
       .withTargetLangOutputDirs(outputDirs)
       .withTargetLangTestOutputDirs(testOutputDirs)
@@ -161,6 +162,9 @@ public class CodegenCli {
     );
     cliArguments.pythonModuleName.ifPresent(
       engineBuilder::withPythonModuleName
+    );
+    cliArguments.goModuleName.ifPresent(
+      engineBuilder::withGoModuleName
     );
     cliArguments.patchFilesDir.ifPresent(engineBuilder::withPatchFilesDir);
     final CodegenEngine engine = engineBuilder.build();
@@ -214,6 +218,16 @@ public class CodegenCli {
       )
       .addOption(
         Option
+          .builder("gdmn")
+          .longOpt("go-dependency-module-name")
+          .desc(
+            "<optional> if using Go, a dependency namespace-to-Go module name map entry"
+          )
+          .hasArg()
+          .build()
+      )
+      .addOption(
+        Option
           .builder("n")
           .longOpt("namespace")
           .desc("smithy namespace to generate code for, such as 'com.foo'")
@@ -227,6 +241,16 @@ public class CodegenCli {
           .longOpt("python-module-name")
           .desc(
             "<optional> if using Python, the intended Python module name for generated code"
+          )
+          .hasArg()
+          .build()
+      )
+      .addOption(
+        Option
+          .builder("gmn")
+          .longOpt("go-module-name")
+          .desc(
+            "<optional> if using Go, the intended Go module name for generated code"
           )
           .hasArg()
           .build()
@@ -475,8 +499,10 @@ public class CodegenCli {
     Path modelPath,
     Path[] dependentModelPaths,
     Map<String, String> dependencyPythonModuleNames,
+    Map<String, String> dependencyGoModuleNames,
     Set<String> namespaces,
     Optional<String> pythonModuleName,
+    Optional<String> goModuleName,
     Optional<Path> outputDotnetDir,
     Optional<Path> outputJavaDir,
     Optional<Path> outputGoDir,
@@ -548,6 +574,14 @@ public class CodegenCli {
             .collect(Collectors.toMap(i -> i[0], i -> i[1]))
           : new HashMap<>();
 
+      final Map<String, String> dependencyNamespacesToGoModuleNamesMap =
+        commandLine.hasOption("go-dependency-module-name")
+          ? Arrays
+          .stream(commandLine.getOptionValues("gdmn"))
+          .map(s -> s.split("="))
+          .collect(Collectors.toMap(i -> i[0], i -> i[1]))
+          : new HashMap<>();
+
       final Set<String> namespaces = Optional
         .ofNullable(commandLine.getOptionValues("namespace"))
         .<Set<String>>map(ns -> new HashSet<>(Arrays.asList(ns)))
@@ -555,6 +589,10 @@ public class CodegenCli {
 
       final Optional<String> pythonModuleName = Optional.ofNullable(
         commandLine.getOptionValue("python-module-name")
+      );
+
+      final Optional<String> goModuleName = Optional.ofNullable(
+        commandLine.getOptionValue("go-module-name")
       );
 
       Optional<Path> outputDafnyDir = Optional
@@ -646,8 +684,10 @@ public class CodegenCli {
           modelPath,
           dependentModelPaths,
           dependencyNamespacesToPythonModuleNamesMap,
+          dependencyNamespacesToGoModuleNamesMap,
           namespaces,
           pythonModuleName,
+          goModuleName,
           outputDotnetDir,
           outputJavaDir,
           outputGoDir,
