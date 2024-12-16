@@ -70,6 +70,15 @@ jobs:
         with:
           node-version: 18
 
+      - name: Verify npm is installed
+        run: npm --version
+
+      - name: Add npm to PATH
+        run: echo "$GITHUB_PATH:/c/Program Files/nodejs" >> $GITHUB_PATH  # Adjust path for Windows
+
+      - name: Verify npm is installed
+        run: npm --version
+
       - name: Build with all languages (smoke test for polymorph_code_gen target)
         shell: bash
         working-directory: TestModels/SimpleTypes/SimpleString
