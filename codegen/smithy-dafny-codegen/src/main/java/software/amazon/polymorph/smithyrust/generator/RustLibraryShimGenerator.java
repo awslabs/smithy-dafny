@@ -236,6 +236,18 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         )
         .collect(Collectors.joining("\n\n"))
     );
+
+    final StructureShape configShape = ModelUtils.getConfigShape(
+      model,
+      service
+    );
+    variables.put(
+      "inputValidations",
+      new InputValidationGenerator()
+        .generateValidations(model, configShape)
+        .collect(Collectors.joining("\n"))
+    );
+
     final String content = evalTemplateResource(
       getClass(),
       "runtimes/rust/client.rs",
@@ -853,6 +865,9 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
 
     private final Map<String, String> commonVariables;
 
+    /**
+     * Generates validation expressions for operation input structures.
+     */
     InputValidationGenerator(
       final Shape bindingShape,
       final OperationShape operationShape
@@ -861,6 +876,21 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         MapUtils.merge(
           serviceVariables(),
           operationVariables(bindingShape, operationShape)
+        );
+      this.commonVariables.put(
+          "inputStructureName",
+          commonVariables.get("pascalCaseOperationInputName")
+        );
+    }
+
+    /**
+     * Generates validation expressions for this service's client config structure.
+     */
+    InputValidationGenerator() {
+      this.commonVariables = serviceVariables();
+      this.commonVariables.put(
+          "inputStructureName",
+          commonVariables.get("qualifiedRustConfigName")
         );
     }
 
@@ -871,7 +901,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         if input.$fieldName:L.is_none() {
             return ::std::result::Result::Err(::aws_smithy_types::error::operation::BuildError::missing_field(
                 "$fieldName:L",
-                "$fieldName:L was not specified but it is required when building $pascalCaseOperationInputName:L",
+                "$fieldName:L was not specified but it is required when building $inputStructureName:L",
             )).map_err($qualifiedRustServiceErrorType:L::wrap_validation_err);
         }
         """,
@@ -1067,7 +1097,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       docFromShape(memberShape) +
       "\n" +
       """
-      pub $fieldName:L: ::std::option::Option<$fieldType:L>,
+      pub $safeFieldName:L: ::std::option::Option<$fieldType:L>,
       """;
     return evalTemplate(template, structureMemberVariables(memberShape));
   }
@@ -1078,8 +1108,8 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       docFromShape(memberShape) +
       "\n" +
       """
-      pub fn $fieldName:L(&self) -> &::std::option::Option<$fieldType:L> {
-          &self.$fieldName:L
+      pub fn $safeFieldName:L(&self) -> &::std::option::Option<$fieldType:L> {
+          &self.$safeFieldName:L
       }
       """;
     return evalTemplate(template, variables);
@@ -1087,7 +1117,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
 
   private String structureBuilderField(final MemberShape memberShape) {
     return evalTemplate(
-      "pub(crate) $fieldName:L: ::std::option::Option<$fieldType:L>,",
+      "pub(crate) $safeFieldName:L: ::std::option::Option<$fieldType:L>,",
       structureMemberVariables(memberShape)
     );
   }
@@ -1097,8 +1127,8 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       docFromShape(memberShape) +
       "\n" +
       """
-      pub fn $fieldName:L(mut self, input: impl ::std::convert::Into<$fieldType:L>) -> Self {
-          self.$fieldName:L = ::std::option::Option::Some(input.into());
+      pub fn $safeFieldName:L(mut self, input: impl ::std::convert::Into<$fieldType:L>) -> Self {
+          self.$safeFieldName:L = ::std::option::Option::Some(input.into());
           self
       }
       """ +
@@ -1106,7 +1136,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       "\n" +
       """
       pub fn set_$fieldName:L(mut self, input: ::std::option::Option<$fieldType:L>) -> Self {
-          self.$fieldName:L = input;
+          self.$safeFieldName:L = input;
           self
       }
       """ +
@@ -1114,7 +1144,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       "\n" +
       """
       pub fn get_$fieldName:L(&self) -> &::std::option::Option<$fieldType:L> {
-          &self.$fieldName:L
+          &self.$safeFieldName:L
       }
       """;
     return evalTemplate(template, structureMemberVariables(memberShape));
@@ -1122,7 +1152,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
 
   private String structureBuilderAssignment(final MemberShape memberShape) {
     return evalTemplate(
-      "$fieldName:L: self.$fieldName:L,",
+      "$safeFieldName:L: self.$safeFieldName:L,",
       structureMemberVariables(memberShape)
     );
   }
@@ -1163,8 +1193,8 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       docFromShape(memberShape) +
       "\n" +
       """
-      pub fn $fieldName:L(mut self, input: impl ::std::convert::Into<$fieldType:L>) -> Self {
-          self.inner = self.inner.$fieldName:L(input.into());
+      pub fn $safeFieldName:L(mut self, input: impl ::std::convert::Into<$fieldType:L>) -> Self {
+          self.inner = self.inner.$safeFieldName:L(input.into());
           self
       }
       """ +
@@ -1815,8 +1845,19 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       service
     );
     final String configName = configShape.getId().getName(service);
+    final String snakeCaseConfigName = toSnakeCase(configName);
+
     variables.put("configName", configName);
-    variables.put("snakeCaseConfigName", toSnakeCase(configName));
+    variables.put("snakeCaseConfigName", snakeCaseConfigName);
+    variables.put(
+      "qualifiedRustConfigName",
+      String.join(
+        "::",
+        getRustTypesModuleName(),
+        snakeCaseConfigName,
+        configName
+      )
+    );
     variables.put("rustErrorModuleName", rustErrorModuleName());
     variables.put(
       "qualifiedRustServiceErrorType",

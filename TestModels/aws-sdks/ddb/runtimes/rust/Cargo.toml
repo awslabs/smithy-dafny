@@ -22,6 +22,3 @@ aws_sdk_ddb = { path = ".", features = ["wrapped-client"] }
 [dependencies.tokio]
 version = "1.26.0"
 features = ["full"]
-
-[lib]
-path = "src/implementation_from_dafny.rs"

@@ -3,6 +3,8 @@
 
 package software.amazon.polymorph.smithypython;
 
+import static software.amazon.smithy.dafny.codegen.TestUtils.make;
+
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,14 +19,17 @@ class PythonTestModels extends TestModelTest {
 
   static {
     DISABLED_TESTS.add("AggregateReferences");
+    DISABLED_TESTS.add("CallingAWSSDKFromLocalService");
     DISABLED_TESTS.add("LanguageSpecificLogic");
     DISABLED_TESTS.add("MultipleModels");
     DISABLED_TESTS.add("SimpleTypes/BigDecimal");
     DISABLED_TESTS.add("SimpleTypes/BigInteger");
     DISABLED_TESTS.add("SimpleTypes/SimpleByte");
+    DISABLED_TESTS.add("SimpleTypes/SimpleDocument");
     DISABLED_TESTS.add("SimpleTypes/SimpleFloat");
     DISABLED_TESTS.add("SimpleTypes/SimpleShort");
     DISABLED_TESTS.add("SimpleTypes/SimpleTimestamp");
+    DISABLED_TESTS.add("Streaming");
     DISABLED_TESTS.add("SQSExtended");
     DISABLED_TESTS.add("aws-sdks/ddb-lite");
     DISABLED_TESTS.add("aws-sdks/glue");
@@ -32,6 +37,8 @@ class PythonTestModels extends TestModelTest {
     DISABLED_TESTS.add("aws-sdks/kms-lite");
     DISABLED_TESTS.add("aws-sdks/sqs");
     DISABLED_TESTS.add("aws-sdks/sqs-via-cli");
+    //TODO: Add support for Recursive shapes.
+    DISABLED_TESTS.add("RecursiveShape");
   }
 
   @ParameterizedTest

@@ -50,6 +50,7 @@ public class ServiceCodegenTest {
     final Set<Path> expectedPaths = new HashSet<Path>();
     expectedPaths.add(Path.of("CollectionOfErrors.cs"));
     expectedPaths.add(Path.of("OpaqueError.cs"));
+    expectedPaths.add(Path.of("OpaqueWithTextError.cs"));
     assertEquals(expectedPaths, codeByPath.keySet());
   }
 
