@@ -55,12 +55,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install --upgrade tox
           pip install poetry
+      
+      - name: Install Python formatters
+        run: make setup_smithy_dafny_python
 
       - name: Setup Java 17 for codegen
         uses: actions/setup-java@v3
         with:
           distribution: "corretto"
           java-version: 17
+
+      - name: Install npm for Java formatter (not installed on Windows by default)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
       - name: Build with all languages (smoke test for polymorph_code_gen target)
         shell: bash
