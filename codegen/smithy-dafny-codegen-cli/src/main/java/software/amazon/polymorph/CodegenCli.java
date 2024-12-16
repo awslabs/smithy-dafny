@@ -163,9 +163,7 @@ public class CodegenCli {
     cliArguments.pythonModuleName.ifPresent(
       engineBuilder::withPythonModuleName
     );
-    cliArguments.goModuleName.ifPresent(
-      engineBuilder::withGoModuleName
-    );
+    cliArguments.goModuleName.ifPresent(engineBuilder::withGoModuleName);
     cliArguments.patchFilesDir.ifPresent(engineBuilder::withPatchFilesDir);
     final CodegenEngine engine = engineBuilder.build();
     switch (cliArguments.command) {
@@ -577,9 +575,9 @@ public class CodegenCli {
       final Map<String, String> dependencyNamespacesToGoModuleNamesMap =
         commandLine.hasOption("go-dependency-module-name")
           ? Arrays
-          .stream(commandLine.getOptionValues("gdmn"))
-          .map(s -> s.split("="))
-          .collect(Collectors.toMap(i -> i[0], i -> i[1]))
+            .stream(commandLine.getOptionValues("gdmn"))
+            .map(s -> s.split("="))
+            .collect(Collectors.toMap(i -> i[0], i -> i[1]))
           : new HashMap<>();
 
       final Set<String> namespaces = Optional
