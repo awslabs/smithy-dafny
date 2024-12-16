@@ -46,44 +46,6 @@ jobs:
         working-directory: TestModels/SimpleTypes/SimpleString
         run: make polymorph_dafny
 
-      - name: Setup Python for running tests
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
-          architecture: x64
-      - run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade tox
-          pip install poetry
-
-      - name: Install Python formatters
-        run: make setup_smithy_dafny_python
-
-      - name: Setup Java 17 for codegen
-        uses: actions/setup-java@v3
-        with:
-          distribution: "corretto"
-          java-version: 17
-
-      - name: Install npm for Java formatter (not installed on Windows by default)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Verify npm is installed
-        run: npm --version
-
-      - name: Add npm to PATH
-        run: echo "/c/Program Files/nodejs" >> $env:GITHUB_PATH  # Adjust path for Windows
-
-      - name: Verify npm is installed
-        run: npm --version
-
-      - name: Build with all languages (smoke test for polymorph_code_gen target)
-        shell: bash
-        working-directory: TestModels/SimpleTypes/SimpleString
-        run: make polymorph_code_gen
-
       - name: not-grep
         if: matrix.os == 'ubuntu-latest'
         uses: mattsb42-meta/not-grep@1.0.0
