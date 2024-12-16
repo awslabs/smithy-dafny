@@ -43,10 +43,10 @@ WRAPPED_INDEX_FILE_WITHOUT_EXTERN_STRING="module WrappedSimpleCallingawssdkfroml
 # Go
 
 GO_DEPENDENCY_MODULE_NAMES := \
-	--go-dependency-library-name=com.amazonaws.kms=github.com/smithy-lang/smithy-dafny/kmsv2 \
-	--go-dependency-library-name=com.amazonaws.dynamodb=github.com/smithy-lang/smithy-dafny/ddbv2 \
-	--go-dependency-library-name=sdk.com.amazonaws.dynamodb=github.com/aws/aws-sdk-go-v2/service/dynamodb \
-	--go-dependency-library-name=sdk.com.amazonaws.kms=github.com/aws/aws-sdk-go-v2/service/kms
+	--go-dependency-module-name=com.amazonaws.kms=github.com/smithy-lang/smithy-dafny/kmsv2 \
+	--go-dependency-module-name=com.amazonaws.dynamodb=github.com/smithy-lang/smithy-dafny/ddbv2 \
+	--go-dependency-module-name=sdk.com.amazonaws.dynamodb=github.com/aws/aws-sdk-go-v2/service/dynamodb \
+	--go-dependency-module-name=sdk.com.amazonaws.kms=github.com/aws/aws-sdk-go-v2/service/kms
 
 GO_MODULE_NAME="github.com/smithy-lang/smithy-dafny/TestModels/CallingAWSSDKFromLocalService"
 
