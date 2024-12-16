@@ -74,7 +74,7 @@ jobs:
         run: npm --version
 
       - name: Add npm to PATH
-        run: echo "$GITHUB_PATH:/c/Program Files/nodejs" >> $GITHUB_PATH  # Adjust path for Windows
+        run: echo "/c/Program Files/nodejs" >> $env:GITHUB_PATH  # Adjust path for Windows
 
       - name: Verify npm is installed
         run: npm --version
