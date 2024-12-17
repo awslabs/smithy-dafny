@@ -1047,7 +1047,8 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
           );
         }
       } else if (shape instanceof StructureShape structureShape) {
-        var isPositionalOutput = operation != null && structureShape.hasTrait(PositionalTrait.class);
+        var isPositionalOutput = (operation == null || operation.getOutputShape().equals(shape.getId()))
+          && structureShape.hasTrait(PositionalTrait.class);
         for (final var memberShape : structureShape.getAllMembers().values()) {
           final var memberVariables = structureMemberVariables(memberShape);
           memberVariables.put(
