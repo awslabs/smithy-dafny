@@ -1047,7 +1047,8 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
           );
         }
       } else if (shape instanceof StructureShape structureShape) {
-        var isPositiional = structureShape.hasTrait(PositionalTrait.class);
+        var isPositionalOutput = operation != null && operation.getOutputShape().equals(shape.getId())
+          && structureShape.hasTrait(PositionalTrait.class);
         for (final var memberShape : structureShape.getAllMembers().values()) {
           final var memberVariables = structureMemberVariables(memberShape);
           memberVariables.put(
@@ -1056,7 +1057,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
           );
           validationBlocks.add(
             evalTemplate(
-              isPositiional ? "$memberValidationFunctionName:L(&Some(input.clone()))?;" :
+              isPositionalOutput ? "$memberValidationFunctionName:L(&Some(input.clone()))?;" :
               "$memberValidationFunctionName:L(&input.$fieldName:L)?;",
               memberVariables
             )
