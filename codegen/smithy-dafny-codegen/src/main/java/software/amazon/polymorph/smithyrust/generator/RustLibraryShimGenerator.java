@@ -1055,13 +1055,29 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
             "memberValidationFunctionName",
             shapeValidationFunctionName(null, null, memberShape)
           );
-          validationBlocks.add(
-            evalTemplate(
-              isPositionalOutput ? "$memberValidationFunctionName:L(&Some(input.clone()))?;" :
-              "$memberValidationFunctionName:L(&input.$fieldName:L)?;",
-              memberVariables
-            )
-          );
+
+          if (isPositionalOutput) {
+            validationBlocks.add(
+              evalTemplate(
+                "$memberValidationFunctionName:L(&Some(input.clone()))?;",
+                memberVariables
+              )
+            );
+          } else if (isRustFieldRequired(structureShape, memberShape)) {
+            validationBlocks.add(
+              evalTemplate(
+                "$memberValidationFunctionName:L(&Some(input.$fieldName:L))?;",
+                memberVariables
+              )
+            );
+          } else {
+            validationBlocks.add(
+              evalTemplate(
+                "$memberValidationFunctionName:L(&input.$fieldName:L)?;",
+                memberVariables
+              )
+            );
+          }
         }
       } else if (shape instanceof UnionShape unionShape) {
         final var unionVariables = unionVariables(unionShape);
@@ -1138,7 +1154,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         if (shape instanceof MemberShape memberShape) {
           final var targetShape = model.expectShape(memberShape.getTarget());
           final var targetType = mergedGeneratorRustTypeForShape(targetShape);
-          if (isStructureMember && !isRustFieldRequired((StructureShape)parentShape, memberShape)) {
+          if (isStructureMember) {
             variables.put(
               "shapeType",
               "::std::option::Option<%s>".formatted(targetType)
