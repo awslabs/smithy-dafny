@@ -19,7 +19,6 @@ class RustTestModels extends TestModelTest {
 
   static {
     DISABLED_TESTS.add("AggregateReferences");
-    DISABLED_TESTS.add("CallingAWSSDKFromLocalService");
     DISABLED_TESTS.add("CodegenPatches");
     DISABLED_TESTS.add("Dependencies");
     DISABLED_TESTS.add("Extern");
