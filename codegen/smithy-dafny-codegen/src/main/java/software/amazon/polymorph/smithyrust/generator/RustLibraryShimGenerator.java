@@ -1056,7 +1056,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
           );
           validationBlocks.add(
             evalTemplate(
-              isPositiional ? "$memberValidationFunctionName:L(&input)?;" :
+              isPositiional ? "$memberValidationFunctionName:L(&Some(input.clone()))?;" :
               "$memberValidationFunctionName:L(&input.$fieldName:L)?;",
               memberVariables
             )
