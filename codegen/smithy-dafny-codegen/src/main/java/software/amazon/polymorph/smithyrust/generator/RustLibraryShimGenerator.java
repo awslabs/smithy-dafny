@@ -253,7 +253,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
     );
     variables.put(
       "inputValidationFunctionName",
-      RustValidationGenerator.shapeValidationFunctionName(configShape)
+      RustValidationGenerator.shapeValidationFunctionName(null, configShape)
     );
 
     final String content = evalTemplateResource(
@@ -781,7 +781,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
     );
     variables.put(
       "inputValidationFunctionName",
-      RustValidationGenerator.shapeValidationFunctionName(inputShape)
+      RustValidationGenerator.shapeValidationFunctionName(operationShape, inputShape)
     );
     if (bindingShape.isServiceShape()) {
       if (inputShape.hasTrait(PositionalTrait.class)) {
@@ -926,6 +926,23 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       return shapesToValidate;
     }
 
+    private String generateValidationFunctions(final Shape shape) {
+      if (operationIndex.isInputStructure(shape)) {
+        return operationIndex.getInputBindings(shape)
+          .stream()
+          .map(operation -> generateValidationFunction(operation, shape))
+          .collect(Collectors.joining("\n"));
+      } else if (operationIndex.isOutputStructure(shape)) {
+        return operationIndex.getOutputBindings(shape)
+          .stream()
+          .map(operation -> generateValidationFunction(operation, shape))
+          .collect(Collectors.joining("\n"));
+      } else {
+        return generateValidationFunction(null, shape);
+      }
+    }
+
+
     /**
      * Generates a validation function for the given aggregate or member shape.
      * <p>
@@ -936,7 +953,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
      * <p>
      * Other modules should therefore only call validation functions for aggregate shapes.
      */
-    private String generateValidationFunction(final Shape shape) {
+    private String generateValidationFunction(final OperationShape operation, final Shape shape) {
       final var validationBlocks = new ArrayList<String>();
 
       final var isStructureMember =
@@ -978,7 +995,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
           final var memberVariables = structureMemberVariables(memberShape);
           memberVariables.put(
             "targetValidationFunctionName",
-            shapeValidationFunctionName(targetShape)
+            shapeValidationFunctionName(null, targetShape)
           );
           validationBlocks.add(
             evalTemplate(
@@ -994,7 +1011,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
           final var memberVariables = structureMemberVariables(memberShape);
           memberVariables.put(
             "memberValidationFunctionName",
-            shapeValidationFunctionName(memberShape)
+            shapeValidationFunctionName(null, memberShape)
           );
           validationBlocks.add(
             evalTemplate(
@@ -1012,7 +1029,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
           );
           memberVariables.put(
             "memberValidationFunctionName",
-            shapeValidationFunctionName(memberShape)
+            shapeValidationFunctionName(null, memberShape)
           );
           validationBlocks.add(
             evalTemplate(
@@ -1029,7 +1046,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         final var memberShape = listShape.getMember();
         final Map<String, String> memberVariables = Map.of(
           "memberValidationFunctionName",
-          shapeValidationFunctionName(memberShape)
+          shapeValidationFunctionName(null, memberShape)
         );
         validationBlocks.add(
           evalTemplate(
@@ -1046,9 +1063,9 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         final var valueShape = mapShape.getValue();
         final Map<String, String> memberVariables = Map.of(
           "keyValidationFunctionName",
-          shapeValidationFunctionName(keyShape),
+          shapeValidationFunctionName(null, keyShape),
           "valueValidationFunctionName",
-          shapeValidationFunctionName(valueShape)
+          shapeValidationFunctionName(null, valueShape)
         );
         validationBlocks.add(
           evalTemplate(
@@ -1070,7 +1087,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       final var variables = new HashMap<String, String>();
       variables.put(
         "shapeValidationFunctionName",
-        shapeValidationFunctionName(shape)
+        shapeValidationFunctionName(operation, shape)
       );
       variables.put("validationBlocks", String.join("\n", validationBlocks));
 
@@ -1086,11 +1103,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
           } else {
             variables.put("shapeType", targetType);
           }
-        } else if (relatedOperationShapes.containsKey(shape.getId())) {
-          // TODO This is a messy way to handle synthetic operation input/outputs,
-          // and the assumption may not even hold for the DB ESDK.
-          // See also: <https://github.com/smithy-lang/smithy-dafny/issues/593>
-          final var operation = relatedOperationShapes.get(shape.getId());
+        } else if (operation != null) {
           final var operationEntities = operationBindingIndex.getBindingShapes(
             operation
           );
@@ -1135,18 +1148,25 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       );
     }
 
-    public static String shapeValidationFunctionName(final Shape shape) {
+    public static String shapeValidationFunctionName(final OperationShape operationShape, final Shape shape) {
       // the ID foo.bar_baz.quux#My_ShapeName$the_member
       // becomes foo_Pbar__baz_Pquux_HMy__ShapeName_Dthe__member
-      final var escapedId = shape
-        .getId()
-        .toString()
+      // If bindingShape is not null (because the shape is the input/output for this operation)
+      // the unqualified name is added as a ..._for_<escaped operation name> suffix
+      var escapedId = escapedName(shape.getId().toString());
+      if (operationShape != null) {
+        escapedId = escapedId + "_for_" + escapedName(operationShape.getId().getName());
+      }
+
+      return "validate_" + escapedId;
+    }
+
+    private static String escapedName(final String name) {
+      return name
         .replace("_", "__")
         .replace(".", "_P")
         .replace("#", "_H")
         .replace("$", "_D");
-
-      return "validate_" + escapedId;
     }
 
     private String validateRequired(final MemberShape memberShape) {
@@ -2079,7 +2099,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
     final var validationFunctions = validationGenerator
       .getShapesToValidate()
       .stream()
-      .map(validationGenerator::generateValidationFunction)
+      .map(validationGenerator::generateValidationFunctions)
       .collect(Collectors.joining("\n"));
 
     return new RustFile(
