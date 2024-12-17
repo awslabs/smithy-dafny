@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.knowledge.KnowledgeIndex;
 import software.amazon.smithy.model.shapes.OperationShape;
@@ -79,10 +78,12 @@ public class OperationBindingIndex implements KnowledgeIndex {
   public Set<BoundOperationShape> getBoundOperations(ToShapeId operation) {
     return getBindingShapes(operation)
       .stream()
-      .map(bindingShape -> new BoundOperationShape(bindingShape, model.expectShape(
-        operation.toShapeId(),
-        OperationShape.class
-      )))
+      .map(bindingShape ->
+        new BoundOperationShape(
+          bindingShape,
+          model.expectShape(operation.toShapeId(), OperationShape.class)
+        )
+      )
       .collect(Collectors.toSet());
   }
 

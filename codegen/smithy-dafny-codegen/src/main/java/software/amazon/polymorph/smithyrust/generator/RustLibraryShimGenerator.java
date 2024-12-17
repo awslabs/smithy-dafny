@@ -253,7 +253,11 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
     );
     variables.put(
       "inputValidationFunctionName",
-      RustValidationGenerator.shapeValidationFunctionName(null, null, configShape)
+      RustValidationGenerator.shapeValidationFunctionName(
+        null,
+        null,
+        configShape
+      )
     );
 
     final String content = evalTemplateResource(
@@ -781,7 +785,11 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
     );
     variables.put(
       "inputValidationFunctionName",
-      RustValidationGenerator.shapeValidationFunctionName(bindingShape, operationShape, inputShape)
+      RustValidationGenerator.shapeValidationFunctionName(
+        bindingShape,
+        operationShape,
+        inputShape
+      )
     );
     if (bindingShape.isServiceShape()) {
       if (inputShape.hasTrait(PositionalTrait.class)) {
@@ -929,17 +937,43 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
     private String generateValidationFunctions(final Shape shape) {
       var result = generateValidationFunction(null, null, shape);
       if (operationIndex.isInputStructure(shape)) {
-        return result + "\n" + operationIndex.getInputBindings(shape)
-          .stream()
-          .flatMap(operation -> operationBindingIndex.getBoundOperations(operation).stream())
-          .map(boundOperation -> generateValidationFunction(boundOperation.bindingShape(), boundOperation.operationShape(), shape))
-          .collect(Collectors.joining("\n"));
+        return (
+          result +
+          "\n" +
+          operationIndex
+            .getInputBindings(shape)
+            .stream()
+            .flatMap(operation ->
+              operationBindingIndex.getBoundOperations(operation).stream()
+            )
+            .map(boundOperation ->
+              generateValidationFunction(
+                boundOperation.bindingShape(),
+                boundOperation.operationShape(),
+                shape
+              )
+            )
+            .collect(Collectors.joining("\n"))
+        );
       } else if (operationIndex.isOutputStructure(shape)) {
-        return result + "\n" + operationIndex.getOutputBindings(shape)
-          .stream()
-          .flatMap(operation -> operationBindingIndex.getBoundOperations(operation).stream())
-          .map(boundOperation -> generateValidationFunction(boundOperation.bindingShape(), boundOperation.operationShape(), shape))
-          .collect(Collectors.joining("\n"));
+        return (
+          result +
+          "\n" +
+          operationIndex
+            .getOutputBindings(shape)
+            .stream()
+            .flatMap(operation ->
+              operationBindingIndex.getBoundOperations(operation).stream()
+            )
+            .map(boundOperation ->
+              generateValidationFunction(
+                boundOperation.bindingShape(),
+                boundOperation.operationShape(),
+                shape
+              )
+            )
+            .collect(Collectors.joining("\n"))
+        );
       } else {
         return result;
       }
@@ -955,7 +989,11 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
      * <p>
      * Other modules should therefore only call validation functions for aggregate shapes.
      */
-    private String generateValidationFunction(final Shape bindingShape, final OperationShape operation, final Shape shape) {
+    private String generateValidationFunction(
+      final Shape bindingShape,
+      final OperationShape operation,
+      final Shape shape
+    ) {
       final var validationBlocks = new ArrayList<String>();
 
       final var isStructureMember =
@@ -1140,16 +1178,23 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       );
     }
 
-    public static String shapeValidationFunctionName(final Shape bindingShape, final OperationShape operationShape, final Shape shape) {
+    public static String shapeValidationFunctionName(
+      final Shape bindingShape,
+      final OperationShape operationShape,
+      final Shape shape
+    ) {
       // the ID foo.bar_baz.quux#My_ShapeName$the_member
       // becomes foo_Pbar__baz_Pquux_HMy__ShapeName_Dthe__member
       // If bindingShape/operationShape is not null (because the shape is the input/output for this operation)
       // the unqualified name is added as a ..._for_<escaped binding name>_<escaped operation name> suffix
       var escapedId = escapedName(shape.getId().toString());
       if (operationShape != null) {
-        escapedId = escapedId + "_for_"
-          + escapedName(bindingShape.getId().getName()) + "_"
-          + escapedName(operationShape.getId().getName());
+        escapedId =
+          escapedId +
+          "_for_" +
+          escapedName(bindingShape.getId().getName()) +
+          "_" +
+          escapedName(operationShape.getId().getName());
       }
 
       return "validate_" + escapedId;
