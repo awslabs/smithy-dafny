@@ -1063,7 +1063,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
                 memberVariables
               )
             );
-          } else if (isRustFieldRequired(structureShape, memberShape)) {
+          } else if (mergedGenerator.generatorForShape(structureShape).isRustFieldRequired(structureShape, memberShape)) {
             validationBlocks.add(
               evalTemplate(
                 "$memberValidationFunctionName:L(&Some(input.$fieldName:L))?;",
