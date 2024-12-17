@@ -12,7 +12,7 @@ impl Client {
     pub fn from_conf(
         input: $qualifiedRustConfigName:L,
     ) -> Result<Self, $qualifiedRustServiceErrorType:L> {
-        crate::validation::$inputValidationFunctionName:L(&input)
+        $rustRootModuleName:L::validation::$inputValidationFunctionName:L(&input)
             .map_err($qualifiedRustServiceErrorType:L::wrap_validation_err)?;
         let inner =
             crate::$dafnyInternalModuleName:L::_default::$sdkId:L(
