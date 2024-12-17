@@ -1138,7 +1138,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         if (shape instanceof MemberShape memberShape) {
           final var targetShape = model.expectShape(memberShape.getTarget());
           final var targetType = mergedGeneratorRustTypeForShape(targetShape);
-          if (isStructureMember && isRustFieldRequired((StructureShape)parentShape, memberShape)) {
+          if (isStructureMember && !isRustFieldRequired((StructureShape)parentShape, memberShape)) {
             variables.put(
               "shapeType",
               "::std::option::Option<%s>".formatted(targetType)
