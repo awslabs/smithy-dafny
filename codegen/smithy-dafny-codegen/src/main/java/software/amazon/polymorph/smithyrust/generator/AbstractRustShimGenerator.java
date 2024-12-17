@@ -48,6 +48,7 @@ import software.amazon.smithy.model.traits.EnumTrait;
 import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.RequiredTrait;
 import software.amazon.smithy.model.traits.StringTrait;
+import software.amazon.smithy.model.traits.TraitDefinition;
 import software.amazon.smithy.model.traits.UnitTypeTrait;
 
 public abstract class AbstractRustShimGenerator {
@@ -132,8 +133,8 @@ public abstract class AbstractRustShimGenerator {
     StructureShape structureShape
   ) {
     return (
+      !structureShape.hasTrait(TraitDefinition.class) &&
       !structureShape.hasTrait(ErrorTrait.class) &&
-      !structureShape.hasTrait(ShapeId.from("smithy.api#trait")) &&
       !structureShape.hasTrait(ReferenceTrait.class) &&
       ModelUtils.isInServiceNamespace(structureShape, service)
     );

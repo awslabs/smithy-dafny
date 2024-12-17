@@ -7,12 +7,16 @@ import static software.amazon.smithy.rust.codegen.core.util.StringsKt.toSnakeCas
 
 import java.math.BigDecimal;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import software.amazon.polymorph.smithydafny.DafnyNameResolver;
@@ -40,6 +44,7 @@ import software.amazon.smithy.model.shapes.UnionShape;
 import software.amazon.smithy.model.traits.EnumTrait;
 import software.amazon.smithy.model.traits.LengthTrait;
 import software.amazon.smithy.model.traits.RangeTrait;
+import software.amazon.smithy.model.traits.RequiredTrait;
 import software.amazon.smithy.model.traits.UnitTypeTrait;
 
 /**
@@ -48,6 +53,7 @@ import software.amazon.smithy.model.traits.UnitTypeTrait;
 public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
 
   private final boolean generateWrappedClient;
+  private final RustValidationGenerator validationGenerator;
 
   public RustLibraryShimGenerator(
     final MergedServicesGenerator mergedGenerator,
@@ -57,6 +63,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
   ) {
     super(mergedGenerator, model, service);
     this.generateWrappedClient = generateWrappedClient;
+    this.validationGenerator = new RustValidationGenerator();
   }
 
   @Override
@@ -71,7 +78,6 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
     result.add(typesModule());
     result.add(typesConfigModule());
     result.add(typesBuildersModule());
-
     result.addAll(
       streamStructuresToGenerateStructsFor()
         .map(this::standardStructureModule)
@@ -98,6 +104,9 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         .map(this::resourceTypeModule)
         .toList()
     );
+
+    // validation
+    result.add(validationModule());
 
     // errors
     result.add(errorModule());
@@ -242,10 +251,8 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       service
     );
     variables.put(
-      "inputValidations",
-      new InputValidationGenerator()
-        .generateValidations(model, configShape)
-        .collect(Collectors.joining("\n"))
+      "inputValidationFunctionName",
+      RustValidationGenerator.shapeValidationFunctionName(configShape)
     );
 
     final String content = evalTemplateResource(
@@ -772,10 +779,8 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       operationVariables(bindingShape, operationShape)
     );
     variables.put(
-      "inputValidations",
-      new InputValidationGenerator(bindingShape, operationShape)
-        .generateValidations(model, inputShape)
-        .collect(Collectors.joining("\n"))
+      "inputValidationFunctionName",
+      RustValidationGenerator.shapeValidationFunctionName(inputShape)
     );
     if (bindingShape.isServiceShape()) {
       if (inputShape.hasTrait(PositionalTrait.class)) {
@@ -860,57 +865,304 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
     return new RustFile(path, TokenTree.of(content));
   }
 
-  class InputValidationGenerator
-    extends ConstrainTraitUtils.ValidationGenerator<String> {
+  class RustValidationGenerator {
 
     private final Map<String, String> commonVariables;
+    private final Set<Shape> shapesToValidate;
 
-    /**
-     * Generates validation expressions for operation input structures.
-     */
-    InputValidationGenerator(
-      final Shape bindingShape,
-      final OperationShape operationShape
-    ) {
-      this.commonVariables =
-        MapUtils.merge(
-          serviceVariables(),
-          operationVariables(bindingShape, operationShape)
-        );
-      this.commonVariables.put(
-          "inputStructureName",
-          commonVariables.get("pascalCaseOperationInputName")
-        );
-    }
+    // map from synthetic input/output shapes to their operations
+    private final Map<ShapeId, OperationShape> relatedOperationShapes;
 
-    /**
-     * Generates validation expressions for this service's client config structure.
-     */
-    InputValidationGenerator() {
+    RustValidationGenerator() {
       this.commonVariables = serviceVariables();
-      this.commonVariables.put(
-          "inputStructureName",
-          commonVariables.get("qualifiedRustConfigName")
-        );
+      this.shapesToValidate = new TreeSet<>();
+      this.relatedOperationShapes = new HashMap<>();
+
+      // Start from the service config and operation input/outputs
+      final var rootShapes = new HashSet<StructureShape>();
+      rootShapes.add(ModelUtils.getConfigShape(model, service));
+      streamAllBoundOperationShapes()
+        .map(BoundOperationShape::operationShape)
+        .forEach(operationShape -> {
+          final var inputShapeId = operationShape.getInputShape();
+          final var outputShapeId = operationShape.getOutputShape();
+          rootShapes.add(model.expectShape(inputShapeId, StructureShape.class));
+          rootShapes.add(
+            model.expectShape(outputShapeId, StructureShape.class)
+          );
+
+          relatedOperationShapes.put(inputShapeId, operationShape);
+          relatedOperationShapes.put(outputShapeId, operationShape);
+        });
+
+      // Traverse to find relevant shapes
+      final var queue = new LinkedList<Shape>(rootShapes);
+      while (!queue.isEmpty()) {
+        final var shape = queue.poll();
+        if (shapesToValidate.contains(shape)) {
+          continue;
+        }
+        if (
+          !(shape instanceof MemberShape ||
+            shape instanceof StructureShape ||
+            shape instanceof UnionShape ||
+            shape instanceof ListShape ||
+            shape instanceof MapShape)
+        ) {
+          continue;
+        }
+
+        shapesToValidate.add(shape);
+        if (shape instanceof MemberShape memberShape) {
+          queue.add(model.expectShape(memberShape.getTarget()));
+        } else {
+          queue.addAll(shape.getAllMembers().values());
+        }
+      }
     }
 
-    @Override
-    protected String validateRequired(final MemberShape memberShape) {
+    Set<Shape> getShapesToValidate() {
+      return shapesToValidate;
+    }
+
+    /**
+     * Generates a validation function for the given aggregate or member shape.
+     * <p>
+     * Validation of constraints (required, range, and length)
+     * occurs only in validation functions for member shapes.
+     * Validation functions for aggregate shapes
+     * only delegate to the validation functions for their members.
+     * <p>
+     * Other modules should therefore only call validation functions for aggregate shapes.
+     */
+    private String generateValidationFunction(final Shape shape) {
+      final var validationBlocks = new ArrayList<String>();
+
+      final var isStructureMember =
+        shape instanceof MemberShape memberShape &&
+        model.expectShape(memberShape.getContainer()).isStructureShape();
+
+      if (shape instanceof MemberShape memberShape) {
+        memberShape
+          .getTrait(RequiredTrait.class)
+          .ifPresent(_trait ->
+            validationBlocks.add(this.validateRequired(memberShape))
+          );
+        // For simplicity, avoid wrapping the rest of the validation in a conditional
+        if (isStructureMember) {
+          validationBlocks.add(
+            """
+            if input.is_none() {
+              return ::std::result::Result::Ok(());
+            }
+            let input = input.as_ref().unwrap();
+            """
+          );
+        }
+
+        memberShape
+          .getMemberTrait(model, RangeTrait.class)
+          .ifPresent(trait ->
+            validationBlocks.add(this.validateRange(memberShape, trait))
+          );
+        memberShape
+          .getMemberTrait(model, LengthTrait.class)
+          .ifPresent(trait ->
+            validationBlocks.add(this.validateLength(memberShape, trait))
+          );
+
+        // validate target if necessary
+        final var targetShape = model.expectShape(memberShape.getTarget());
+        if (this.shapesToValidate.contains(targetShape)) {
+          final var memberVariables = structureMemberVariables(memberShape);
+          memberVariables.put(
+            "targetValidationFunctionName",
+            shapeValidationFunctionName(targetShape)
+          );
+          validationBlocks.add(
+            evalTemplate(
+              """
+              $targetValidationFunctionName:L(input)?;
+              """,
+              memberVariables
+            )
+          );
+        }
+      } else if (shape instanceof StructureShape structureShape) {
+        for (final var memberShape : structureShape.getAllMembers().values()) {
+          final var memberVariables = structureMemberVariables(memberShape);
+          memberVariables.put(
+            "memberValidationFunctionName",
+            shapeValidationFunctionName(memberShape)
+          );
+          validationBlocks.add(
+            evalTemplate(
+              "$memberValidationFunctionName:L(&input.$fieldName:L)?;",
+              memberVariables
+            )
+          );
+        }
+      } else if (shape instanceof UnionShape unionShape) {
+        final var unionVariables = unionVariables(unionShape);
+        for (final var memberShape : unionShape.getAllMembers().values()) {
+          final var memberVariables = MapUtils.merge(
+            unionVariables,
+            unionMemberVariables(memberShape)
+          );
+          memberVariables.put(
+            "memberValidationFunctionName",
+            shapeValidationFunctionName(memberShape)
+          );
+          validationBlocks.add(
+            evalTemplate(
+              """
+              if let $qualifiedRustUnionName:L::$rustUnionMemberName:L(ref inner) = &input {
+                $memberValidationFunctionName:L(inner)?;
+              }
+              """,
+              memberVariables
+            )
+          );
+        }
+      } else if (shape instanceof ListShape listShape) {
+        final var memberShape = listShape.getMember();
+        final Map<String, String> memberVariables = Map.of(
+          "memberValidationFunctionName",
+          shapeValidationFunctionName(memberShape)
+        );
+        validationBlocks.add(
+          evalTemplate(
+            """
+            for inner in input.iter() {
+              $memberValidationFunctionName:L(inner)?;
+            }
+            """,
+            memberVariables
+          )
+        );
+      } else if (shape instanceof MapShape mapShape) {
+        final var keyShape = mapShape.getKey();
+        final var valueShape = mapShape.getValue();
+        final Map<String, String> memberVariables = Map.of(
+          "keyValidationFunctionName",
+          shapeValidationFunctionName(keyShape),
+          "valueValidationFunctionName",
+          shapeValidationFunctionName(valueShape)
+        );
+        validationBlocks.add(
+          evalTemplate(
+            """
+            for (inner_key, inner_val) in input.iter() {
+              $keyValidationFunctionName:L(inner_key)?;
+              $valueValidationFunctionName:L(inner_val)?;
+            }
+            """,
+            memberVariables
+          )
+        );
+      } else {
+        throw new IllegalArgumentException(
+          "Unsupported shape: " + shape.getId()
+        );
+      }
+
+      final var variables = new HashMap<String, String>();
+      variables.put(
+        "shapeValidationFunctionName",
+        shapeValidationFunctionName(shape)
+      );
+      variables.put("validationBlocks", String.join("\n", validationBlocks));
+
+      try {
+        if (shape instanceof MemberShape memberShape) {
+          final var targetShape = model.expectShape(memberShape.getTarget());
+          final var targetType = rustTypeForShape(targetShape);
+          if (isStructureMember) {
+            variables.put(
+              "shapeType",
+              "::std::option::Option<%s>".formatted(targetType)
+            );
+          } else {
+            variables.put("shapeType", targetType);
+          }
+        } else if (relatedOperationShapes.containsKey(shape.getId())) {
+          // TODO This is a messy way to handle synthetic operation input/outputs,
+          // and the assumption may not even hold for the DB ESDK.
+          // See also: <https://github.com/smithy-lang/smithy-dafny/issues/593>
+          final var operation = relatedOperationShapes.get(shape.getId());
+          final var operationEntities = operationBindingIndex.getBindingShapes(
+            operation
+          );
+          if (operationEntities.size() != 1) {
+            throw new IllegalStateException(
+              "Expected exactly 1 entity for operation %s".formatted(
+                  operation.getId()
+                )
+            );
+          }
+          final var operationVariables = operationVariables(
+            operationEntities.iterator().next(),
+            operation
+          );
+          final String shapeType;
+          if (operation.getInputShape().equals(shape.getId())) {
+            shapeType = operationVariables.get("operationInputType");
+          } else {
+            shapeType = operationVariables.get("operationOutputType");
+          }
+          variables.put("shapeType", shapeType);
+        } else {
+          variables.put("shapeType", rustTypeForShape(shape));
+        }
+      } catch (Exception e) {
+        throw new RuntimeException(
+          "Failed on shape %s".formatted(shape.getId()),
+          e
+        );
+      }
+
       return evalTemplate(
         """
-        if input.$fieldName:L.is_none() {
+        pub(crate) fn $shapeValidationFunctionName:L(input: &$shapeType:L)
+          -> ::std::result::Result<(), ::aws_smithy_types::error::operation::BuildError>
+        {
+          $validationBlocks:L
+          Ok(())
+        }
+        """,
+        variables
+      );
+    }
+
+    public static String shapeValidationFunctionName(final Shape shape) {
+      // the ID foo.bar_baz.quux#My_ShapeName$the_member
+      // becomes foo_Pbar__baz_Pquux_HMy__ShapeName_Dthe__member
+      final var escapedId = shape
+        .getId()
+        .toString()
+        .replace("_", "__")
+        .replace(".", "_P")
+        .replace("#", "_H")
+        .replace("$", "_D");
+
+      return "validate_" + escapedId;
+    }
+
+    private String validateRequired(final MemberShape memberShape) {
+      return evalTemplate(
+        """
+        if input.is_none() {
             return ::std::result::Result::Err(::aws_smithy_types::error::operation::BuildError::missing_field(
                 "$fieldName:L",
-                "$fieldName:L was not specified but it is required when building $inputStructureName:L",
-            )).map_err($qualifiedRustServiceErrorType:L::wrap_validation_err);
+                "$fieldName:L is required but was not specified",
+            ));
         }
         """,
         MapUtils.merge(commonVariables, structureMemberVariables(memberShape))
       );
     }
 
-    @Override
-    protected String validateRange(
+    private String validateRange(
       final MemberShape memberShape,
       final RangeTrait rangeTrait
     ) {
@@ -925,43 +1177,45 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       final var max = rangeTrait
         .getMax()
         .map(bound -> asLiteral(bound, targetShape));
-      final var conditionTemplate =
-        "!(%s..%s).contains(&x)".formatted(
+
+      variables.put(
+        "condition",
+        "!(%s..%s).contains(input)".formatted(
             min.orElse(""),
             max.map(val -> "=" + val).orElse("")
-          );
-      final var rangeDescription = describeMinMax(min, max);
+          )
+      );
+      variables.put("rangeDescription", describeMinMax(min, max));
       return evalTemplate(
         """
-        if matches!(input.$fieldName:L, Some(x) if %s) {
+        if $condition:L {
             return ::std::result::Result::Err(::aws_smithy_types::error::operation::BuildError::invalid_field(
                 "$fieldName:L",
-                "$fieldName:L failed to satisfy constraint: Member must be %s",
-            )).map_err($qualifiedRustServiceErrorType:L::wrap_validation_err);
+                "$fieldName:L failed to satisfy constraint: Member must be $rangeDescription:L",
+            ));
         }
-        """.formatted(conditionTemplate, rangeDescription),
+        """,
         variables
       );
     }
 
-    @Override
-    protected String validateLength(
+    private String validateLength(
       final MemberShape memberShape,
       final LengthTrait lengthTrait
     ) {
       final var targetShape = model.expectShape(memberShape.getTarget());
       final var len =
         switch (targetShape.getType()) {
-          case BLOB -> "x.as_ref().len()";
+          case BLOB -> "input.as_ref().len()";
           case STRING -> targetShape.hasTrait(DafnyUtf8BytesTrait.class)
             // scalar values
-            ? "x.chars().count()"
+            ? "input.chars().count()"
             // The Smithy spec says that this should count scalar values,
             // but for consistency with the existing Java and .NET implementations,
             // we instead count UTF-16 code points.
             // See <https://github.com/smithy-lang/smithy-dafny/issues/610>.
-            : "x.chars().map(::std::primitive::char::len_utf16).fold(0usize, ::std::ops::Add::add)";
-          default -> "x.len()";
+            : "input.chars().map(::std::primitive::char::len_utf16).fold(0usize, ::std::ops::Add::add)";
+          default -> "input.len()";
         };
       final var variables = MapUtils.merge(
         commonVariables,
@@ -978,11 +1232,11 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       final var rangeDescription = describeMinMax(min, max);
       return evalTemplate(
         """
-        if matches!(input.$fieldName:L, Some(ref x) if %s) {
+        if %s {
             return ::std::result::Result::Err(::aws_smithy_types::error::operation::BuildError::invalid_field(
                 "$fieldName:L",
                 "$fieldName:L failed to satisfy constraint: Member must have length %s",
-            )).map_err($qualifiedRustServiceErrorType:L::wrap_validation_err);
+            ));
         }
         """.formatted(conditionTemplate, rangeDescription),
         variables
@@ -1817,6 +2071,19 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       getClass(),
       "runtimes/rust/wrapped/client_operation_impl.part.rs",
       variables
+    );
+  }
+
+  private RustFile validationModule() {
+    final var validationFunctions = validationGenerator
+      .getShapesToValidate()
+      .stream()
+      .map(validationGenerator::generateValidationFunction)
+      .collect(Collectors.joining("\n"));
+
+    return new RustFile(
+      rootPathForShape(service).resolve("validation.rs"),
+      TokenTree.of(validationFunctions)
     );
   }
 
