@@ -927,20 +927,21 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
     }
 
     private String generateValidationFunctions(final Shape shape) {
+      var result = generateValidationFunction(null, null, shape);
       if (operationIndex.isInputStructure(shape)) {
-        return operationIndex.getInputBindings(shape)
+        return result + "\n" + operationIndex.getInputBindings(shape)
           .stream()
           .flatMap(operation -> operationBindingIndex.getBoundOperations(operation).stream())
           .map(boundOperation -> generateValidationFunction(boundOperation.bindingShape(), boundOperation.operationShape(), shape))
           .collect(Collectors.joining("\n"));
       } else if (operationIndex.isOutputStructure(shape)) {
-        return operationIndex.getOutputBindings(shape)
+        return result + "\n" + operationIndex.getOutputBindings(shape)
           .stream()
           .flatMap(operation -> operationBindingIndex.getBoundOperations(operation).stream())
           .map(boundOperation -> generateValidationFunction(boundOperation.bindingShape(), boundOperation.operationShape(), shape))
           .collect(Collectors.joining("\n"));
       } else {
-        return generateValidationFunction(null, null, shape);
+        return result;
       }
     }
 
