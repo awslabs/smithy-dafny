@@ -996,9 +996,9 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
     ) {
       final var validationBlocks = new ArrayList<String>();
 
-      final var isStructureMember =
-        shape instanceof MemberShape memberShape &&
-        model.expectShape(memberShape.getContainer()).isStructureShape();
+      final var parentShape = shape instanceof MemberShape memberShape ?
+        model.expectShape(memberShape.getContainer()) : null;
+      final var isStructureMember = parentShape != null && parentShape.isStructureShape();
 
       if (shape instanceof MemberShape memberShape) {
         memberShape
@@ -1138,7 +1138,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         if (shape instanceof MemberShape memberShape) {
           final var targetShape = model.expectShape(memberShape.getTarget());
           final var targetType = mergedGeneratorRustTypeForShape(targetShape);
-          if (isStructureMember) {
+          if (isStructureMember && isRustFieldRequired((StructureShape)parentShape, memberShape)) {
             variables.put(
               "shapeType",
               "::std::option::Option<%s>".formatted(targetType)
