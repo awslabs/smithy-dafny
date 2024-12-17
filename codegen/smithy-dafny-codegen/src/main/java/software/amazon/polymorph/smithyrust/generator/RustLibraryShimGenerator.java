@@ -1063,7 +1063,9 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
                 memberVariables
               )
             );
-          } else if (mergedGenerator.generatorForShape(structureShape).isRustFieldRequired(structureShape, memberShape)) {
+          } else if (mergedGenerator.generatorForShape(structureShape).isRustFieldRequired(structureShape, memberShape)
+              // TODO: This may be more correct than the current isRustFieldRequired in general
+              && !(operationIndex.isOutputStructure(structureShape) && model.expectShape(memberShape.getTarget()).isListShape())) {
             validationBlocks.add(
               evalTemplate(
                 "$memberValidationFunctionName:L(&Some(input.$fieldName:L.clone()))?;",
@@ -1163,7 +1165,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
             variables.put("shapeType", targetType);
           }
         } else if (operation != null) {
-          final var operationVariables = operationVariables(
+          final var operationVariables = mergedGenerator.generatorForShape(bindingShape).operationVariables(
             bindingShape,
             operation
           );
@@ -1175,7 +1177,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
           }
           variables.put("shapeType", shapeType);
         } else {
-          variables.put("shapeType", rustTypeForShape(shape));
+          variables.put("shapeType", mergedGeneratorRustTypeForShape(shape));
         }
       } catch (Exception e) {
         throw new RuntimeException(

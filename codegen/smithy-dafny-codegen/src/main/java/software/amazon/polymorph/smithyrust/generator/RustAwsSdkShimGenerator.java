@@ -824,6 +824,8 @@ public class RustAwsSdkShimGenerator extends AbstractRustShimGenerator {
       bindingShape,
       operationShape
     );
+    variables.put("operationInputType", rustTypeForShape(operationIndex.getInputShape(operationShape).get()));
+    variables.put("operationOutputType", rustTypeForShape(operationIndex.getOutputShape(operationShape).get()));
     variables.put(
       "sdkOperationInputStruct",
       sdkOperationInputStruct(operationShape)
