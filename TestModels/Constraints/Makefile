@@ -44,6 +44,16 @@ remove_unsupported_rust_tests:
 		SED_BEFORE_STRING='let mut allowBadUtf8BytesFromDafny: bool = true' \
 		SED_AFTER_STRING='let mut allowBadUtf8BytesFromDafny: bool = false'
 
+# Patch out tests that Java codegen doesn't support
+
+transpile_java: | transpile_implementation_java transpile_dependencies_java remove_unsupported_java_tests
+
+remove_unsupported_java_tests:
+	$(MAKE) _sed_file \
+		SED_FILE_PATH=$(LIBRARY_ROOT)/runtimes/java/src/test/dafny-generated/WrappedSimpleConstraintsTest_Compile/__default.java \
+		SED_BEFORE_STRING='_3_supportsOptionalPrimitiveFields = true' \
+		SED_AFTER_STRING='_3_supportsOptionalPrimitiveFields = false'
+
 # Python
 
 PYTHON_MODULE_NAME=simple_constraints

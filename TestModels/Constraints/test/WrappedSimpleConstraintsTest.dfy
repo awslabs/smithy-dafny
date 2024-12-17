@@ -33,13 +33,19 @@ module WrappedSimpleConstraintsTest {
     TestGetConstraintWithGreaterThanOne(client);
     TestGetConstraintWithUtf8Bytes(client);
     TestGetConstraintWithListOfUtf8Bytes(client);
-    TestGetConstraintWithUnionWithConstraint(client);
     TestGetConstraintWithComplexStructureList(client);
 
     var allowBadUtf8BytesFromDafny := true;
     if (allowBadUtf8BytesFromDafny) {
       TestGetConstraintWithBadUtf8Bytes(client);
       TestGetConstraintWithListOfBadUtf8Bytes(client);
+    }
+
+    // This doesn't work in Java.
+    // See https://github.com/smithy-lang/smithy-dafny/issues/278
+    var supportsOptionalPrimitiveFields := true;
+    if (supportsOptionalPrimitiveFields) {
+      TestGetConstraintWithUnionWithConstraint(client);
     }
   }
 
