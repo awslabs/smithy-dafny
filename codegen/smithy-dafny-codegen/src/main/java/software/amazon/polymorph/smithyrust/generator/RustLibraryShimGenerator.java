@@ -1137,7 +1137,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       try {
         if (shape instanceof MemberShape memberShape) {
           final var targetShape = model.expectShape(memberShape.getTarget());
-          final var targetType = rustTypeForShape(targetShape);
+          final var targetType = mergedGeneratorRustTypeForShape(targetShape);
           if (isStructureMember) {
             variables.put(
               "shapeType",
