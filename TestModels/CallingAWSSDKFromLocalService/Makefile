@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 CORES=2
+TRANSPILE_TESTS_IN_RUST=1
 
 ENABLE_EXTERN_PROCESSING=1
 
@@ -9,6 +10,8 @@ include ../SharedMakefile.mk
 
 PROJECT_SERVICES := \
 	SimpleCallingawssdkfromlocalservice
+
+MAIN_SERVICE_FOR_RUST := SimpleCallingawssdkfromlocalservice
 
 PROJECT_DEPENDENCIES := \
 	aws-sdks/kmsv2 \
