@@ -127,9 +127,6 @@ mvn_local_deploy:
 	@echo "${RED}Warning!!${YELLOW} Installing TestModel's STD to Maven Local replaces ESDK's STD!\n$(RESET)" >&2
 	$(GRADLEW) -p runtimes/java publishToMavenLocal
 
-stdlibs:
-	dafny build -t:lib --output stdlibs DafnyStandardLibraries.toml
-
 dafny_benerate: DAFNY_RUST_OUTPUT=\
 	runtimes/rust/implementation_from_dafny
 dafny_benerate: DAFNY_RUST_OUTPUT_FOLDER=\
