@@ -1049,45 +1049,58 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
           );
         }
       } else if (shape instanceof StructureShape structureShape) {
-        var isPositionalOutput =
-          (operation == null ||
-            operation.getOutputShape().equals(shape.getId())) &&
-          structureShape.hasTrait(PositionalTrait.class);
-        for (final var memberShape : structureShape.getAllMembers().values()) {
-          final var memberVariables = structureMemberVariables(memberShape);
-          memberVariables.put(
-            "memberValidationFunctionName",
-            shapeValidationFunctionName(null, null, memberShape)
-          );
+        // If this is a response shape for an AWS SDK,
+        // make validation a no-op for now.
+        // This is because the SDKs will produce values that violate constraints,
+        // such as a `Some({})` on an optional map with @length(min: 1).
+        // This could be considered an SDK bug since information is lost,
+        // SDKs are also not supposed to validate constraints
+        // which makes it harder to argue it should be fixed.
+        // See https://github.com/smithy-lang/smithy-dafny/issues/751
+        var generator = mergedGenerator.generatorForShape(shape);
+        if (generator instanceof RustAwsSdkShimGenerator && operationIndex.isOutputStructure(shape)) {
+          validationBlocks.add("// Validation intentionally suppressed for AWS SDK response structures");
+        } else {
+          var isPositionalOutput =
+            (operation == null ||
+              operation.getOutputShape().equals(shape.getId())) &&
+              structureShape.hasTrait(PositionalTrait.class);
+          for (final var memberShape : structureShape.getAllMembers().values()) {
+            final var memberVariables = structureMemberVariables(memberShape);
+            memberVariables.put(
+              "memberValidationFunctionName",
+              shapeValidationFunctionName(null, null, memberShape)
+            );
 
-          if (isPositionalOutput) {
-            validationBlocks.add(
-              evalTemplate(
-                "$memberValidationFunctionName:L(&Some(input.clone()))?;",
-                memberVariables
-              )
-            );
-          } else if (
-            mergedGenerator
-              .generatorForShape(structureShape)
-              .isRustFieldRequired(structureShape, memberShape) &&
-            // TODO: This may be more correct than the current isRustFieldRequired in general
-            !(operationIndex.isOutputStructure(structureShape) &&
-              model.expectShape(memberShape.getTarget()).isListShape())
-          ) {
-            validationBlocks.add(
-              evalTemplate(
-                "$memberValidationFunctionName:L(&Some(input.$fieldName:L.clone()))?;",
-                memberVariables
-              )
-            );
-          } else {
-            validationBlocks.add(
-              evalTemplate(
-                "$memberValidationFunctionName:L(&input.$fieldName:L)?;",
-                memberVariables
-              )
-            );
+            if (isPositionalOutput) {
+              validationBlocks.add(
+                evalTemplate(
+                  "$memberValidationFunctionName:L(&Some(input.clone()))?;",
+                  memberVariables
+                )
+              );
+            } else if (
+              mergedGenerator
+                .generatorForShape(structureShape)
+                .isRustFieldRequired(structureShape, memberShape) &&
+                // TODO: This may be more correct than the current isRustFieldRequired in general
+                !(operationIndex.isOutputStructure(structureShape) &&
+                  model.expectShape(memberShape.getTarget()).isListShape())
+            ) {
+              validationBlocks.add(
+                evalTemplate(
+                  "$memberValidationFunctionName:L(&Some(input.$fieldName:L.clone()))?;",
+                  memberVariables
+                )
+              );
+            } else {
+              validationBlocks.add(
+                evalTemplate(
+                  "$memberValidationFunctionName:L(&input.$fieldName:L)?;",
+                  memberVariables
+                )
+              );
+            }
           }
         }
       } else if (shape instanceof UnionShape unionShape) {
