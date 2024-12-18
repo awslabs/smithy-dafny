@@ -1176,6 +1176,14 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
             shapeType = operationVariables.get("operationOutputType");
           }
           variables.put("shapeType", shapeType);
+        } else if (ModelUtils.getConfigShape(model, service).getId().equals(shape.getId())) {
+          // The config shape is a bit special, because even if it's declared in a dependent service
+          // we still re-declare it for this one.
+          variables.put("shapeType", "%s::%s::%s".formatted(
+            getRustTypesModuleName(),
+            toSnakeCase(rustStructureName((StructureShape)shape)),
+            rustStructureName((StructureShape)shape)
+          ));
         } else {
           variables.put("shapeType", mergedGeneratorRustTypeForShape(shape));
         }
