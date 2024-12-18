@@ -25,7 +25,7 @@ else
 endif
 
 # Overriding this target just to generate the project.properties file.
-polymorph_dafny: build_dafny_stdlibs
+polymorph_dafny:
 	cd $(CODEGEN_CLI_ROOT); \
 	$(GRADLEW) run --args="\
 	--library-root $(LIBRARY_ROOT) \
