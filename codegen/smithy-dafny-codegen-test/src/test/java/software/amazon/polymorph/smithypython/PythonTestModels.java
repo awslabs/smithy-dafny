@@ -11,7 +11,9 @@ import java.util.Set;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import software.amazon.polymorph.CodegenEngine;
 import software.amazon.polymorph.TestModelTest;
+import software.amazon.polymorph.smithydafny.DafnyVersion;
 
 class PythonTestModels extends TestModelTest {
 
@@ -45,6 +47,15 @@ class PythonTestModels extends TestModelTest {
   @MethodSource("discoverTestModels")
   void testModelsForPython(String relativeTestModelPath) {
     Assumptions.assumeFalse(DISABLED_TESTS.contains(relativeTestModelPath));
+
+    // The @streaming support depends on our subset of the Dafny standard libraries
+    // which cannot be built for old versions of Dafny.
+    if (relativeTestModelPath.endsWith("Streaming") || relativeTestModelPath.endsWith("s3")) {
+      DafnyVersion dafnyVersion = CodegenEngine.getDafnyVersionFromDafny();
+      if (dafnyVersion.compareTo(DafnyVersion.parse("4.9.0")) < 0) {
+        Assumptions.assumeTrue(false);
+      }
+    }
 
     Path testModelPath = getTestModelPath(relativeTestModelPath);
     make(testModelPath, "setup_prettier");

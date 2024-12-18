@@ -95,7 +95,7 @@ verify:
 		--log-format csv \
 		--verification-time-limit $(VERIFY_TIMEOUT) \
 		--resource-limit $(MAX_RESOURCE_COUNT) \
-		$(if $(strip $(STD_LIBRARY)) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/DafnyStandardLibraries-smithy-dafny-subset.doo, ) \
+		$(if $(USE_DAFNY_STANDARD_LIBRARIES) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/DafnyStandardLibraries-smithy-dafny-subset.doo, ) \
 		$(DAFNY_OPTIONS) \
 		%
 
@@ -111,7 +111,7 @@ verify_single:
 		--log-format text \
 		--verification-time-limit $(VERIFY_TIMEOUT) \
 		--resource-limit $(MAX_RESOURCE_COUNT) \
-		$(if $(strip $(STD_LIBRARY)) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/DafnyStandardLibraries-smithy-dafny-subset.doo, ) \
+		$(if $(USE_DAFNY_STANDARD_LIBRARIES) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/DafnyStandardLibraries-smithy-dafny-subset.doo, ) \
 		$(DAFNY_OPTIONS) \
 		$(if ${PROC},-proc:*$(PROC)*,) \
 		$(FILE)
@@ -208,7 +208,7 @@ transpile_implementation:
 		$(DAFNY_OTHER_FILES) \
 		$(TRANSPILE_MODULE_NAME) \
 		$(if $(strip $(STD_LIBRARY)) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/src/Index.dfy, ) \
-		$(if $(strip $(STD_LIBRARY)) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/DafnyStandardLibraries-smithy-dafny-subset.doo, ) \
+		$(if $(USE_DAFNY_STANDARD_LIBRARIES) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/DafnyStandardLibraries-smithy-dafny-subset.doo, ) \
 		$(TRANSLATION_RECORD) \
 		$(TRANSPILE_DEPENDENCIES)
 
@@ -246,7 +246,7 @@ transpile_test:
 		$(DAFNY_OPTIONS) \
 		$(DAFNY_OTHER_FILES) \
 		$(if $(strip $(STD_LIBRARY)) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/src/Index.dfy, ) \
-		$(if $(strip $(STD_LIBRARY)) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/DafnyStandardLibraries-smithy-dafny-subset.doo, ) \
+		$(if $(USE_DAFNY_STANDARD_LIBRARIES) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/DafnyStandardLibraries-smithy-dafny-subset.doo, ) \
 		$(TRANSLATION_RECORD) \
 		$(SOURCE_TRANSLATION_RECORD) \
 		$(TRANSPILE_MODULE_NAME) \
@@ -328,7 +328,7 @@ _polymorph_wrapped:
 	$(POLYMORPH_OPTIONS)";
 
 _polymorph_dependencies:
-	$(if $(strip $(STD_LIBRARY)), $(MAKE) -C $(PROJECT_ROOT)/$(STD_LIBRARY) polymorph_$(POLYMORPH_LANGUAGE_TARGET) LIBRARY_ROOT=$(PROJECT_ROOT)/$(STD_LIBRARY), )
+	$(if $(strip $(STD_LIBRARY)), $(MAKE) -C $(PROJECT_ROOT)/$(STD_LIBRARY) polymorph_$(POLYMORPH_LANGUAGE_TARGET) LIBRARY_ROOT=$(PROJECT_ROOT)/$(STD_LIBRARY) USE_DAFNY_STANDARD_LIBRARIES=$(USE_DAFNY_STANDARD_LIBRARIES), )
 	@$(foreach dependency, \
 		$(PROJECT_DEPENDENCIES), \
 		$(MAKE) -C $(PROJECT_ROOT)/$(dependency) polymorph_$(POLYMORPH_LANGUAGE_TARGET); \

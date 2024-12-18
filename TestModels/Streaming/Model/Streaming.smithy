@@ -28,6 +28,7 @@ service SimpleStreaming {
 
 structure SimpleStreamingConfig {}
 
+@suppress(["UnsupportedFeatures"])
 @streaming
 blob StreamingBlob
 

@@ -8,7 +8,7 @@ module SimpleStreamingTypes
   import opened StandardLibrary.UInt
   import opened StandardLibrary.Streams
   import opened UTF8
-    // Generic helpers for verification of mock/unit tests.
+  // Generic helpers for verification of mock/unit tests.
   datatype DafnyCallEvent<I, O> = DafnyCallEvent(input: I, output: O)
 
   // Begin Generated Types
@@ -338,7 +338,7 @@ abstract module AbstractSimpleStreamingOperations {
     returns (output: Result<ChunksOutput, Error>)
     requires
       && ValidInternalConfig?(config)
-         // TODO: smithy-dafny isn't yet generating this
+      // TODO: smithy-dafny isn't yet generating this
       && input.bytesIn.Valid()
     modifies ModifiesInternalConfig(config)
     // Dafny will skip type parameters when generating a default decreases clause.
