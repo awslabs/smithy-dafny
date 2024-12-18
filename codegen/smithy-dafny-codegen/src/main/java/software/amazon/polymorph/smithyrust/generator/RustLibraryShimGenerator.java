@@ -1058,14 +1058,21 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         // which makes it harder to argue it should be fixed.
         // See https://github.com/smithy-lang/smithy-dafny/issues/751
         var generator = mergedGenerator.generatorForShape(shape);
-        if (generator instanceof RustAwsSdkShimGenerator && operationIndex.isOutputStructure(shape)) {
-          validationBlocks.add("// Validation intentionally suppressed for AWS SDK response structures");
+        if (
+          generator instanceof RustAwsSdkShimGenerator &&
+          operationIndex.isOutputStructure(shape)
+        ) {
+          validationBlocks.add(
+            "// Validation intentionally suppressed for AWS SDK response structures"
+          );
         } else {
           var isPositionalOutput =
             (operation == null ||
               operation.getOutputShape().equals(shape.getId())) &&
-              structureShape.hasTrait(PositionalTrait.class);
-          for (final var memberShape : structureShape.getAllMembers().values()) {
+            structureShape.hasTrait(PositionalTrait.class);
+          for (final var memberShape : structureShape
+            .getAllMembers()
+            .values()) {
             final var memberVariables = structureMemberVariables(memberShape);
             memberVariables.put(
               "memberValidationFunctionName",
@@ -1083,9 +1090,9 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
               mergedGenerator
                 .generatorForShape(structureShape)
                 .isRustFieldRequired(structureShape, memberShape) &&
-                // TODO: This may be more correct than the current isRustFieldRequired in general
-                !(operationIndex.isOutputStructure(structureShape) &&
-                  model.expectShape(memberShape.getTarget()).isListShape())
+              // TODO: This may be more correct than the current isRustFieldRequired in general
+              !(operationIndex.isOutputStructure(structureShape) &&
+                model.expectShape(memberShape.getTarget()).isListShape())
             ) {
               validationBlocks.add(
                 evalTemplate(
