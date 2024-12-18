@@ -1,9 +1,9 @@
 #![allow(
-    deprecated,
-    non_upper_case_globals,
-    unused,
-    non_snake_case,
-    non_camel_case_types
+  deprecated,
+  non_upper_case_globals,
+  unused,
+  non_snake_case,
+  non_camel_case_types
 )]
 
 pub mod client;
@@ -21,5 +21,13 @@ pub mod types;
 pub mod wrapped;
 pub(crate) use crate::implementation_from_dafny::r#_Wrappers_Compile;
 pub(crate) use crate::implementation_from_dafny::simple;
-pub use crate::types::simple_enum_config::SimpleEnumConfig;
+pub use crate::types::simple_callingawssdkfromlocalservice_config::SimpleCallingawssdkfromlocalserviceConfig;
 pub use client::Client;
+
+pub use crate::deps::com_amazonaws_dynamodb;
+pub use crate::deps::com_amazonaws_kms;
+
+pub mod ddb;
+pub mod kms;
+
+pub(crate) use crate::implementation_from_dafny::software;
