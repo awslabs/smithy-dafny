@@ -996,9 +996,11 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
     ) {
       final var validationBlocks = new ArrayList<String>();
 
-      final var parentShape = shape instanceof MemberShape memberShape ?
-        model.expectShape(memberShape.getContainer()) : null;
-      final var isStructureMember = parentShape != null && parentShape.isStructureShape();
+      final var parentShape = shape instanceof MemberShape memberShape
+        ? model.expectShape(memberShape.getContainer())
+        : null;
+      final var isStructureMember =
+        parentShape != null && parentShape.isStructureShape();
 
       if (shape instanceof MemberShape memberShape) {
         memberShape
@@ -1047,8 +1049,10 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
           );
         }
       } else if (shape instanceof StructureShape structureShape) {
-        var isPositionalOutput = (operation == null || operation.getOutputShape().equals(shape.getId()))
-          && structureShape.hasTrait(PositionalTrait.class);
+        var isPositionalOutput =
+          (operation == null ||
+            operation.getOutputShape().equals(shape.getId())) &&
+          structureShape.hasTrait(PositionalTrait.class);
         for (final var memberShape : structureShape.getAllMembers().values()) {
           final var memberVariables = structureMemberVariables(memberShape);
           memberVariables.put(
@@ -1063,9 +1067,14 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
                 memberVariables
               )
             );
-          } else if (mergedGenerator.generatorForShape(structureShape).isRustFieldRequired(structureShape, memberShape)
-              // TODO: This may be more correct than the current isRustFieldRequired in general
-              && !(operationIndex.isOutputStructure(structureShape) && model.expectShape(memberShape.getTarget()).isListShape())) {
+          } else if (
+            mergedGenerator
+              .generatorForShape(structureShape)
+              .isRustFieldRequired(structureShape, memberShape) &&
+            // TODO: This may be more correct than the current isRustFieldRequired in general
+            !(operationIndex.isOutputStructure(structureShape) &&
+              model.expectShape(memberShape.getTarget()).isListShape())
+          ) {
             validationBlocks.add(
               evalTemplate(
                 "$memberValidationFunctionName:L(&Some(input.$fieldName:L.clone()))?;",
@@ -1165,10 +1174,9 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
             variables.put("shapeType", targetType);
           }
         } else if (operation != null) {
-          final var operationVariables = mergedGenerator.generatorForShape(bindingShape).operationVariables(
-            bindingShape,
-            operation
-          );
+          final var operationVariables = mergedGenerator
+            .generatorForShape(bindingShape)
+            .operationVariables(bindingShape, operation);
           final String shapeType;
           if (operation.getInputShape().equals(shape.getId())) {
             shapeType = operationVariables.get("operationInputType");
@@ -1176,14 +1184,22 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
             shapeType = operationVariables.get("operationOutputType");
           }
           variables.put("shapeType", shapeType);
-        } else if (ModelUtils.getConfigShape(model, service).getId().equals(shape.getId())) {
+        } else if (
+          ModelUtils
+            .getConfigShape(model, service)
+            .getId()
+            .equals(shape.getId())
+        ) {
           // The config shape is a bit special, because even if it's declared in a dependent service
           // we still re-declare it for this one.
-          variables.put("shapeType", "%s::%s::%s".formatted(
-            getRustTypesModuleName(),
-            toSnakeCase(rustStructureName((StructureShape)shape)),
-            rustStructureName((StructureShape)shape)
-          ));
+          variables.put(
+            "shapeType",
+            "%s::%s::%s".formatted(
+                getRustTypesModuleName(),
+                toSnakeCase(rustStructureName((StructureShape) shape)),
+                rustStructureName((StructureShape) shape)
+              )
+          );
         } else {
           variables.put("shapeType", mergedGeneratorRustTypeForShape(shape));
         }
