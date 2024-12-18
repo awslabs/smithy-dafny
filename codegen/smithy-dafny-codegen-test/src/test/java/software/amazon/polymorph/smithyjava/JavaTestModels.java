@@ -11,7 +11,9 @@ import java.util.Set;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import software.amazon.polymorph.CodegenEngine;
 import software.amazon.polymorph.TestModelTest;
+import software.amazon.polymorph.smithydafny.DafnyVersion;
 
 class JavaTestModels extends TestModelTest {
 
@@ -58,6 +60,15 @@ class JavaTestModels extends TestModelTest {
   @ParameterizedTest
   @MethodSource("discoverTestModels")
   void testModelsForJava(String relativeTestModelPath) {
+    // This test is hacked up to pass for Java in a way that doesn't work
+    // for older Dafny versions.
+    if (relativeTestModelPath.endsWith("Constraints")) {
+      DafnyVersion dafnyVersion = CodegenEngine.getDafnyVersionFromDafny();
+      if (dafnyVersion.compareTo(DafnyVersion.parse("4.9.0")) < 0) {
+        Assumptions.assumeTrue(false);
+      }
+    }
+
     Assumptions.assumeFalse(DISABLED_TESTS.contains(relativeTestModelPath));
 
     Path testModelPath = getTestModelPath(relativeTestModelPath);
