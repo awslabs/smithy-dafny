@@ -471,9 +471,9 @@ _polymorph_go: DEPENDENCY_MODULE_NAMES = $(GO_DEPENDENCY_MODULE_NAMES)
 _polymorph_go: _polymorph _mv_polymorph_go run_goimports
 
 run_goimports:
-	cd runtimes/go/ImplementationFromDafny-go && goimports -w .
+	cd runtimes/go/ImplementationFromDafny-go && goimports -w -v .
 	@if [ -d runtimes/go/TestsFromDafny-go ]; then \
-		cd runtimes/go/TestsFromDafny-go && goimports -w . ; \
+		cd runtimes/go/TestsFromDafny-go && goimports -w -v . ; \
 	fi
 
 _mv_polymorph_go:
