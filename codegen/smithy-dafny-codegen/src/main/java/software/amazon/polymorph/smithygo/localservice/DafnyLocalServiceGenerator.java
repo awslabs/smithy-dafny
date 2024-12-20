@@ -1125,7 +1125,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 "dafny"
               );
             } else {
-              String fromDafnyConvMethodNameForOutput =
+              String toDafnyConvMethodNameForOutput =
                 SmithyNameResolver.getToDafnyMethodName(
                   service,
                   outputShape,
@@ -1148,16 +1148,16 @@ public class DafnyLocalServiceGenerator implements Runnable {
                         .getReferentId()
                     );
                 }
-                fromDafnyConvMethodNameForOutput =
+                toDafnyConvMethodNameForOutput =
                   outputShape.isResourceShape()
-                    ? SmithyNameResolver.getFromDafnyMethodName(
+                    ? SmithyNameResolver.getToDafnyMethodName(
                       service,
                       outputShape,
                       ""
                     )
                     : Constants.funcNameGenerator(
                       postionalMemShape,
-                      "FromDafny",
+                      "ToDafny",
                       model
                     );
                 deReferenceRequired = false;
@@ -1165,7 +1165,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
               clientResponse = "var native_response, native_error";
               returnResponse =
                 "%s(%snative_response)".formatted(
-                    fromDafnyConvMethodNameForOutput,
+                    toDafnyConvMethodNameForOutput,
                     deReferenceRequired ? "*" : ""
                   );
             }
