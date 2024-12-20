@@ -1533,9 +1533,10 @@ public class DafnyLocalServiceTypeConversionProtocol
           }
           alreadyVisited.add(visitingMemberShape.toShapeId());
           String inputType;
-          final var outputType = ShapeVisitorHelper.isToDafnyShapeOptional(
-              visitingMemberShape
-            )
+          final Boolean isOptional = ShapeVisitorHelper.isToDafnyShapeOptional(
+            visitingMemberShape
+          );
+          var outputType = isOptional
             ? "Wrappers.Option"
             : DafnyNameResolver.getDafnyType(
               visitingShape,
@@ -1547,15 +1548,51 @@ public class DafnyLocalServiceTypeConversionProtocol
               visitingShape,
               true
             );
-          if (
-            context
-              .symbolProvider()
-              .toSymbol(visitingMemberShape)
-              .getProperty(POINTABLE, Boolean.class)
-              .orElse(false)
-          ) {
-            inputType = "*".concat(inputType);
+          Boolean isPointable = context
+            .symbolProvider()
+            .toSymbol(visitingMemberShape)
+            .getProperty(POINTABLE, Boolean.class)
+            .orElse(false);
+          if (visitingShape.hasTrait(ReferenceTrait.class)) {
+            final var referenceTrait = visitingShape.expectTrait(
+              ReferenceTrait.class
+            );
+            final var resourceOrService = context
+              .model()
+              .expectShape(referenceTrait.getReferentId());
+            isPointable =
+              context
+                .symbolProvider()
+                .toSymbol(resourceOrService)
+                .getProperty(POINTABLE, Boolean.class)
+                .orElse(false);
+            if (resourceOrService.isServiceShape()) {
+              if (resourceOrService.hasTrait(ServiceTrait.class)) {
+                outputType =
+                  isOptional
+                    ? "Wrappers.Option"
+                    : DafnyNameResolver.getDafnyInterfaceClient(
+                      resourceOrService.asServiceShape().get(),
+                      resourceOrService.getTrait(ServiceTrait.class).get()
+                    );
+              } else {
+                outputType =
+                  isOptional
+                    ? "Wrappers.Option"
+                    : DafnyNameResolver.getDafnyType(
+                      visitingShape,
+                      context.symbolProvider().toSymbol(visitingShape)
+                    );
+              }
+              inputType =
+                GoCodegenUtils.getType(
+                  context.symbolProvider().toSymbol(resourceOrService),
+                  resourceOrService,
+                  true
+                );
+            }
           }
+          inputType = isPointable ? "*".concat(inputType) : inputType;
           writer.write(
             """
             func $L(input $L)($L) {
