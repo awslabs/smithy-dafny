@@ -13,6 +13,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -64,7 +65,9 @@ import software.amazon.smithy.build.FileManifest;
 import software.amazon.smithy.build.PluginContext;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.node.ObjectNode;
+import software.amazon.smithy.model.selector.Selector;
 import software.amazon.smithy.model.shapes.ServiceShape;
+import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.utils.IoUtils;
 import software.amazon.smithy.utils.Pair;
 
@@ -1375,7 +1378,7 @@ public class CodegenEngine {
     }
   }
 
-  private static DafnyVersion getDafnyVersionFromDafny() {
+  public static DafnyVersion getDafnyVersionFromDafny() {
     String versionString = runCommandOrThrow(
       Path.of("."),
       "dafny",

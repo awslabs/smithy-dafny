@@ -114,13 +114,13 @@ transpile_implementation:
 # Override SharedMakefile's build_java to not install
 # StandardLibrary as a dependency
 build_java: transpile_java
-	gradle -p runtimes/java build
+	$(GRADLEW) -p runtimes/java build
 
 # Override SharedMakefile's mvn_local_deploy to
 # issue warning
 mvn_local_deploy:
 	@echo "${RED}Warning!!${YELLOW} Installing TestModel's STD to Maven Local replaces ESDK's STD!\n$(RESET)" >&2
-	gradle -p runtimes/java publishToMavenLocal
+	$(GRADLEW) -p runtimes/java publishToMavenLocal
 
 dafny_benerate: DAFNY_RUST_OUTPUT=\
 	runtimes/rust/implementation_from_dafny
