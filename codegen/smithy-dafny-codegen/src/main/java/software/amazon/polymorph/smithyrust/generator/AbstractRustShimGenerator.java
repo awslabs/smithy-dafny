@@ -48,6 +48,7 @@ import software.amazon.smithy.model.traits.EnumTrait;
 import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.RequiredTrait;
 import software.amazon.smithy.model.traits.StringTrait;
+import software.amazon.smithy.model.traits.TraitDefinition;
 import software.amazon.smithy.model.traits.UnitTypeTrait;
 
 public abstract class AbstractRustShimGenerator {
@@ -132,8 +133,8 @@ public abstract class AbstractRustShimGenerator {
     StructureShape structureShape
   ) {
     return (
+      !structureShape.hasTrait(TraitDefinition.class) &&
       !structureShape.hasTrait(ErrorTrait.class) &&
-      !structureShape.hasTrait(ShapeId.from("smithy.api#trait")) &&
       !structureShape.hasTrait(ReferenceTrait.class) &&
       ModelUtils.isInServiceNamespace(structureShape, service)
     );
@@ -831,7 +832,7 @@ public abstract class AbstractRustShimGenerator {
     final String snakeCaseMemberName = toSnakeCase(member.getMemberName());
     return toDafny(
       targetShape,
-      "value." + snakeCaseMemberName,
+      "value." + RustUtils.escapedName(snakeCaseMemberName),
       !isRustFieldRequired(parent, member),
       !hasRequiredTrait(member)
     );
@@ -1585,8 +1586,12 @@ public abstract class AbstractRustShimGenerator {
     final HashMap<String, String> variables = new HashMap<>();
     final String memberName = memberShape.getMemberName();
     final Shape targetShape = model.expectShape(memberShape.getTarget());
-    variables.put("memberName", memberName);
+    variables.put("memberName", RustUtils.escapedName(memberName));
     variables.put("fieldName", toSnakeCase(memberName));
+    variables.put(
+      "safeFieldName",
+      RustUtils.escapedName(toSnakeCase(memberName))
+    );
     variables.put("fieldType", mergedGeneratorRustTypeForShape(targetShape));
     return variables;
   }

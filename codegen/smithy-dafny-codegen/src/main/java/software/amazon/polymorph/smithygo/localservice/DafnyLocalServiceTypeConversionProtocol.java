@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.stream.Collectors;
 import software.amazon.polymorph.smithygo.codegen.ApplicationProtocol;
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoDelegator;
@@ -24,6 +25,7 @@ import software.amazon.polymorph.traits.ExtendableTrait;
 import software.amazon.polymorph.traits.LocalServiceTrait;
 import software.amazon.polymorph.traits.PositionalTrait;
 import software.amazon.polymorph.traits.ReferenceTrait;
+import software.amazon.polymorph.utils.ModelUtils;
 import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.model.shapes.OperationShape;
@@ -1066,6 +1068,16 @@ public class DafnyLocalServiceTypeConversionProtocol
         }
       );
 
+    final Set<StructureShape> errorShapesForNamespace = context
+      .model()
+      .getStructureShapes()
+      .stream()
+      .filter(shape -> shape.hasTrait(ErrorTrait.class))
+      .filter(shape ->
+        ModelUtils.isInServiceNamespace(shape.getId(), serviceShape)
+      )
+      .collect(Collectors.toSet());
+
     context
       .writerDelegator()
       .useFileWriter(
@@ -1103,7 +1115,8 @@ public class DafnyLocalServiceTypeConversionProtocol
             """,
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
             writer.consumer(w -> {
-              for (var error : serviceShape.getErrors()) {
+              for (var errorShape : errorShapesForNamespace) {
+                final var error = errorShape.getId();
                 w.write(
                   """
                     case $L:
@@ -1203,7 +1216,7 @@ public class DafnyLocalServiceTypeConversionProtocol
         sdkErrHandler.append(
           """
           %s := %s.Error_ToDafny(err)
-          if(!%s.Is_Opaque()) {
+          if(!%s.Is_OpaqueWithText()) {
             return %s.Create_%s_(%s)
           }
           """.formatted(
@@ -1216,6 +1229,18 @@ public class DafnyLocalServiceTypeConversionProtocol
             )
         );
       } else {
+        w.addImportFromModule(
+          SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+            depShape.toShapeId().getNamespace()
+          ),
+          SmithyNameResolver.smithyTypesNamespace(depShape)
+        );
+        w.addImportFromModule(
+          SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+            depShape.toShapeId().getNamespace()
+          ),
+          SmithyNameResolver.shapeNamespace(depShape)
+        );
         w.write(
           """
           case $L.$LBaseException:
@@ -1424,6 +1449,16 @@ public class DafnyLocalServiceTypeConversionProtocol
         }
       );
 
+    final Set<StructureShape> errorShapesForNamespace = context
+      .model()
+      .getStructureShapes()
+      .stream()
+      .filter(shape -> shape.hasTrait(ErrorTrait.class))
+      .filter(shape ->
+        ModelUtils.isInServiceNamespace(shape.getId(), serviceShape)
+      )
+      .collect(Collectors.toSet());
+
     context
       .writerDelegator()
       .useFileWriter(
@@ -1456,7 +1491,8 @@ public class DafnyLocalServiceTypeConversionProtocol
             """,
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
             writer.consumer(w -> {
-              for (final var error : serviceShape.getErrors()) {
+              for (final var errorShape : errorShapesForNamespace) {
+                final var error = errorShape.getId();
                 w.write(
                   """
                   if err.Is_$L() {
@@ -1487,6 +1523,12 @@ public class DafnyLocalServiceTypeConversionProtocol
                 final var depService = context
                   .model()
                   .expectShape(dep, ServiceShape.class);
+                writer.addImportFromModule(
+                  SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+                    depService.toShapeId().getNamespace()
+                  ),
+                  SmithyNameResolver.shapeNamespace(depService)
+                );
                 w.write(
                   """
                   if err.Is_$L() {

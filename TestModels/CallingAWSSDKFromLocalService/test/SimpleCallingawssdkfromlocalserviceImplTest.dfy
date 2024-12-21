@@ -56,7 +56,7 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
 
     expect resFailure.Failure?;
     expect resFailure.error.ComAmazonawsDynamodb?;
-    expect resFailure.error.ComAmazonawsDynamodb.Opaque?;
+    expect resFailure.error.ComAmazonawsDynamodb.OpaqueWithText?;
   }
 
   method{:test} CallDDBGetItem(){
@@ -99,7 +99,7 @@ module SimpleCallingawssdkfromlocalserviceImplTest {
 
     expect resFailure.Failure?;
     expect resFailure.error.ComAmazonawsDynamodb?;
-    expect resFailure.error.ComAmazonawsDynamodb.Opaque?;
+    expect resFailure.error.ComAmazonawsDynamodb.OpaqueWithText?;
   }
 
   method{:test} CallDDBPutItem(){

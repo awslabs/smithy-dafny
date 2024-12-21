@@ -231,6 +231,12 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
         ),
         SmithyNameResolver.shapeNamespace(resourceShape)
       );
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+          resourceOrService.toShapeId().getNamespace()
+        ),
+        SmithyNameResolver.smithyTypesNamespace(resourceShape)
+      );
       namespace =
         SmithyNameResolver.shapeNamespace(resourceOrService).concat(".");
     }
@@ -582,6 +588,19 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       );
     }
     if (shape.hasTrait(EnumTrait.class)) {
+      if (
+        !shape
+          .toShapeId()
+          .getNamespace()
+          .equals(context.settings().getService().getNamespace())
+      ) {
+        writer.addImportFromModule(
+          SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+            shape.toShapeId().getNamespace()
+          ),
+          DafnyNameResolver.dafnyTypesNamespace(shape)
+        );
+      }
       if (this.isOptional) {
         return """
           return func () *%s.%s {
