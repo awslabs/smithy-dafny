@@ -1627,9 +1627,12 @@ public class DafnyLocalServiceTypeConversionProtocol
                     );
               }
               inputType =
-              SmithyNameResolver.shapeNamespace(resourceOrService)
-                .concat(".")
-                .concat(context.symbolProvider().toSymbol(serviceShape).getName());
+                SmithyNameResolver
+                  .shapeNamespace(resourceOrService)
+                  .concat(".")
+                  .concat(
+                    context.symbolProvider().toSymbol(serviceShape).getName()
+                  );
               System.out.println(inputType);
             }
           }
