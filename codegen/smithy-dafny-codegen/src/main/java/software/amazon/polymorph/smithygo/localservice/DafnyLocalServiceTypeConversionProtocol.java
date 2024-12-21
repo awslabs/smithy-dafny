@@ -1580,16 +1580,15 @@ public class DafnyLocalServiceTypeConversionProtocol
                   isOptional
                     ? "Wrappers.Option"
                     : DafnyNameResolver.getDafnyType(
-                      visitingShape,
-                      context.symbolProvider().toSymbol(visitingShape)
+                      resourceOrService,
+                      context.symbolProvider().toSymbol(resourceOrService)
                     );
               }
               inputType =
-                GoCodegenUtils.getType(
-                  context.symbolProvider().toSymbol(resourceOrService),
-                  resourceOrService,
-                  true
-                );
+              SmithyNameResolver.shapeNamespace(resourceOrService)
+                .concat(".")
+                .concat(context.symbolProvider().toSymbol(serviceShape).getName());
+              System.out.println(inputType);
             }
           }
           inputType = isPointable ? "*".concat(inputType) : inputType;
