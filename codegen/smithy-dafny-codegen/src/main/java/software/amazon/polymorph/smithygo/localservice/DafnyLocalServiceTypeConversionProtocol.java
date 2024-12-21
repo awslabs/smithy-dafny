@@ -1632,14 +1632,13 @@ public class DafnyLocalServiceTypeConversionProtocol
                       context.symbolProvider().toSymbol(resourceOrService)
                     );
                 inputType =
-                    SmithyNameResolver
-                      .shapeNamespace(resourceOrService)
-                      .concat(".")
-                      .concat(
-                        context.symbolProvider().toSymbol(serviceShape).getName()
-                      );
+                  SmithyNameResolver
+                    .shapeNamespace(resourceOrService)
+                    .concat(".")
+                    .concat(
+                      context.symbolProvider().toSymbol(serviceShape).getName()
+                    );
               }
-              
             }
           }
           inputType = isPointable ? "*".concat(inputType) : inputType;
