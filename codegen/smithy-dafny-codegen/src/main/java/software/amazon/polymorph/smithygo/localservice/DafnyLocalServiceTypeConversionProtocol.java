@@ -1617,6 +1617,12 @@ public class DafnyLocalServiceTypeConversionProtocol
                       resourceOrService.asServiceShape().get(),
                       resourceOrService.getTrait(ServiceTrait.class).get()
                     );
+                inputType =
+                  GoCodegenUtils.getType(
+                    context.symbolProvider().toSymbol(resourceOrService),
+                    resourceOrService,
+                    true
+                  );
               } else {
                 outputType =
                   isOptional
@@ -1625,15 +1631,15 @@ public class DafnyLocalServiceTypeConversionProtocol
                       resourceOrService,
                       context.symbolProvider().toSymbol(resourceOrService)
                     );
+                inputType =
+                    SmithyNameResolver
+                      .shapeNamespace(resourceOrService)
+                      .concat(".")
+                      .concat(
+                        context.symbolProvider().toSymbol(serviceShape).getName()
+                      );
               }
-              inputType =
-                SmithyNameResolver
-                  .shapeNamespace(resourceOrService)
-                  .concat(".")
-                  .concat(
-                    context.symbolProvider().toSymbol(serviceShape).getName()
-                  );
-              System.out.println(inputType);
+              
             }
           }
           inputType = isPointable ? "*".concat(inputType) : inputType;
