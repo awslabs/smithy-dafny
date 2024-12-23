@@ -1627,9 +1627,8 @@ public class DafnyLocalServiceTypeConversionProtocol
                 outputType =
                   isOptional
                     ? "Wrappers.Option"
-                    : DafnyNameResolver.getDafnyType(
-                      resourceOrService,
-                      context.symbolProvider().toSymbol(resourceOrService)
+                    : DafnyNameResolver.getDafnyInterfaceClient(
+                      resourceOrService
                     );
                 inputType =
                   SmithyNameResolver

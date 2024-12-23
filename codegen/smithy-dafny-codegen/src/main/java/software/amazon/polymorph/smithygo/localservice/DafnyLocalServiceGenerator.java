@@ -3,6 +3,7 @@
 
 package software.amazon.polymorph.smithygo.localservice;
 
+import static software.amazon.polymorph.smithygo.codegen.SymbolUtils.POINTABLE;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
 
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
@@ -1132,6 +1133,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   ""
                 );
               boolean deReferenceRequired = true;
+              boolean fetchAddress = false;
               if (outputShape.hasTrait(PositionalTrait.class)) {
                 final MemberShape postionalMemShape = outputShape
                   .getAllMembers()
@@ -1147,6 +1149,14 @@ public class DafnyLocalServiceGenerator implements Runnable {
                         .expectTrait(ReferenceTrait.class)
                         .getReferentId()
                     );
+                  // If shape is pointer type, we need to fetch its address
+                  // because conversion function will have pointer as input
+                  fetchAddress =
+                    context
+                      .symbolProvider()
+                      .toSymbol(outputShape)
+                      .getProperty(POINTABLE, Boolean.class)
+                      .orElse(false);
                 }
                 toDafnyConvMethodNameForOutput =
                   outputShape.isResourceShape()
@@ -1166,7 +1176,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
               returnResponse =
                 "%s(%snative_response)".formatted(
                     toDafnyConvMethodNameForOutput,
-                    deReferenceRequired ? "*" : ""
+                    deReferenceRequired ? "*" : (fetchAddress ? "&" : "")
                   );
             }
             writer.write(
