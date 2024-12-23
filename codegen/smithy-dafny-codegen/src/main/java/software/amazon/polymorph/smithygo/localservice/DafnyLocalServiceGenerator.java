@@ -1133,7 +1133,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   ""
                 );
               boolean deReferenceRequired = true;
-              boolean fetchAddress = false;
+              boolean referenceType = false;
               if (outputShape.hasTrait(PositionalTrait.class)) {
                 final MemberShape postionalMemShape = outputShape
                   .getAllMembers()
@@ -1151,7 +1151,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     );
                   // If shape is pointer type, we need to fetch its address
                   // because conversion function will have pointer as input
-                  fetchAddress =
+                  referenceType =
                     context
                       .symbolProvider()
                       .toSymbol(outputShape)
@@ -1176,7 +1176,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
               returnResponse =
                 "%s(%snative_response)".formatted(
                     toDafnyConvMethodNameForOutput,
-                    deReferenceRequired ? "*" : (fetchAddress ? "&" : "")
+                    deReferenceRequired ? "*" : (referenceType ? "&" : "")
                   );
             }
             writer.write(
