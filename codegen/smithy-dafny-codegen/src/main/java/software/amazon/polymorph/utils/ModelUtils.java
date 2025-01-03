@@ -461,7 +461,6 @@ public class ModelUtils {
     Set<List<ShapeId>> pathsToShapes = new LinkedHashSet<>(
       new LinkedHashSet<>()
     );
-    Set<ShapeId> visited = new HashSet<>();
 
     // Breadth-first search via getDependencyShapeIds
     final Queue<List<ShapeId>> toTraverse = new LinkedList<>(
@@ -470,11 +469,10 @@ public class ModelUtils {
     while (!toTraverse.isEmpty()) {
       final List<ShapeId> currentShapeIdWithPath = toTraverse.remove();
 
-      // to avoid cycles, only keep the first list with a given last element
       ShapeId last = currentShapeIdWithPath.get(
         currentShapeIdWithPath.size() - 1
       );
-      if (visited.add(last) && pathsToShapes.add(currentShapeIdWithPath)) {
+      if (pathsToShapes.add(currentShapeIdWithPath)) {
         final Shape currentShape = model.expectShape(
           currentShapeIdWithPath.get(currentShapeIdWithPath.size() - 1)
         );
