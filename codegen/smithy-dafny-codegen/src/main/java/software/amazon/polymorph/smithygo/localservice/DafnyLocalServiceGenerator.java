@@ -3,6 +3,7 @@
 
 package software.amazon.polymorph.smithygo.localservice;
 
+import static software.amazon.polymorph.smithygo.codegen.SymbolUtils.POINTABLE;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
 
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
@@ -1125,13 +1126,14 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 "dafny"
               );
             } else {
-              String fromDafnyConvMethodNameForOutput =
+              String toDafnyConvMethodNameForOutput =
                 SmithyNameResolver.getToDafnyMethodName(
                   service,
                   outputShape,
                   ""
                 );
               boolean deReferenceRequired = true;
+              boolean referenceType = false;
               if (outputShape.hasTrait(PositionalTrait.class)) {
                 final MemberShape postionalMemShape = outputShape
                   .getAllMembers()
@@ -1147,17 +1149,25 @@ public class DafnyLocalServiceGenerator implements Runnable {
                         .expectTrait(ReferenceTrait.class)
                         .getReferentId()
                     );
+                  // If shape is pointer type, we need to fetch its address
+                  // because conversion function will have pointer as input
+                  referenceType =
+                    context
+                      .symbolProvider()
+                      .toSymbol(outputShape)
+                      .getProperty(POINTABLE, Boolean.class)
+                      .orElse(false);
                 }
-                fromDafnyConvMethodNameForOutput =
+                toDafnyConvMethodNameForOutput =
                   outputShape.isResourceShape()
-                    ? SmithyNameResolver.getFromDafnyMethodName(
+                    ? SmithyNameResolver.getToDafnyMethodName(
                       service,
                       outputShape,
                       ""
                     )
                     : Constants.funcNameGenerator(
                       postionalMemShape,
-                      "FromDafny",
+                      "ToDafny",
                       model
                     );
                 deReferenceRequired = false;
@@ -1165,8 +1175,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
               clientResponse = "var native_response, native_error";
               returnResponse =
                 "%s(%snative_response)".formatted(
-                    fromDafnyConvMethodNameForOutput,
-                    deReferenceRequired ? "*" : ""
+                    toDafnyConvMethodNameForOutput,
+                    deReferenceRequired ? "*" : (referenceType ? "&" : "")
                   );
             }
             writer.write(

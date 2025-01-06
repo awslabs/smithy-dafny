@@ -21,5 +21,5 @@ smithy-python = { path = "../../../../../codegen/smithy-dafny-codegen-modules/sm
 pytest = "^7.4.0"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core<2.0.0"]
 build-backend = "poetry.core.masonry.api"
