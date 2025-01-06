@@ -1415,7 +1415,7 @@ public class CodegenEngine {
     }
   }
 
-  private static DafnyVersion getDafnyVersionFromDafny() {
+  public static DafnyVersion getDafnyVersionFromDafny() {
     String versionString = runCommandOrThrow(
       Path.of("."),
       "dafny",

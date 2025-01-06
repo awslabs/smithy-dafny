@@ -116,6 +116,11 @@ list ListLessThanOrEqualToTen {
 }
 
 @length(min: 1, max: 10)
+list ListWithConstraint {
+  member: MyString
+}
+
+@length(min: 1, max: 10)
 map MyMap {
   key: String,
   value: String,
@@ -131,6 +136,12 @@ map NonEmptyMap {
 map MapLessThanOrEqualToTen {
   key: String,
   value: String,
+}
+
+@length(min: 1, max: 10)
+map MapWithConstraint {
+  key: MyString,
+  value: MyString,
 }
 
 // we don't do patterns yet
@@ -160,10 +171,21 @@ integer LessThanTen
 //   member: ComplexListElement
 // }
 
-// structure ComplexListElement {
-//   value: String,
-//   blob: Blob,
-// }
+union UnionWithConstraint {
+  IntegerValue: OneToTen,
+  StringValue: MyString,
+}
+
+structure ComplexStructure {
+  InnerString: MyString,
+  @required
+  InnerBlob: MyBlob,
+}
+
+@length(min: 1)
+list ComplexStructureList {
+  member: ComplexStructure,
+}
 
 structure GetConstraintsInput {
   MyString: MyString,
@@ -175,9 +197,11 @@ structure GetConstraintsInput {
   MyList: MyList,
   NonEmptyList: NonEmptyList,
   ListLessThanOrEqualToTen: ListLessThanOrEqualToTen,
+  ListWithConstraint: ListWithConstraint,
   MyMap: MyMap,
   NonEmptyMap: NonEmptyMap,
   MapLessThanOrEqualToTen: MapLessThanOrEqualToTen,
+  MapWithConstraint: MapWithConstraint,
   // Alphabetic: Alphabetic,
   OneToTen: OneToTen,
   myTenToTen: TenToTen,
@@ -187,6 +211,8 @@ structure GetConstraintsInput {
   // MyComplexUniqueList: MyComplexUniqueList,
   MyUtf8Bytes: Utf8Bytes,
   MyListOfUtf8Bytes: ListOfUtf8Bytes,
+  UnionWithConstraint: UnionWithConstraint,
+  ComplexStructureList: ComplexStructureList,
 }
 
 structure GetConstraintsOutput {
@@ -199,9 +225,11 @@ structure GetConstraintsOutput {
   MyList: MyList,
   NonEmptyList: NonEmptyList,
   ListLessThanOrEqualToTen: ListLessThanOrEqualToTen,
+  ListWithConstraint: ListWithConstraint,
   MyMap: MyMap,
   NonEmptyMap: NonEmptyMap,
   MapLessThanOrEqualToTen: MapLessThanOrEqualToTen,
+  MapWithConstraint: MapWithConstraint,
   // Alphabetic: Alphabetic,
   OneToTen: OneToTen,
   thatTenToTen: TenToTen,
@@ -211,6 +239,8 @@ structure GetConstraintsOutput {
   // MyComplexUniqueList: MyComplexUniqueList,
   MyUtf8Bytes: Utf8Bytes,
   MyListOfUtf8Bytes: ListOfUtf8Bytes,
+  UnionWithConstraint: UnionWithConstraint,
+  ComplexStructureList: ComplexStructureList,
 }
 
 // See Comment in traits.smithy
