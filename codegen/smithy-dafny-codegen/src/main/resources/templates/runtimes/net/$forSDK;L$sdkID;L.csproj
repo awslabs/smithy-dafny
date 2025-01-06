@@ -1,11 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-<<<<<<<< HEAD:codegen/smithy-dafny-codegen/src/main/resources/templates/runtimes/net/$forSDK:L$serviceID:L.csproj
-    <RootNamespace>$serviceID:L</RootNamespace>
-========
     <RootNamespace>$sdkID:L</RootNamespace>
->>>>>>>> 473e68059a424aa6168f4b339b4c8b2e83c36f07:codegen/smithy-dafny-codegen/src/main/resources/templates/runtimes/net/$forSDK:L$sdkID:L.csproj
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <TargetFrameworks>net6.0</TargetFrameworks>
