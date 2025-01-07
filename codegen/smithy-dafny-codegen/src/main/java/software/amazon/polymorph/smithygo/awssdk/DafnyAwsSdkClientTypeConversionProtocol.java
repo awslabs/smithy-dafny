@@ -3,9 +3,11 @@ package software.amazon.polymorph.smithygo.awssdk;
 import static software.amazon.polymorph.smithygo.localservice.DafnyLocalServiceTypeConversionProtocol.TO_DAFNY;
 import static software.amazon.polymorph.smithygo.localservice.DafnyLocalServiceTypeConversionProtocol.TO_NATIVE;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
-
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import software.amazon.polymorph.smithygo.awssdk.shapevisitor.AwsSdkToDafnyShapeVisitor;
 import software.amazon.polymorph.smithygo.awssdk.shapevisitor.DafnyToAwsSdkShapeVisitor;
 import software.amazon.polymorph.smithygo.awssdk.shapevisitor.ShapeVisitorHelper;
@@ -489,7 +491,8 @@ public class DafnyAwsSdkClientTypeConversionProtocol
     final Set<ShapeId> alreadyVisited = new HashSet<>();
     final var errorShapes = awsNormalizedModel.getShapesWithTrait(
       ErrorTrait.class
-    );
+    ).stream()
+    .sorted(Comparator.comparing(shape -> shape.getId().getName())).collect(Collectors.toCollection(LinkedHashSet::new));;
 
     for (final var errorShape : errorShapes) {
       if (
