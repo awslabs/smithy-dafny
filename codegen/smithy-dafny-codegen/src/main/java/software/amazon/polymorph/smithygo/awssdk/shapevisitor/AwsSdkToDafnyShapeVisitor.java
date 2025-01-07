@@ -3,7 +3,6 @@ package software.amazon.polymorph.smithygo.awssdk.shapevisitor;
 import static software.amazon.polymorph.smithygo.localservice.nameresolver.Constants.DOT;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;

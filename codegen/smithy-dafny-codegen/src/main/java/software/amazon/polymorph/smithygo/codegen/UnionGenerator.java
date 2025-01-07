@@ -54,6 +54,7 @@ public class UnionGenerator {
     memberShapes
       .stream()
       .map(symbolProvider::toMemberName)
+      .sorted()
       .forEach(name -> {
         writer.write("//  " + name);
       });
