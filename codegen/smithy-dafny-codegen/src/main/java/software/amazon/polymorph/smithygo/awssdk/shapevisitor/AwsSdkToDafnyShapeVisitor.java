@@ -4,6 +4,7 @@ import static software.amazon.polymorph.smithygo.localservice.nameresolver.Const
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import software.amazon.polymorph.smithygo.awssdk.AwsSdkGoPointableIndex;
@@ -48,7 +49,7 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
   protected boolean isPointerType;
   //TODO: Ideally this shouldn't be static but with current design we need to access this across instances.
   private static final Map<MemberShape, String> memberShapeConversionFuncMap =
-    new HashMap<>();
+    new LinkedHashMap<>();
 
   public AwsSdkToDafnyShapeVisitor(
     final GenerationContext context,
