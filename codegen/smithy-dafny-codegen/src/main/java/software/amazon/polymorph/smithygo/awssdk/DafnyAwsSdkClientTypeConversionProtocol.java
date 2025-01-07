@@ -753,9 +753,7 @@ public class DafnyAwsSdkClientTypeConversionProtocol
             """,
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
             writer.consumer(w -> {
-              for (final var error : awsNormalizedModel.getShapesWithTrait(
-                ErrorTrait.class
-              )) {
+              for (final var error : errorShapes) {
                 w.write(
                   """
                   if err.Is_$L() {
