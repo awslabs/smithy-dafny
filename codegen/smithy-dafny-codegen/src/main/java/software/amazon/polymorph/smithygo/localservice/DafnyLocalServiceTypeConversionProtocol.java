@@ -65,6 +65,8 @@ public class DafnyLocalServiceTypeConversionProtocol
     final var writerDelegator = context.writerDelegator();
     serviceShape
       .getOperations()
+      .stream()
+      .sorted()
       .forEach(eachOperation -> {
         final var operation = model.expectShape(
           eachOperation,
@@ -215,6 +217,8 @@ public class DafnyLocalServiceTypeConversionProtocol
         );
         resourceShape
           .getOperations()
+          .stream()
+          .sorted()
           .forEach(eachOperation -> {
             final var operation = model.expectShape(
               eachOperation,
@@ -425,6 +429,8 @@ public class DafnyLocalServiceTypeConversionProtocol
 
     serviceShape
       .getOperations()
+      .stream()
+      .sorted()
       .forEach(eachOperation -> {
         final var operation = context
           .model()
@@ -590,6 +596,8 @@ public class DafnyLocalServiceTypeConversionProtocol
           .expectShape(resource, ResourceShape.class);
         resourceShape
           .getOperations()
+          .stream()
+          .sorted()
           .forEach(eachOperation -> {
             final var operation = context
               .model()
