@@ -4,6 +4,7 @@ import static software.amazon.polymorph.smithygo.codegen.SymbolUtils.POINTABLE;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
@@ -45,9 +46,9 @@ public class ValidationGenerator {
     }
     """;
   private static final Map<MemberShape, String> validationFuncMap =
-    new HashMap<>();
+    new LinkedHashMap<>();
   private static final Map<MemberShape, String> validationFuncInputTypeMap =
-    new HashMap<>();
+    new LinkedHashMap<>();
 
   public ValidationGenerator(
     final GenerationContext context,
