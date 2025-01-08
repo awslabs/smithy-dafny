@@ -514,8 +514,7 @@ public class DafnyApiCodegen {
   public TokenTree generateServiceTraitDefinition(ServiceShape serviceShape) {
     final TokenTree trait = TokenTree.of(
       "trait {:termination false}",
-      nameResolver.traitForServiceClient(serviceShape),
-      "extends object"
+      nameResolver.traitForServiceClient(serviceShape)
     );
     final TokenTree methods = TokenTree
       .of(
@@ -592,8 +591,7 @@ public class DafnyApiCodegen {
 
     final TokenTree trait = TokenTree.of(
       "trait {:termination false}",
-      nameResolver.baseTypeForShape(shapeWithReference),
-      "extends object"
+      nameResolver.baseTypeForShape(shapeWithReference)
     );
 
     final TokenTree methods = TokenTree
