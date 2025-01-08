@@ -1090,7 +1090,7 @@ public class DafnyLocalServiceTypeConversionProtocol
         ModelUtils.isInServiceNamespace(shape.getId(), serviceShape)
       )
       .sorted()
-      .collect(Collectors.toSet());
+      .collect(Collectors.toCollection(LinkedHashSet::new));
 
     context
       .writerDelegator()
@@ -1473,7 +1473,7 @@ public class DafnyLocalServiceTypeConversionProtocol
         ModelUtils.isInServiceNamespace(shape.getId(), serviceShape)
       )
       .sorted()
-      .collect(Collectors.toSet());
+      .collect(Collectors.toCollection(LinkedHashSet::new));
 
     context
       .writerDelegator()
