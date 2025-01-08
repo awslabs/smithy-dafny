@@ -208,7 +208,7 @@ public class DafnyLocalServiceTypeConversionProtocol
     final var refResources = context
       .model()
       .getShapesWithTrait(ReferenceTrait.class).stream()
-    .sorted(Comparator.comparing(shape -> shape.getId().getName())).collect(Collectors.toCollection(LinkedHashSet::new));
+    .sorted().collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var refResource : refResources) {
       final var resource = refResource
         .expectTrait(ReferenceTrait.class)
@@ -588,7 +588,7 @@ public class DafnyLocalServiceTypeConversionProtocol
     final var refResources = context
       .model()
       .getShapesWithTrait(ReferenceTrait.class).stream()
-      .sorted(Comparator.comparing(shape -> shape.getId().getName())).collect(Collectors.toCollection(LinkedHashSet::new));
+      .sorted().collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var refResource : refResources) {
       final var resource = refResource
         .expectTrait(ReferenceTrait.class)
@@ -989,7 +989,7 @@ public class DafnyLocalServiceTypeConversionProtocol
     final var errorShapes = context
       .model()
       .getShapesWithTrait(ErrorTrait.class).stream()
-      .sorted(Comparator.comparing(shape -> shape.getId().getName())).collect(Collectors.toCollection(LinkedHashSet::new));
+      .sorted().collect(Collectors.toCollection(LinkedHashSet::new));
 
     for (final var errorShape : errorShapes) {
       if (
@@ -1089,6 +1089,7 @@ public class DafnyLocalServiceTypeConversionProtocol
       .filter(shape ->
         ModelUtils.isInServiceNamespace(shape.getId(), serviceShape)
       )
+      .sorted()
       .collect(Collectors.toSet());
 
     context
@@ -1346,7 +1347,7 @@ public class DafnyLocalServiceTypeConversionProtocol
     final var errorShapes = context
       .model()
       .getShapesWithTrait(ErrorTrait.class).stream()
-      .sorted(Comparator.comparing(shape -> shape.getId().getName())).collect(Collectors.toCollection(LinkedHashSet::new));
+      .sorted().collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var errorShape : errorShapes) {
       if (
         !errorShape
@@ -1471,6 +1472,7 @@ public class DafnyLocalServiceTypeConversionProtocol
       .filter(shape ->
         ModelUtils.isInServiceNamespace(shape.getId(), serviceShape)
       )
+      .sorted()
       .collect(Collectors.toSet());
 
     context

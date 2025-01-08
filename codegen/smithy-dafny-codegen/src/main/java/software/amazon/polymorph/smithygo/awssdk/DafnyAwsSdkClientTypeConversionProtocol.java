@@ -496,7 +496,7 @@ public class DafnyAwsSdkClientTypeConversionProtocol
     final var errorShapes = awsNormalizedModel.getShapesWithTrait(
       ErrorTrait.class
     ).stream()
-    .sorted(Comparator.comparing(shape -> shape.getId().getName())).collect(Collectors.toCollection(LinkedHashSet::new));
+    .sorted().collect(Collectors.toCollection(LinkedHashSet::new));
 
     for (final var errorShape : errorShapes) {
       if (
