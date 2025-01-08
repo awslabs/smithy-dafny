@@ -5,7 +5,9 @@ package software.amazon.polymorph.smithygo.localservice;
 
 import static software.amazon.polymorph.smithygo.codegen.SymbolUtils.POINTABLE;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
-
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.stream.Collectors;
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoDelegator;
 import software.amazon.polymorph.smithygo.codegen.GoWriter;
@@ -623,7 +625,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
   }
 
   void shimErrors(GoWriter writer) {
-    for (final var error : model.getShapesWithTrait(ErrorTrait.class)) {
+    for (final var error : model.getShapesWithTrait(ErrorTrait.class).stream()
+    .sorted(Comparator.comparing(shape -> shape.getId().getName())).collect(Collectors.toCollection(LinkedHashSet::new))) {
       writer.write(
         """
         case $L.$L:
@@ -641,7 +644,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
   }
 
   void resourceErrors(GoWriter writer) {
-    for (final var error : model.getShapesWithTrait(ErrorTrait.class)) {
+    for (final var error : model.getShapesWithTrait(ErrorTrait.class).stream()
+    .sorted(Comparator.comparing(shape -> shape.getId().getName())).collect(Collectors.toCollection(LinkedHashSet::new))) {
       writer.write(
         """
         case $L:
@@ -710,7 +714,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
   }
 
   void generateReferencedResources(final GenerationContext context) {
-    final var refResources = model.getShapesWithTrait(ReferenceTrait.class);
+    final var refResources = model.getShapesWithTrait(ReferenceTrait.class).stream()
+    .sorted(Comparator.comparing(shape -> shape.getId().getName())).collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var refResource : refResources) {
       if (!refResource.expectTrait(ReferenceTrait.class).isService()) {
         final var resource = refResource

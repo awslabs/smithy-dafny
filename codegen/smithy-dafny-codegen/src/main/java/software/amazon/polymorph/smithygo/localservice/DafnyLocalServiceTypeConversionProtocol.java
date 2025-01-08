@@ -4,7 +4,9 @@ import static software.amazon.polymorph.smithygo.codegen.SymbolUtils.POINTABLE;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -205,7 +207,8 @@ public class DafnyLocalServiceTypeConversionProtocol
 
     final var refResources = context
       .model()
-      .getShapesWithTrait(ReferenceTrait.class);
+      .getShapesWithTrait(ReferenceTrait.class).stream()
+    .sorted(Comparator.comparing(shape -> shape.getId().getName())).collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var refResource : refResources) {
       final var resource = refResource
         .expectTrait(ReferenceTrait.class)
@@ -584,7 +587,8 @@ public class DafnyLocalServiceTypeConversionProtocol
 
     final var refResources = context
       .model()
-      .getShapesWithTrait(ReferenceTrait.class);
+      .getShapesWithTrait(ReferenceTrait.class).stream()
+      .sorted(Comparator.comparing(shape -> shape.getId().getName())).collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var refResource : refResources) {
       final var resource = refResource
         .expectTrait(ReferenceTrait.class)
@@ -984,7 +988,8 @@ public class DafnyLocalServiceTypeConversionProtocol
     final var serviceShape = context.settings().getService(context.model());
     final var errorShapes = context
       .model()
-      .getShapesWithTrait(ErrorTrait.class);
+      .getShapesWithTrait(ErrorTrait.class).stream()
+      .sorted(Comparator.comparing(shape -> shape.getId().getName())).collect(Collectors.toCollection(LinkedHashSet::new));
 
     for (final var errorShape : errorShapes) {
       if (
@@ -1340,7 +1345,8 @@ public class DafnyLocalServiceTypeConversionProtocol
     final var serviceShape = context.settings().getService(context.model());
     final var errorShapes = context
       .model()
-      .getShapesWithTrait(ErrorTrait.class);
+      .getShapesWithTrait(ErrorTrait.class).stream()
+      .sorted(Comparator.comparing(shape -> shape.getId().getName())).collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var errorShape : errorShapes) {
       if (
         !errorShape
