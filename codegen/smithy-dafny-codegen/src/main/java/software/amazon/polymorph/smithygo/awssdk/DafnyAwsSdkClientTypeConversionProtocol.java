@@ -64,6 +64,8 @@ public class DafnyAwsSdkClientTypeConversionProtocol
     final var writerDelegator = context.writerDelegator();
     serviceShape
       .getOperations()
+      .stream()
+      .sorted()
       .forEach(eachOperation -> {
         final var awsNormalizedOperation = awsNormalizedModel.expectShape(
           eachOperation,
@@ -215,6 +217,8 @@ public class DafnyAwsSdkClientTypeConversionProtocol
 
     serviceShape
       .getOperations()
+      .stream()
+      .sorted()
       .forEach(eachOperation -> {
         final var awsNormalizedOperationShape = awsNormalizedModel.expectShape(
           eachOperation,
