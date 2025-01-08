@@ -366,56 +366,56 @@ public class DafnyLocalServiceTypeConversionProtocol
                 );
               }
             }
-          });
-        if (
-          !alreadyVisited.contains(resourceShape.toShapeId()) &&
-          resourceShape
-            .toShapeId()
-            .getNamespace()
-            .equals(serviceShape.toShapeId().getNamespace())
-        ) {
-          alreadyVisited.add(resourceShape.toShapeId());
-          writerDelegator.useFileWriter(
-            "%s/%s".formatted(
+            if (
+              !alreadyVisited.contains(resourceShape.toShapeId()) &&
+              resourceShape
+                .toShapeId()
+                .getNamespace()
+                .equals(serviceShape.toShapeId().getNamespace())
+            ) {
+              alreadyVisited.add(resourceShape.toShapeId());
+              writerDelegator.useFileWriter(
+                "%s/%s".formatted(
+                    SmithyNameResolver.shapeNamespace(serviceShape),
+                    TO_DAFNY
+                  ),
                 SmithyNameResolver.shapeNamespace(serviceShape),
-                TO_DAFNY
-              ),
-            SmithyNameResolver.shapeNamespace(serviceShape),
-            writer -> {
-              var goBody =
-                """
-                return nativeResource.(*%s).Impl
-                """.formatted(resourceShape.getId().getName());
-              if (resourceShape.hasTrait(ExtendableTrait.class)) {
-                goBody =
-                  """
-                                                     val, ok := nativeResource.(*%s)
-                  if ok {
-                  	return val.Impl
+                writer -> {
+                  var goBody =
+                    """
+                    return nativeResource.(*%s).Impl
+                    """.formatted(resourceShape.getId().getName());
+                  if (resourceShape.hasTrait(ExtendableTrait.class)) {
+                    goBody =
+                      """
+                                                         val, ok := nativeResource.(*%s)
+                      if ok {
+                      	return val.Impl
+                      }
+                      return %s{&%sNativeWrapper{Impl: nativeResource}}.Impl
+                                                         """.formatted(
+                          resourceShape.getId().getName(),
+                          resourceShape.getId().getName(),
+                          resourceShape.getId().getName()
+                        );
                   }
-                  return %s{&%sNativeWrapper{Impl: nativeResource}}.Impl
-                                                     """.formatted(
-                      resourceShape.getId().getName(),
-                      resourceShape.getId().getName(),
-                      resourceShape.getId().getName()
-                    );
-              }
-              writer.write(
-                """
-                func $L_ToDafny(nativeResource $L.I$L) $L.I$L {
-                    $L
+                  writer.write(
+                    """
+                    func $L_ToDafny(nativeResource $L.I$L) $L.I$L {
+                        $L
+                    }
+                    """,
+                    resourceShape.getId().getName(),
+                    SmithyNameResolver.smithyTypesNamespace(resourceShape),
+                    resourceShape.getId().getName(),
+                    DafnyNameResolver.dafnyTypesNamespace(resourceShape),
+                    resourceShape.getId().getName(),
+                    goBody
+                  );
                 }
-                """,
-                resourceShape.getId().getName(),
-                SmithyNameResolver.smithyTypesNamespace(resourceShape),
-                resourceShape.getId().getName(),
-                DafnyNameResolver.dafnyTypesNamespace(resourceShape),
-                resourceShape.getId().getName(),
-                goBody
               );
             }
-          );
-        }
+          });
       }
     }
     generateErrorSerializer(context);
