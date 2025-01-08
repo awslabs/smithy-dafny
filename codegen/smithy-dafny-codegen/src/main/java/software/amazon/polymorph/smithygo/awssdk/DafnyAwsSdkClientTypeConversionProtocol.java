@@ -4,7 +4,6 @@ import static software.amazon.polymorph.smithygo.localservice.DafnyLocalServiceT
 import static software.amazon.polymorph.smithygo.localservice.DafnyLocalServiceTypeConversionProtocol.TO_NATIVE;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
 
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -646,7 +645,7 @@ public class DafnyAwsSdkClientTypeConversionProtocol
     final var errorShapes = awsNormalizedModel
       .getShapesWithTrait(ErrorTrait.class)
       .stream()
-      .sorted(Comparator.comparing(shape -> shape.getId().getName()))
+      .sorted()
       .collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var errorShape : errorShapes) {
       if (
