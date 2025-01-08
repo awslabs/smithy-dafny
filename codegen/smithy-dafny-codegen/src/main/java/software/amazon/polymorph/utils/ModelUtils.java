@@ -476,7 +476,9 @@ public class ModelUtils {
         final List<List<ShapeId>> dependencyShapeIdsWithPaths =
           getDependencyShapeIds(currentShape)
             // to avoid cycles, append only those dependencyShapeId which are not already in the path currentShapeIdWithPath
-            .filter(dependencyShapeId -> !currentShapeIdWithPath.contains(dependencyShapeId))
+            .filter(dependencyShapeId ->
+              !currentShapeIdWithPath.contains(dependencyShapeId)
+            )
             .map(dependencyShapeId ->
               Stream
                 .concat(
