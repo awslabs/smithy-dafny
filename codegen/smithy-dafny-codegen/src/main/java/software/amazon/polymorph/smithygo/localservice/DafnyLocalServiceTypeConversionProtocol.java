@@ -207,8 +207,10 @@ public class DafnyLocalServiceTypeConversionProtocol
 
     final var refResources = context
       .model()
-      .getShapesWithTrait(ReferenceTrait.class).stream()
-    .sorted().collect(Collectors.toCollection(LinkedHashSet::new));
+      .getShapesWithTrait(ReferenceTrait.class)
+      .stream()
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var refResource : refResources) {
       final var resource = refResource
         .expectTrait(ReferenceTrait.class)
@@ -366,55 +368,55 @@ public class DafnyLocalServiceTypeConversionProtocol
               }
             }
           });
-            if (
-              !alreadyVisited.contains(resourceShape.toShapeId()) &&
-              resourceShape
-                .toShapeId()
-                .getNamespace()
-                .equals(serviceShape.toShapeId().getNamespace())
-            ) {
-              alreadyVisited.add(resourceShape.toShapeId());
-              writerDelegator.useFileWriter(
-                "%s/%s".formatted(
-                    SmithyNameResolver.shapeNamespace(serviceShape),
-                    TO_DAFNY
-                  ),
+        if (
+          !alreadyVisited.contains(resourceShape.toShapeId()) &&
+          resourceShape
+            .toShapeId()
+            .getNamespace()
+            .equals(serviceShape.toShapeId().getNamespace())
+        ) {
+          alreadyVisited.add(resourceShape.toShapeId());
+          writerDelegator.useFileWriter(
+            "%s/%s".formatted(
                 SmithyNameResolver.shapeNamespace(serviceShape),
-                writer -> {
-                  var goBody =
-                    """
-                    return nativeResource.(*%s).Impl
-                    """.formatted(resourceShape.getId().getName());
-                  if (resourceShape.hasTrait(ExtendableTrait.class)) {
-                    goBody =
-                      """
-                                                         val, ok := nativeResource.(*%s)
-                      if ok {
-                      	return val.Impl
-                      }
-                      return %s{&%sNativeWrapper{Impl: nativeResource}}.Impl
-                                                         """.formatted(
-                          resourceShape.getId().getName(),
-                          resourceShape.getId().getName(),
-                          resourceShape.getId().getName()
-                        );
+                TO_DAFNY
+              ),
+            SmithyNameResolver.shapeNamespace(serviceShape),
+            writer -> {
+              var goBody =
+                """
+                return nativeResource.(*%s).Impl
+                """.formatted(resourceShape.getId().getName());
+              if (resourceShape.hasTrait(ExtendableTrait.class)) {
+                goBody =
+                  """
+                                                     val, ok := nativeResource.(*%s)
+                  if ok {
+                  	return val.Impl
                   }
-                  writer.write(
-                    """
-                    func $L_ToDafny(nativeResource $L.I$L) $L.I$L {
-                        $L
-                    }
-                    """,
-                    resourceShape.getId().getName(),
-                    SmithyNameResolver.smithyTypesNamespace(resourceShape),
-                    resourceShape.getId().getName(),
-                    DafnyNameResolver.dafnyTypesNamespace(resourceShape),
-                    resourceShape.getId().getName(),
-                    goBody
-                  );
+                  return %s{&%sNativeWrapper{Impl: nativeResource}}.Impl
+                                                     """.formatted(
+                      resourceShape.getId().getName(),
+                      resourceShape.getId().getName(),
+                      resourceShape.getId().getName()
+                    );
+              }
+              writer.write(
+                """
+                func $L_ToDafny(nativeResource $L.I$L) $L.I$L {
+                    $L
                 }
+                """,
+                resourceShape.getId().getName(),
+                SmithyNameResolver.smithyTypesNamespace(resourceShape),
+                resourceShape.getId().getName(),
+                DafnyNameResolver.dafnyTypesNamespace(resourceShape),
+                resourceShape.getId().getName(),
+                goBody
               );
             }
+          );
+        }
       }
     }
     generateErrorSerializer(context);
@@ -587,8 +589,10 @@ public class DafnyLocalServiceTypeConversionProtocol
 
     final var refResources = context
       .model()
-      .getShapesWithTrait(ReferenceTrait.class).stream()
-      .sorted().collect(Collectors.toCollection(LinkedHashSet::new));
+      .getShapesWithTrait(ReferenceTrait.class)
+      .stream()
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var refResource : refResources) {
       final var resource = refResource
         .expectTrait(ReferenceTrait.class)
@@ -988,8 +992,10 @@ public class DafnyLocalServiceTypeConversionProtocol
     final var serviceShape = context.settings().getService(context.model());
     final var errorShapes = context
       .model()
-      .getShapesWithTrait(ErrorTrait.class).stream()
-      .sorted().collect(Collectors.toCollection(LinkedHashSet::new));
+      .getShapesWithTrait(ErrorTrait.class)
+      .stream()
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new));
 
     for (final var errorShape : errorShapes) {
       if (
@@ -1346,8 +1352,10 @@ public class DafnyLocalServiceTypeConversionProtocol
     final var serviceShape = context.settings().getService(context.model());
     final var errorShapes = context
       .model()
-      .getShapesWithTrait(ErrorTrait.class).stream()
-      .sorted().collect(Collectors.toCollection(LinkedHashSet::new));
+      .getShapesWithTrait(ErrorTrait.class)
+      .stream()
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var errorShape : errorShapes) {
       if (
         !errorShape

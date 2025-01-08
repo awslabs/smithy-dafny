@@ -3,6 +3,7 @@ package software.amazon.polymorph.smithygo.awssdk;
 import static software.amazon.polymorph.smithygo.localservice.DafnyLocalServiceTypeConversionProtocol.TO_DAFNY;
 import static software.amazon.polymorph.smithygo.localservice.DafnyLocalServiceTypeConversionProtocol.TO_NATIVE;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
+
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -493,10 +494,11 @@ public class DafnyAwsSdkClientTypeConversionProtocol
 
   private void generateErrorSerializer(final GenerationContext context) {
     final Set<ShapeId> alreadyVisited = new HashSet<>();
-    final var errorShapes = awsNormalizedModel.getShapesWithTrait(
-      ErrorTrait.class
-    ).stream()
-    .sorted().collect(Collectors.toCollection(LinkedHashSet::new));
+    final var errorShapes = awsNormalizedModel
+      .getShapesWithTrait(ErrorTrait.class)
+      .stream()
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new));
 
     for (final var errorShape : errorShapes) {
       if (
@@ -641,10 +643,11 @@ public class DafnyAwsSdkClientTypeConversionProtocol
 
   private void generateErrorDeserializer(final GenerationContext context) {
     final Set<ShapeId> alreadyVisited = new HashSet<>();
-    final var errorShapes = awsNormalizedModel.getShapesWithTrait(
-      ErrorTrait.class
-    ).stream()
-    .sorted(Comparator.comparing(shape -> shape.getId().getName())).collect(Collectors.toCollection(LinkedHashSet::new));
+    final var errorShapes = awsNormalizedModel
+      .getShapesWithTrait(ErrorTrait.class)
+      .stream()
+      .sorted(Comparator.comparing(shape -> shape.getId().getName()))
+      .collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var errorShape : errorShapes) {
       if (
         !errorShape
