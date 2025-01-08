@@ -469,15 +469,14 @@ public class ModelUtils {
     while (!toTraverse.isEmpty()) {
       final List<ShapeId> currentShapeIdWithPath = toTraverse.remove();
 
-      ShapeId last = currentShapeIdWithPath.get(
-        currentShapeIdWithPath.size() - 1
-      );
       if (pathsToShapes.add(currentShapeIdWithPath)) {
         final Shape currentShape = model.expectShape(
           currentShapeIdWithPath.get(currentShapeIdWithPath.size() - 1)
         );
         final List<List<ShapeId>> dependencyShapeIdsWithPaths =
           getDependencyShapeIds(currentShape)
+            // to avoid cycles, append only those dependencyShapeId which are not already in the path currentShapeIdWithPath
+            .filter(dependencyShapeId -> !currentShapeIdWithPath.contains(dependencyShapeId))
             .map(dependencyShapeId ->
               Stream
                 .concat(
