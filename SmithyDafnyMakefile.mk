@@ -617,7 +617,6 @@ transpile_implementation_rust: DAFNY_OPTIONS=--emit-uncompilable-code --allow-wa
 # The Dafny Rust code generator only supports a single crate for everything,
 # so we inline all dependencies by not passing `-library` to Dafny.
 transpile_implementation_rust: TRANSPILE_DEPENDENCIES=
-transpile_implementation_rust: DAFNY_OTHER_FILES=$(RUST_OTHER_FILES) $(PROJECT_ROOT)/dafny-dependencies/StandardLibrary/DafnyStandardLibraries-smithy-dafny-subset.doo
 transpile_implementation_rust: STD_LIBRARY=
 transpile_implementation_rust: SRC_INDEX_TRANSPILE=$(if $(SRC_INDEX),$(SRC_INDEX),src)
 transpile_implementation_rust: TEST_INDEX_TRANSPILE=$(if $(TEST_INDEX),$(TEST_INDEX),test)

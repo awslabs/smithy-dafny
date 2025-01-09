@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Streams;
 import com.squareup.javapoet.ParameterizedTypeName;
 import org.reactivestreams.Publisher;
 import software.amazon.polymorph.smithyjava.NamespaceHelper;
@@ -24,6 +25,7 @@ import software.amazon.polymorph.utils.Token;
 import software.amazon.polymorph.utils.TokenTree;
 import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.model.Model;
+import software.amazon.smithy.model.neighbor.Walker;
 import software.amazon.smithy.model.shapes.*;
 import software.amazon.smithy.model.traits.ReadonlyTrait;
 import software.amazon.smithy.model.traits.StreamingTrait;
@@ -368,16 +370,25 @@ public record DafnyNameResolver(
     return "CallHistory";
   }
 
-  public static Stream<String> modulePreludeStandardImports() {
-    return Stream.of(
+  public static Stream<String> modulePreludeStandardImports(Model model, ServiceShape serviceShape) {
+    Stream basics = Stream.of(
       "import opened Wrappers",
       "import opened StandardLibrary.UInt",
-      "import opened StandardLibrary.Streams",
       "import opened UTF8"
     );
+    // Include StandardLibrary.Streams only if the service uses @streaming.
+    // This is because Rust doesn't yet support the Dafny streaming traits,
+    // so that code is essentially #ifdef'd out.
+    if (new Walker(model).walkShapes(serviceShape).stream().anyMatch(s -> s.hasTrait(StreamingTrait.class))) {
+      return Streams.concat(basics,
+        Stream.of("import opened StandardLibrary.Streams"));
+    } else {
+      return basics;
+    }
   }
 
   public static Stream<TokenTree> abstractModulePrelude(
+    Model model,
     ServiceShape serviceShape
   ) {
     final String typesModuleName = dafnyTypesModuleName(
@@ -386,7 +397,7 @@ public record DafnyNameResolver(
 
     return Stream
       .concat(
-        modulePreludeStandardImports(),
+        modulePreludeStandardImports(model, serviceShape),
         Stream.of("import opened Types = %s".formatted(typesModuleName))
       )
       .map(i -> Token.of(i));
@@ -416,10 +427,11 @@ public record DafnyNameResolver(
   }
 
   public static Stream<TokenTree> wrappedAbstractModulePrelude(
+    Model model,
     ServiceShape serviceShape
   ) {
     return Stream.concat(
-      abstractModulePrelude(serviceShape),
+      abstractModulePrelude(model, serviceShape),
       Stream.of(
         TokenTree.of(
           "import WrappedService : %s".formatted(
