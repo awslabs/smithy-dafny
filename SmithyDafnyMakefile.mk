@@ -95,7 +95,7 @@ verify:
 		--log-format csv \
 		--verification-time-limit $(VERIFY_TIMEOUT) \
 		--resource-limit $(MAX_RESOURCE_COUNT) \
-		$(if $(strip $(STD_LIBRARY) && $(USE_DAFNY_STANDARD_LIBRARIES) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/DafnyStandardLibraries-smithy-dafny-subset.doo, ) \
+		$(if $(strip $(STD_LIBRARY)) && $(USE_DAFNY_STANDARD_LIBRARIES) , --library:$(PROJECT_ROOT)/$(STD_LIBRARY)/DafnyStandardLibraries-smithy-dafny-subset.doo, ) \
 		$(DAFNY_OPTIONS) \
 		%
 
