@@ -25,7 +25,7 @@ else
 endif
 
 # Overriding this target just to generate the project.properties file.
-polymorph_dafny: build_dafny_stdlibs
+polymorph_dafny: $(if $(USE_DAFNY_STANDARD_LIBRARIES), build_dafny_stdlibs, )
 	cd $(CODEGEN_CLI_ROOT); \
 	$(GRADLEW) run --args="\
 	--library-root $(LIBRARY_ROOT) \
@@ -107,7 +107,7 @@ transpile_implementation:
 		--unicode-char:false \
 		--function-syntax:3 \
 		--output $(OUT) \
-		DafnyStandardLibraries-smithy-dafny-subset.doo \
+		$(if $(USE_DAFNY_STANDARD_LIBRARIES), DafnyStandardLibraries-smithy-dafny-subset.doo, ) \
 		$(DAFNY_OPTIONS) \
 		$(DAFNY_OTHER_FILES) \
 		$(TRANSPILE_MODULE_NAME)

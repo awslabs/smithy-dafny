@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 // Do not modify this file. This file is machine generated, and any changes to it will be overwritten.
 include "../../dafny-dependencies/StandardLibrary/src/Index.dfy"
-module SimpleStreamingTypes
+module {:extern "simple.streaming.internaldafny.types" } SimpleStreamingTypes
 {
   import opened Wrappers
   import opened StandardLibrary.UInt
-  import opened StandardLibrary.Streams
   import opened UTF8
+  import opened StandardLibrary.Streams
   // Generic helpers for verification of mock/unit tests.
   datatype DafnyCallEvent<I, O> = DafnyCallEvent(input: I, output: O)
 
@@ -46,7 +46,7 @@ module SimpleStreamingTypes
     ghost var BinaryOf: seq<DafnyCallEvent<BinaryOfInput, Result<BinaryOfOutput, Error>>>
     ghost var Chunks: seq<DafnyCallEvent<ChunksInput, Result<ChunksOutput, Error>>>
   }
-  trait {:termination false} ISimpleStreamingClient extends object
+  trait {:termination false} ISimpleStreamingClient
   {
     // Helper to define any additional modifies/reads clauses.
     // If your operations need to mutate state,
@@ -177,8 +177,8 @@ abstract module AbstractSimpleStreamingService
 {
   import opened Wrappers
   import opened StandardLibrary.UInt
-  import opened StandardLibrary.Streams
   import opened UTF8
+  import opened StandardLibrary.Streams
   import opened Types = SimpleStreamingTypes
   import Operations : AbstractSimpleStreamingOperations
   function method DefaultSimpleStreamingConfig(): SimpleStreamingConfig
@@ -286,8 +286,8 @@ abstract module AbstractSimpleStreamingService
 abstract module AbstractSimpleStreamingOperations {
   import opened Wrappers
   import opened StandardLibrary.UInt
-  import opened StandardLibrary.Streams
   import opened UTF8
+  import opened StandardLibrary.Streams
   import opened Types = SimpleStreamingTypes
   type InternalConfig
   predicate ValidInternalConfig?(config: InternalConfig)
