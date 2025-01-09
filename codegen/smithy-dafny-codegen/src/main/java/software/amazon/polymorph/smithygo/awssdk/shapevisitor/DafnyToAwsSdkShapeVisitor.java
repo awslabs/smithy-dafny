@@ -49,7 +49,7 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
 
   //TODO: Ideally this shouldn't be static but with current design we need to access this across instances.
   private static final Map<MemberShape, String> memberShapeConversionFuncMap =
-    new HashMap<>();
+    new LinkedHashMap<>();
 
   public DafnyToAwsSdkShapeVisitor(
     final GenerationContext context,

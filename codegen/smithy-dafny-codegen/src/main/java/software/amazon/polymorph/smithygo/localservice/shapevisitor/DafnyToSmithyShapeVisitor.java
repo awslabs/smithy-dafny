@@ -2,7 +2,7 @@ package software.amazon.polymorph.smithygo.localservice.shapevisitor;
 
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
@@ -52,7 +52,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
   private final boolean isOptional;
   //TODO: Ideally this shouldn't be static but with current design we need to access this across instances.
   private static final Map<MemberShape, String> memberShapeConversionFuncMap =
-    new HashMap<>();
+    new LinkedHashMap<>();
 
   public DafnyToSmithyShapeVisitor(
     final GenerationContext context,
