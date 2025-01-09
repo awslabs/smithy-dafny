@@ -74,26 +74,8 @@ transpile_go: | transpile_implementation_go transpile_test_go
 
 ########################## Rust targets
 # Override SharedMakefile's transpile_java to not transpile
-# StandardLibrary as a dependency,
-# and to not include Streams.dfy since Dafny's Rust code generator
-# doesn't yet support it.
-transpile_rust: _no_extern_pre_transpile
+# StandardLibrary as a dependency
 transpile_rust: | transpile_implementation_rust
-transpile_rust: _no_extern_post_transpile
-
-INDEX_FILE_PATH=src/Index.dfy
-INDEX_FILE_WITH_EXTERN_STRING='include "./Streams.dfy"'
-INDEX_FILE_WITHOUT_EXTERN_STRING='// include WOOT "./Streams.dfy"'
-
-# No-ops:
-
-TYPES_FILE_PATH=src/StandardLibrary.dfy
-TYPES_FILE_WITH_EXTERN_STRING='module {:extern "Whatever"} StandardLibrary {'
-TYPES_FILE_WITHOUT_EXTERN_STRING='module StandardLibrary {'
-
-WRAPPED_INDEX_FILE_PATH=src/WrappersInterop.dfy
-WRAPPED_INDEX_FILE_WITH_EXTERN_STRING='module {:extern "Whatever"} StandardLibraryInterop {'
-WRAPPED_INDEX_FILE_WITHOUT_EXTERN_STRING='module StandardLibraryInterop {'
 
 RUST_OTHER_FILES=runtimes/rust/src/conversion.rs runtimes/rust/src/UTF8_externs.rs
 
@@ -106,7 +88,7 @@ SMITHY_DEPS=dafny-dependencies/Model/traits.smithy
 # Override this target to not insert a dependency on the standard library.
 _mv_implementation_rust:
 	mv implementation_from_dafny-rust/src/implementation_from_dafny.rs runtimes/rust/src/implementation_from_dafny.rs
-# rustfmt runtimes/rust/src/implementation_from_dafny.rs
+	rustfmt runtimes/rust/src/implementation_from_dafny.rs
 	rm -rf implementation_from_dafny-rust
 
 transpile_dependencies:

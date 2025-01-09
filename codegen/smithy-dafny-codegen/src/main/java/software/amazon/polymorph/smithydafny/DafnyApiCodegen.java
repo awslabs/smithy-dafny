@@ -151,7 +151,7 @@ public class DafnyApiCodegen {
       .of(
         Stream
           .concat(
-            DafnyNameResolver.modulePreludeStandardImports(model, serviceShape),
+            DafnyNameResolver.modulePreludeStandardImports(),
             nameResolver
               .dependentModels()
               .stream()
@@ -1989,7 +1989,7 @@ public class DafnyApiCodegen {
 
   public TokenTree generateAbstractBody() {
     final TokenTree abstractModulePrelude = TokenTree
-      .of(DafnyNameResolver.abstractModulePrelude(model, serviceShape))
+      .of(DafnyNameResolver.abstractModulePrelude(serviceShape))
       .lineSeparated();
 
     if (serviceShape.hasTrait(ServiceTrait.class)) {
@@ -2011,7 +2011,7 @@ public class DafnyApiCodegen {
   // This method needs to be called before typesModulePrelude is calculated
   public TokenTree generateAbstractServiceModule(ServiceShape serviceShape) {
     final TokenTree abstractModulePrelude = TokenTree
-      .of(DafnyNameResolver.abstractModulePrelude(model, serviceShape))
+      .of(DafnyNameResolver.abstractModulePrelude(serviceShape))
       .lineSeparated();
     final TokenTree moduleHeader = TokenTree.of(
       "abstract module %s".formatted(
@@ -2825,7 +2825,7 @@ public class DafnyApiCodegen {
       "abstract module WrappedAbstract%sService".formatted(baseModuleName)
     );
     final TokenTree abstractModulePrelude = TokenTree
-      .of(DafnyNameResolver.wrappedAbstractModulePrelude(model, serviceShape))
+      .of(DafnyNameResolver.wrappedAbstractModulePrelude(serviceShape))
       .lineSeparated();
 
     final String configTypeName = nameResolver.baseTypeForShape(
@@ -3054,7 +3054,7 @@ public class DafnyApiCodegen {
 
     final TokenTree body = TokenTree
       .of(
-        TokenTree.of(DafnyNameResolver.abstractModulePrelude(model, serviceShape)),
+        TokenTree.of(DafnyNameResolver.abstractModulePrelude(serviceShape)),
         TokenTree.of("type %s".formatted(internalConfigType)),
         TokenTree.of(
           "predicate %s(config: %s)".formatted(
