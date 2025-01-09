@@ -50,7 +50,10 @@ class PythonTestModels extends TestModelTest {
 
     // The @streaming support depends on our subset of the Dafny standard libraries
     // which cannot be built for old versions of Dafny.
-    if (relativeTestModelPath.endsWith("Streaming") || relativeTestModelPath.endsWith("s3")) {
+    if (
+      relativeTestModelPath.endsWith("Streaming") ||
+      relativeTestModelPath.endsWith("s3")
+    ) {
       DafnyVersion dafnyVersion = CodegenEngine.getDafnyVersionFromDafny();
       if (dafnyVersion.compareTo(DafnyVersion.parse("4.9.0")) < 0) {
         Assumptions.assumeTrue(false);

@@ -95,7 +95,10 @@ public class LocalServiceToDafnyShapeVisitor
   @Override
   public String blobShape(BlobShape shape) {
     if (shape.hasTrait(StreamingTrait.class)) {
-      writer.addStdlibImport("smithy_dafny_standard_library.internaldafny.extern.streams", "StreamingBlobDataStream");
+      writer.addStdlibImport(
+        "smithy_dafny_standard_library.internaldafny.extern.streams",
+        "StreamingBlobDataStream"
+      );
       return "StreamingBlobDataStream(%1$s)".formatted(dataSource);
     } else {
       writer.addStdlibImport("_dafny", "Seq");

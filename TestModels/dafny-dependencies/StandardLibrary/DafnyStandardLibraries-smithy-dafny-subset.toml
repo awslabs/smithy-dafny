@@ -10,6 +10,7 @@ includes = [
   "../dafny/Source/DafnyStandardLibraries/src/Std/Frames.dfy",
   "../dafny/Source/DafnyStandardLibraries/src/Std/Math.dfy",
   "../dafny/Source/DafnyStandardLibraries/src/Std/Relations.dfy",
+  "../dafny/Source/DafnyStandardLibraries/src/Std/Streams/Streams.dfy",
   "../dafny/Source/DafnyStandardLibraries/src/Std/Wrappers.dfy"
 ]
 
