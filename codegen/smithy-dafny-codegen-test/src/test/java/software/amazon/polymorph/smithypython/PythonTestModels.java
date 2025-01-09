@@ -45,20 +45,10 @@ class PythonTestModels extends TestModelTest {
 
   @ParameterizedTest
   @MethodSource("discoverTestModels")
-  void testModelsForPython(String relativeTestModelPath) {
-    Assumptions.assumeFalse(DISABLED_TESTS.contains(relativeTestModelPath));
+  protected void testModels(String relativeTestModelPath) {
+    super.testModels(relativeTestModelPath);
 
-    // The @streaming support depends on our subset of the Dafny standard libraries
-    // which cannot be built for old versions of Dafny.
-    if (
-      relativeTestModelPath.endsWith("Streaming") ||
-      relativeTestModelPath.endsWith("s3")
-    ) {
-      DafnyVersion dafnyVersion = CodegenEngine.getDafnyVersionFromDafny();
-      if (dafnyVersion.compareTo(DafnyVersion.parse("4.9.0")) < 0) {
-        Assumptions.assumeTrue(false);
-      }
-    }
+    Assumptions.assumeFalse(DISABLED_TESTS.contains(relativeTestModelPath));
 
     Path testModelPath = getTestModelPath(relativeTestModelPath);
     make(testModelPath, "setup_prettier");
