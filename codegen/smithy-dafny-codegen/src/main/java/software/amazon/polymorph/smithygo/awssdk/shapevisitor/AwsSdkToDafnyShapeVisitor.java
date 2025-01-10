@@ -2,6 +2,7 @@ package software.amazon.polymorph.smithygo.awssdk.shapevisitor;
 
 import static software.amazon.polymorph.smithygo.localservice.nameresolver.Constants.DOT;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
+import static software.amazon.polymorph.smithygo.utils.Constants.SMITHY_DAFNY_STD_LIB_GO;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -140,10 +141,7 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
   public String structureShape(final StructureShape shape) {
     final var typeConversionMethodBuilder = new StringBuilder();
 
-    writer.addImportFromModule(
-      "github.com/dafny-lang/DafnyStandardLibGo",
-      "Wrappers"
-    );
+    writer.addImportFromModule(SMITHY_DAFNY_STD_LIB_GO, "Wrappers");
     writer.addImportFromModule(
       SmithyNameResolver.getGoModuleNameForSmithyNamespace(
         shape.toShapeId().getNamespace()
