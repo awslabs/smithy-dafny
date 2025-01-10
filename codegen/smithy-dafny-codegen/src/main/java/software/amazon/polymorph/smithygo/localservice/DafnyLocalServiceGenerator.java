@@ -5,6 +5,7 @@ package software.amazon.polymorph.smithygo.localservice;
 
 import static software.amazon.polymorph.smithygo.codegen.SymbolUtils.POINTABLE;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
+import static software.amazon.polymorph.smithygo.utils.Constants.SMITHY_DAFNY_STD_LIB_GO;
 
 import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
@@ -404,10 +405,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
           ),
           DafnyNameResolver.dafnyTypesNamespace(service)
         );
-        writer.addImportFromModule(
-          "github.com/dafny-lang/DafnyStandardLibGo",
-          "Wrappers"
-        );
+        writer.addImportFromModule(SMITHY_DAFNY_STD_LIB_GO, "Wrappers");
         writer.addImportFromModule(
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
             context.settings().getService().getNamespace()
@@ -1032,10 +1030,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
           context.settings().getModuleName(),
           SmithyNameResolver.smithyTypesNamespace(service)
         );
-        writer.addImportFromModule(
-          "github.com/dafny-lang/DafnyStandardLibGo",
-          "Wrappers"
-        );
+        writer.addImportFromModule(SMITHY_DAFNY_STD_LIB_GO, "Wrappers");
         writer.addImportFromModule(
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
             resourceShape.toShapeId().getNamespace()
