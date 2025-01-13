@@ -40,16 +40,16 @@ impl Error {
     where
         E: ::std::error::Error + 'static,
     {
-        Self::ValidationError(ValidationError(::std::rc::Rc::new(err)))
+        Self::ValidationError(ValidationError(::dafny_runtime::Rc::new(err)))
     }
 }
 
 #[derive(::std::clone::Clone, ::std::fmt::Debug)]
-pub struct ValidationError(::std::rc::Rc<dyn ::std::error::Error>);
+pub struct ValidationError(::dafny_runtime::Rc<dyn ::std::error::Error>);
 
 impl ::std::cmp::PartialEq for ValidationError {
     fn eq(&self, other: &Self) -> bool {
-        ::std::rc::Rc::<(dyn std::error::Error + 'static)>::ptr_eq(&self.0, &other.0)
+        ::dafny_runtime::Rc::<(dyn std::error::Error + 'static)>::ptr_eq(&self.0, &other.0)
     }
 }
 

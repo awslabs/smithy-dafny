@@ -22,12 +22,12 @@ impl dafny_runtime::UpcastObject<dyn std::any::Any> for Client {
 }
 
 impl Client {
-  pub fn from_conf(config: &::std::rc::Rc<
+  pub fn from_conf(config: &::dafny_runtime::Rc<
     crate::r#$dafnyTypesModuleName:L::$configName:L,
   >) ->
-::std::rc::Rc<crate::r#_Wrappers_Compile::Result<
+::dafny_runtime::Rc<crate::r#_Wrappers_Compile::Result<
   ::dafny_runtime::Object<dyn crate::r#$dafnyTypesModuleName:L::I$serviceName:LClient>,
-  ::std::rc::Rc<crate::r#$dafnyTypesModuleName:L::Error>
+  ::dafny_runtime::Rc<crate::r#$dafnyTypesModuleName:L::Error>
 >> {
     let result = $rustRootModuleName:L::client::Client::from_conf(
       $rustRootModuleName:L::conversions::$snakeCaseConfigName:L::_$snakeCaseConfigName:L::from_dafny(
@@ -39,7 +39,7 @@ impl Client {
         let wrap = $rustRootModuleName:L::wrapped::client::Client {
           wrapped: client
         };
-        std::rc::Rc::new(
+        dafny_runtime::Rc::new(
           crate::_Wrappers_Compile::Result::Success {
             value: ::dafny_runtime::upcast_object()(::dafny_runtime::object::new(wrap))
           }

@@ -7,7 +7,7 @@ pub fn to_dafny(
   let wrap = $rustResourceName:LWrapper {
       obj: value.clone(),
   };
-  let inner = ::std::rc::Rc::new(::std::cell::UnsafeCell::new(wrap));
+  let inner = ::dafny_runtime::Rc::new(::dafny_runtime::UnsafeCell::new(wrap));
   ::dafny_runtime::Object (Some(inner) )
 }
 
@@ -29,7 +29,7 @@ pub fn from_dafny(
         obj: dafny_value.clone(),
     };
     $rustTypesModuleName:L::$snakeCaseResourceName:L::$rustResourceName:LRef {
-      inner: ::std::rc::Rc::new(::std::cell::RefCell::new(wrap))
+      inner: ::dafny_runtime::Rc::new(::dafny_runtime::RefCell::new(wrap))
     }
 }
 

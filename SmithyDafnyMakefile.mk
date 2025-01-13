@@ -609,7 +609,7 @@ transpile_implementation_rust: SRC_INDEX=$(RUST_SRC_INDEX)
 transpile_implementation_rust: TEST_INDEX=$(RUST_TEST_INDEX)
 # The Dafny Rust code generator is not complete yet,
 # so we want to emit code even if there are unsupported features in the input.
-transpile_implementation_rust: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix --rust-module-name implementation_from_dafny
+transpile_implementation_rust: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix --rust-module-name implementation_from_dafny --rust-sync
 # The Dafny Rust code generator only supports a single crate for everything,
 # so we inline all dependencies by not passing `-library` to Dafny.
 transpile_implementation_rust: TRANSPILE_DEPENDENCIES=
@@ -776,7 +776,7 @@ local_transpile_impl_rust_single: TARGET=rs
 local_transpile_impl_rust_single: OUT=implementation_from_dafny
 local_transpile_impl_rust_single: SRC_INDEX=$(RUST_SRC_INDEX)
 local_transpile_impl_rust_single: TEST_INDEX=$(RUST_TEST_INDEX)
-local_transpile_impl_rust_single: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix
+local_transpile_impl_rust_single: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix --rust-sync
 local_transpile_impl_rust_single: TRANSPILE_DEPENDENCIES=
 local_transpile_impl_rust_single: STD_LIBRARY=
 local_transpile_impl_rust_single: SRC_INDEX_TRANSPILE=$(if $(SRC_INDEX),$(SRC_INDEX),src)
