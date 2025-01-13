@@ -10,7 +10,7 @@ module SimpleStreamingImplTest {
     import Std.Aggregators
     import Std.BoundedInts
     import opened StandardLibrary.UInt
-    import opened StandardLibrary.Streams
+    import opened Std.Streams
     import opened SimpleStreamingTypes
     import opened Wrappers
     method{:test} TestClient(){

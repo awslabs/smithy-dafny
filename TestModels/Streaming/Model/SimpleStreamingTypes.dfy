@@ -7,7 +7,7 @@ module {:extern "simple.streaming.internaldafny.types" } SimpleStreamingTypes
   import opened Wrappers
   import opened StandardLibrary.UInt
   import opened UTF8
-  import opened StandardLibrary.Streams
+  import opened Std.Streams
   // Generic helpers for verification of mock/unit tests.
   datatype DafnyCallEvent<I, O> = DafnyCallEvent(input: I, output: O)
 
@@ -17,17 +17,17 @@ module {:extern "simple.streaming.internaldafny.types" } SimpleStreamingTypes
     nameonly number: int32
   )
   datatype BinaryOfOutput = | BinaryOfOutput (
-    nameonly binary: DataStream
+    nameonly binary: ByteStream
   )
   datatype ChunksInput = | ChunksInput (
-    nameonly bytesIn: DataStream ,
+    nameonly bytesIn: ByteStream ,
     nameonly chunkSize: CountingInteger
   )
   datatype ChunksOutput = | ChunksOutput (
-    nameonly bytesOut: DataStream
+    nameonly bytesOut: ByteStream
   )
   datatype CountBitsInput = | CountBitsInput (
-    nameonly bits: DataStream
+    nameonly bits: ByteStream
   )
   datatype CountBitsOutput = | CountBitsOutput (
     nameonly sum: int32
@@ -128,7 +128,7 @@ module {:extern "simple.streaming.internaldafny.types" } SimpleStreamingTypes
   datatype SimpleStreamingConfig = | SimpleStreamingConfig (
 
                                    )
-  type StreamingBlob = DataStream
+  type StreamingBlob = ByteStream
   datatype Error =
       // Local Error structures are listed here
     | OverflowError (
@@ -178,7 +178,7 @@ abstract module AbstractSimpleStreamingService
   import opened Wrappers
   import opened StandardLibrary.UInt
   import opened UTF8
-  import opened StandardLibrary.Streams
+  import opened Std.Streams
   import opened Types = SimpleStreamingTypes
   import Operations : AbstractSimpleStreamingOperations
   function method DefaultSimpleStreamingConfig(): SimpleStreamingConfig
@@ -287,7 +287,7 @@ abstract module AbstractSimpleStreamingOperations {
   import opened Wrappers
   import opened StandardLibrary.UInt
   import opened UTF8
-  import opened StandardLibrary.Streams
+  import opened Std.Streams
   import opened Types = SimpleStreamingTypes
   type InternalConfig
   predicate ValidInternalConfig?(config: InternalConfig)

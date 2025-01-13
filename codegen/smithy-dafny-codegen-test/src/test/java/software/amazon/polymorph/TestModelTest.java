@@ -92,7 +92,7 @@ public abstract class TestModelTest {
     // which cannot be built for old versions of Dafny.
     if (
       relativeTestModelPath.endsWith("Streaming") ||
-        relativeTestModelPath.endsWith("s3")
+      relativeTestModelPath.endsWith("s3")
     ) {
       DafnyVersion dafnyVersion = CodegenEngine.getDafnyVersionFromDafny();
       if (dafnyVersion.compareTo(DafnyVersion.parse("4.9.0")) < 0) {

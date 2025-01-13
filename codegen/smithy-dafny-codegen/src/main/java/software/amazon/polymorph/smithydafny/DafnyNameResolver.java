@@ -90,7 +90,7 @@ public record DafnyNameResolver(
         MAP -> dafnyModulePrefixForShape(shape) + shapeName;
       case BLOB -> {
         if (shape.hasTrait(StreamingTrait.class)) {
-          yield "DataStream";
+          yield "ByteStream";
         } else {
           yield dafnyModulePrefixForShape(shape) + shapeName;
         }
@@ -386,10 +386,7 @@ public record DafnyNameResolver(
         .stream()
         .anyMatch(s -> s.hasTrait(StreamingTrait.class))
     ) {
-      return Streams.concat(
-        basics,
-        Stream.of("import opened StandardLibrary.Streams")
-      );
+      return Streams.concat(basics, Stream.of("import opened Std.Streams"));
     } else {
       return basics;
     }

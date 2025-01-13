@@ -130,6 +130,7 @@ module Chunker {
       while chunkSize as int <= |chunkBuffer| 
         invariant a.ValidAndDisjoint()
       {
+        a.CanConsumeAll(a.history, chunkBuffer[..chunkSize]);
         a.Accept(chunkBuffer[..chunkSize]);
         chunkBuffer := chunkBuffer[chunkSize..];
       }
