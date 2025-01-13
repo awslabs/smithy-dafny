@@ -900,7 +900,9 @@ public class RustAwsSdkShimGenerator extends AbstractRustShimGenerator {
           } else {
             valueToDafny = rustToDafny.formatted(rustValue);
           }
-          yield TokenTree.of("::dafny_runtime::Rc::new(%s)".formatted(valueToDafny));
+          yield TokenTree.of(
+            "::dafny_runtime::Rc::new(%s)".formatted(valueToDafny)
+          );
         } else {
           if (isRustOption) {
             var result = TokenTree.of(
