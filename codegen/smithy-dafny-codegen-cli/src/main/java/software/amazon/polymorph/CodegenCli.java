@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,6 +34,18 @@ public class CodegenCli {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(
     CodegenCli.class
+  );
+
+  private enum Command {
+    GENERATE,
+    PATCH_AFTER_TRANSPILE,
+  }
+
+  private static final Map<Command, Options> optionsForCommand = Map.of(
+    Command.GENERATE,
+    getCliOptionsForBuild(),
+    Command.PATCH_AFTER_TRANSPILE,
+    getCliOptionsForPatchAfterTranspile()
   );
 
   public static void main(String[] args) {
@@ -96,8 +109,14 @@ public class CodegenCli {
     cliArguments.outputDotnetDir.ifPresent(path ->
       outputDirs.put(TargetLanguage.DOTNET, path)
     );
+    cliArguments.outputGoDir.ifPresent(path ->
+      outputDirs.put(TargetLanguage.GO, path)
+    );
     cliArguments.outputRustDir.ifPresent(path ->
       outputDirs.put(TargetLanguage.RUST, path)
+    );
+    cliArguments.outputPythonDir.ifPresent(path ->
+      outputDirs.put(TargetLanguage.PYTHON, path)
     );
 
     final Map<TargetLanguage, Path> testOutputDirs = new HashMap<>();
@@ -110,14 +129,29 @@ public class CodegenCli {
       .withLibraryRoot(cliArguments.libraryRoot)
       .withServiceModel(serviceModel)
       .withDependentModelPaths(cliArguments.dependentModelPaths)
-      .withNamespace(cliArguments.namespace)
+      .withDependencyLibraryNames(cliArguments.dependencyLibraryNames)
+      .withNamespaces(cliArguments.namespaces)
       .withTargetLangOutputDirs(outputDirs)
       .withTargetLangTestOutputDirs(testOutputDirs)
       .withAwsSdkStyle(cliArguments.awsSdkStyle)
-      .withLocalServiceTest(cliArguments.localServiceTest)
       .withDafnyVersion(cliArguments.dafnyVersion)
       .withUpdatePatchFiles(cliArguments.updatePatchFiles)
       .withGenerationAspects(cliArguments.generationAspects);
+    // Rust currently generates all code for all dependencies at once,
+    // and the makefile structure makes it very difficult to avoid passing --local-service-test
+    // when we don't actually want it for --aws-sdk style projects.
+    // For now just ignoring it with a warning.
+    if (
+      outputDirs.containsKey(TargetLanguage.RUST) &&
+      cliArguments.awsSdkStyle &&
+      cliArguments.localServiceTest
+    ) {
+      LOGGER.warn(
+        "Ignoring --local-service-test because --output-rust and --aws-sdk are also present"
+      );
+    } else {
+      engineBuilder.withLocalServiceTest(cliArguments.localServiceTest);
+    }
     cliArguments.propertiesFile.ifPresent(engineBuilder::withPropertiesFile);
     cliArguments.javaAwsSdkVersion.ifPresent(
       engineBuilder::withJavaAwsSdkVersion
@@ -125,12 +159,16 @@ public class CodegenCli {
     cliArguments.includeDafnyFile.ifPresent(
       engineBuilder::withIncludeDafnyFile
     );
+    cliArguments.libraryName.ifPresent(engineBuilder::withLibraryName);
     cliArguments.patchFilesDir.ifPresent(engineBuilder::withPatchFilesDir);
     final CodegenEngine engine = engineBuilder.build();
-    engine.run();
+    switch (cliArguments.command) {
+      case GENERATE -> engine.run();
+      case PATCH_AFTER_TRANSPILE -> engine.patchAfterTranspiling();
+    }
   }
 
-  private static Options getCliOptions() {
+  private static Options getCliOptionsForBuild() {
     return new Options()
       .addOption(
         Option.builder("h").longOpt("help").desc("print help message").build()
@@ -164,11 +202,31 @@ public class CodegenCli {
       )
       .addOption(
         Option
+          .builder("dln")
+          .longOpt("dependency-library-name")
+          .desc(
+            "namespace-to-library-name map entry for a dependency namespace"
+          )
+          .hasArg()
+          .build()
+      )
+      .addOption(
+        Option
           .builder("n")
           .longOpt("namespace")
           .desc("smithy namespace to generate code for, such as 'com.foo'")
           .hasArg()
-          .required()
+          .valueSeparator(',')
+          .build()
+      )
+      .addOption(
+        Option
+          .builder("ln")
+          .longOpt("library-name")
+          .desc(
+            "if generating for a language that uses library names (go, python), the name of the library in that language"
+          )
+          .hasArg()
           .build()
       )
       .addOption(
@@ -190,6 +248,14 @@ public class CodegenCli {
       .addOption(
         Option
           .builder()
+          .longOpt("output-go")
+          .desc("<optional> output directory for generated Go files")
+          .hasArg()
+          .build()
+      )
+      .addOption(
+        Option
+          .builder()
           .longOpt("output-java-test")
           .desc("<optional> output directory for generated Java test files")
           .hasArg()
@@ -200,6 +266,14 @@ public class CodegenCli {
           .builder()
           .longOpt("output-rust")
           .desc("<optional> output directory for generated Rust files")
+          .hasArg()
+          .build()
+      )
+      .addOption(
+        Option
+          .builder()
+          .longOpt("output-python")
+          .desc("<optional> output directory for generated Python files")
           .hasArg()
           .build()
       )
@@ -293,19 +367,120 @@ public class CodegenCli {
       );
   }
 
+  private static Options getCliOptionsForPatchAfterTranspile() {
+    return new Options()
+      .addOption(
+        Option.builder("h").longOpt("help").desc("print help message").build()
+      )
+      .addOption(
+        Option
+          .builder("r")
+          .longOpt("library-root")
+          .desc("root directory of the library")
+          .hasArg()
+          .required()
+          .build()
+      )
+      .addOption(
+        Option
+          .builder("m")
+          .longOpt("model")
+          .desc("directory for the model file[s] (.smithy or json format).")
+          .hasArg()
+          .required()
+          .build()
+      )
+      .addOption(
+        Option
+          .builder("d")
+          .longOpt("dependent-model")
+          .desc("directory for dependent model file[s] (.smithy format)")
+          .hasArg()
+          .required()
+          .build()
+      )
+      .addOption(
+        Option
+          .builder("n")
+          .longOpt("namespace")
+          .desc("smithy namespace to generate code for, such as 'com.foo'")
+          .hasArg()
+          .required()
+          .build()
+      )
+      .addOption(
+        Option
+          .builder()
+          .longOpt("output-rust")
+          .desc("<optional> output directory for generated Rust files")
+          .hasArg()
+          .build()
+      )
+      .addOption(
+        Option
+          .builder()
+          .longOpt("dafny-version")
+          .desc("Dafny version that generated the code to patch")
+          .hasArg()
+          .build()
+      )
+      .addOption(
+        Option
+          .builder()
+          .longOpt("aws-sdk")
+          .desc(
+            "<optional> patch Dafny generated code for AWS SDK-style API and shims"
+          )
+          .build()
+      )
+      .addOption(
+        Option
+          .builder()
+          .longOpt("generate")
+          .desc(
+            "<optional> optional aspects to generate. Available aspects:\n" +
+            CodegenEngine.GenerationAspect.helpText()
+          )
+          .hasArgs()
+          .valueSeparator(',')
+          .build()
+      )
+      .addOption(
+        Option
+          .builder()
+          .longOpt("local-service-test")
+          .desc("<optional> generate Dafny that tests a local service")
+          .build()
+      );
+  }
+
   private static void printHelpMessage() {
-    new HelpFormatter().printHelp("smithy-dafny-codegen-cli", getCliOptions());
+    new HelpFormatter()
+      .printHelp(
+        "smithy-dafny-codegen-cli [generate]",
+        getCliOptionsForBuild()
+      );
+    new HelpFormatter()
+      .printHelp(
+        "smithy-dafny-codegen-cli patch-after-transpile",
+        getCliOptionsForPatchAfterTranspile()
+      );
   }
 
   private record CliArguments(
+    Command command,
     Path libraryRoot,
     Path modelPath,
     Path[] dependentModelPaths,
-    String namespace,
+    Map<String, String> dependencyLibraryNames,
+    Set<String> namespaces,
+    Optional<String> libraryName,
     Optional<Path> outputDotnetDir,
     Optional<Path> outputJavaDir,
+    Optional<Path> outputGoDir,
     Optional<Path> testOutputJavaDir,
     Optional<Path> outputRustDir,
+    Optional<Path> outputPythonDir,
     Optional<Path> outputDafnyDir,
     Optional<AwsSdkVersion> javaAwsSdkVersion,
     DafnyVersion dafnyVersion,
@@ -324,7 +499,27 @@ public class CodegenCli {
      */
     static Optional<CliArguments> parse(String[] args) throws ParseException {
       final DefaultParser parser = new DefaultParser();
-      final CommandLine commandLine = parser.parse(getCliOptions(), args);
+      final String commandString = args.length > 0 && !args[0].startsWith("-")
+        ? args[0]
+        : "generate";
+      Command command = null;
+      try {
+        command =
+          Command.valueOf(commandString.toUpperCase().replace("-", "_"));
+      } catch (IllegalArgumentException e) {
+        LOGGER.error("Unrecognized command: {}", commandString);
+        printHelpMessage();
+        System.exit(-1);
+      }
+
+      final Options options = optionsForCommand.get(command);
+      if (options == null) {
+        LOGGER.error("Unrecognized command: {}", command);
+        printHelpMessage();
+        System.exit(-1);
+      }
+
+      final CommandLine commandLine = parser.parse(options, args);
       if (commandLine.hasOption("h")) {
         printHelpMessage();
         return Optional.empty();
@@ -339,7 +534,26 @@ public class CodegenCli {
         .map(Path::of)
         .toArray(Path[]::new);
 
-      final String namespace = commandLine.getOptionValue('n');
+      // Maps a Smithy namespace to its module name
+      // ex. `dependency-library-name=aws.cryptography.materialproviders=aws_cryptographic_materialproviders`
+      // maps the Smithy namespace `aws.cryptography.materialproviders` to a module name `aws_cryptographic_materialproviders`
+      // via a map key of "aws.cryptography.materialproviders" and a value of "aws_cryptographic_materialproviders"
+      final Map<String, String> dependencyNamespacesToLibraryNamesMap =
+        commandLine.hasOption("dependency-library-name")
+          ? Arrays
+            .stream(commandLine.getOptionValues("dln"))
+            .map(s -> s.split("="))
+            .collect(Collectors.toMap(i -> i[0], i -> i[1]))
+          : new HashMap<>();
+
+      final Set<String> namespaces = Optional
+        .ofNullable(commandLine.getOptionValues("namespace"))
+        .<Set<String>>map(ns -> new HashSet<>(Arrays.asList(ns)))
+        .orElse(Collections.emptySet());
+
+      final Optional<String> libraryName = Optional.ofNullable(
+        commandLine.getOptionValue("library-name")
+      );
 
       Optional<Path> outputDafnyDir = Optional
         .ofNullable(commandLine.getOptionValue("output-dafny"))
@@ -362,8 +576,14 @@ public class CodegenCli {
       final Optional<Path> outputDotnetDir = Optional
         .ofNullable(commandLine.getOptionValue("output-dotnet"))
         .map(Paths::get);
+      final Optional<Path> outputGoDir = Optional
+        .ofNullable(commandLine.getOptionValue("output-go"))
+        .map(Paths::get);
       final Optional<Path> outputRustDir = Optional
         .ofNullable(commandLine.getOptionValue("output-rust"))
+        .map(Paths::get);
+      final Optional<Path> outputPythonDir = Optional
+        .ofNullable(commandLine.getOptionValue("output-python"))
         .map(Paths::get);
 
       boolean localServiceTest = commandLine.hasOption("local-service-test");
@@ -383,17 +603,15 @@ public class CodegenCli {
         }
       }
 
-      DafnyVersion dafnyVersion;
+      DafnyVersion dafnyVersion = null;
       String versionStr = commandLine.getOptionValue("dafny-version");
-      if (versionStr == null) {
-        LOGGER.error("--dafny-version option is required");
-        System.exit(-1);
-      }
-      try {
-        dafnyVersion = DafnyVersion.parse(versionStr.trim());
-      } catch (IllegalArgumentException ex) {
-        LOGGER.error("Could not parse --dafny-version: {}", versionStr);
-        throw ex;
+      if (versionStr != null) {
+        try {
+          dafnyVersion = DafnyVersion.parse(versionStr.trim());
+        } catch (IllegalArgumentException ex) {
+          LOGGER.error("Could not parse --dafny-version: {}", versionStr);
+          throw ex;
+        }
       }
 
       Optional<Path> propertiesFile = Optional
@@ -421,14 +639,19 @@ public class CodegenCli {
 
       return Optional.of(
         new CliArguments(
+          command,
           libraryRoot,
           modelPath,
           dependentModelPaths,
-          namespace,
+          dependencyNamespacesToLibraryNamesMap,
+          namespaces,
+          libraryName,
           outputDotnetDir,
           outputJavaDir,
+          outputGoDir,
           testOutputJavaDir,
           outputRustDir,
+          outputPythonDir,
           outputDafnyDir,
           javaAwsSdkVersion,
           dafnyVersion,

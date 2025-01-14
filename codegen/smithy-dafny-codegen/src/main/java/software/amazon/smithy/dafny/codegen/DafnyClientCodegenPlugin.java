@@ -5,6 +5,7 @@ package software.amazon.smithy.dafny.codegen;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,6 +57,7 @@ public final class DafnyClientCodegenPlugin implements SmithyBuildPlugin {
             "main",
             "smithy-generated"
           );
+          case RUST -> Paths.get("runtimes", "rust");
           default -> throw new UnsupportedOperationException(
             lang + " is not yet supported"
           );
@@ -78,7 +80,7 @@ public final class DafnyClientCodegenPlugin implements SmithyBuildPlugin {
       .withLibraryRoot(manifest.getBaseDir())
       .withServiceModel(model)
       // TODO generate code based on service closure, not namespace
-      .withNamespace(settings.serviceId.getNamespace())
+      .withNamespaces(Collections.singleton(settings.serviceId.getNamespace()))
       .withDafnyVersion(settings.dafnyVersion)
       .withPropertiesFile(propertiesFile)
       .withTargetLangOutputDirs(outputDirs)

@@ -3,9 +3,15 @@
 
 CORES=2
 
+TRANSPILE_TESTS_IN_RUST=true
+
 include ../../SharedMakefile.mk
 
 MAX_RESOURCE_COUNT=500000000
+PYTHON_MODULE_NAME=smithy_dafny_standard_library
+LIBRARIES :=
+
+GO_MODULE_NAME="github.com/aws/aws-cryptographic-material-providers-library/releases/go/smithy-dafny-standard-library"
 
 # define standard colors
 ifneq (,$(findstring xterm,${TERM}))
@@ -22,7 +28,6 @@ endif
 polymorph_dafny :
 	cd $(CODEGEN_CLI_ROOT); \
 	$(GRADLEW) run --args="\
-	--dafny-version $(DAFNY_VERSION) \
 	--library-root $(LIBRARY_ROOT) \
 	--properties-file $(PROJECT_ROOT)/$(STD_LIBRARY)/project.properties \
 	--model $(PROJECT_ROOT)/$(STD_LIBRARY)/Model \
@@ -30,27 +35,23 @@ polymorph_dafny :
 	--dependent-model $(PROJECT_ROOT)/$(STD_LIBRARY)/../Model \
 	";
 
-polymorph_dotnet :
+polymorph_dotnet:
 	echo "Skipping polymorph_dotnet for StandardLibrary"
 
-polymorph_java :
+polymorph_java:
 	echo "Skipping polymorph_java for StandardLibrary"
 
-# Using this target for the side-effect of maintaining patches,
-# Since Dafny Rust code generation is incomplete and also needs to be patched.
-# That only works if you run transpile_rust first.
-polymorph_rust :
-	cd $(CODEGEN_CLI_ROOT); \
-	$(GRADLEW) run --args="\
-	--dafny-version $(DAFNY_VERSION) \
-	--library-root $(LIBRARY_ROOT) \
-	--patch-files-dir $(if $(DIR_STRUCTURE_V2),$(LIBRARY_ROOT)/codegen-patches/$(SERVICE),$(LIBRARY_ROOT)/codegen-patches) \
-	--output-rust $(LIBRARY_ROOT)/runtimes/rust \
-	--model $(PROJECT_ROOT)/$(STD_LIBRARY)/Model \
-	--namespace aws.polymorph \
-	--dependent-model $(PROJECT_ROOT)/$(STD_LIBRARY)/../Model \
-	$(POLYMORPH_OPTIONS) \
-	";
+polymorph_python:
+	echo "Skipping polymorph_python for StandardLibrary"
+
+polymorph_go :
+	echo "Skipping polymorph_go for StandardLibrary"
+
+polymorph_rust:
+	echo "Skipping polymorph_rust for StandardLibrary"
+
+patch_after_transpile_rust:
+	echo "Skipping patch_after_transpile_rust for StandardLibrary"
 
 _polymorph_dependencies: 
 	echo "Skipping _polymorph_dependencies for StandardLibrary"
@@ -63,9 +64,26 @@ transpile_net: | transpile_implementation_net transpile_test_net
 # StandardLibrary as a dependency
 transpile_java: | transpile_implementation_java transpile_test_java
 
+# Override SharedMakefile's transpile_python to not transpile
+# StandardLibrary as a dependency
+transpile_python: | transpile_implementation_python transpile_test_python
+
+# Override SharedMakefile's transpile_go to not transpile
+# StandardLibrary as a dependency
+transpile_go: | transpile_implementation_go transpile_test_go
+
+########################## Rust targets
 # Override SharedMakefile's transpile_java to not transpile
 # StandardLibrary as a dependency
-transpile_rust: | transpile_implementation_rust transpile_test_rust
+transpile_rust: | transpile_implementation_rust
+
+RUST_OTHER_FILES=runtimes/rust/src/conversion.rs runtimes/rust/src/UTF8_externs.rs
+
+# These are necessary just for the patch_after_transpile_rust target
+MAIN_SERVICE_FOR_RUST := StandardLibrary
+SERVICE_NAMESPACE_StandardLibrary=aws.polymorph
+SERVICE_DEPS_StandardLibrary :=
+SMITHY_DEPS=dafny-dependencies/Model/traits.smithy
 
 # Override this target to not insert a dependency on the standard library.
 _mv_implementation_rust:
@@ -78,32 +96,31 @@ transpile_dependencies:
 
 # Override SharedMakefile's transpile_implementation to not reference
 # StandardLibrary as a Library
+transpile_implementation: SRC_INDEX_TRANSPILE=$(if $(SRC_INDEX),$(SRC_INDEX),src)
 transpile_implementation:
 	find ./dafny/**/$(SRC_INDEX_TRANSPILE)/ ./$(SRC_INDEX_TRANSPILE)/ -name 'Index.dfy' | sed -e 's/^/include "/' -e 's/$$/"/' | dafny \
-		-stdin \
-		-noVerify \
-		-vcsCores:$(CORES) \
-		-compileTarget:$(TARGET) \
-		-spillTargetCode:3 \
-		-compile:0 \
-		-optimizeErasableDatatypeWrapper:0 \
-		-compileSuffix:1 \
-		-unicodeChar:0 \
-		-functionSyntax:3 \
-		-useRuntimeLib \
+	translate $(TARGET) \
+		--stdin \
+		--no-verify \
+		--cores:$(CORES) \
+		--optimize-erasable-datatype-wrapper:false \
+		--unicode-char:false \
+		--function-syntax:3 \
+		--output $(OUT) \
 		$(DAFNY_OPTIONS) \
-		-out $(OUT)
+		$(DAFNY_OTHER_FILES) \
+		$(TRANSPILE_MODULE_NAME)
 
 # Override SharedMakefile's build_java to not install
 # StandardLibrary as a dependency
 build_java: transpile_java
-	gradle -p runtimes/java build
+	$(GRADLEW) -p runtimes/java build
 
 # Override SharedMakefile's mvn_local_deploy to
 # issue warning
 mvn_local_deploy:
 	@echo "${RED}Warning!!${YELLOW} Installing TestModel's STD to Maven Local replaces ESDK's STD!\n$(RESET)" >&2
-	gradle -p runtimes/java publishToMavenLocal
+	$(GRADLEW) -p runtimes/java publishToMavenLocal
 
 dafny_benerate: DAFNY_RUST_OUTPUT=\
 	runtimes/rust/implementation_from_dafny

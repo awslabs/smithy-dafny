@@ -3,10 +3,15 @@
 package software.amazon.polymorph.utils;
 
 import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.stream.Stream;
+import software.amazon.smithy.model.Model;
+import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.traits.LengthTrait;
 import software.amazon.smithy.model.traits.RangeTrait;
 import software.amazon.smithy.model.traits.RequiredTrait;
+import software.amazon.smithy.model.traits.Trait;
 
 // TODO: Support idRef, pattern, uniqueItems
 public class ConstrainTraitUtils {
@@ -50,7 +55,7 @@ public class ConstrainTraitUtils {
     }
 
     // TODO: Only INTEGER has been tested
-    private static String asShapeType(Shape shape, BigDecimal value) {
+    public static String asShapeType(Shape shape, BigDecimal value) {
       return switch (shape.getType()) {
         case BYTE -> "%d".formatted(value.byteValue());
         case SHORT -> "%d".formatted(value.shortValue());

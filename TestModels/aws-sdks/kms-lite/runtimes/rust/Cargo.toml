@@ -10,7 +10,6 @@ aws-smithy-runtime = {version = "1.6.0", features = ["client"] }
 aws-smithy-runtime-api = {version = "1.7.0", features = ["client"] }
 aws-smithy-types = "1.2.0"
 dafny_runtime = { path = "../../../../dafny-dependencies/dafny_runtime_rust"}
-dafny_standard_library = { path = "../../../../dafny-dependencies/StandardLibrary/runtimes/rust"}
 
 aws-sdk-kms = "1.35.0"
 aws-config = "1.5.4"

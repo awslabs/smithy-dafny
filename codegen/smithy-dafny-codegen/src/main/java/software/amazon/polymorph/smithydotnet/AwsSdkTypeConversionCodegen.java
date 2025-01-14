@@ -155,7 +155,7 @@ public class AwsSdkTypeConversionCodegen extends TypeConversionCodegen {
     final TreeSet<StructureShape> errorShapes
   ) {
     final String dafnyUnknownErrorType =
-      "%s.Error_Opaque".formatted(
+      "%s.Error_OpaqueWithText".formatted(
           DafnyNameResolverHelpers.dafnyExternNamespaceForShapeId(
             serviceShape.getId()
           )
@@ -190,7 +190,7 @@ public class AwsSdkTypeConversionCodegen extends TypeConversionCodegen {
     final TokenTree unknownErrorCase = Token.of(
       """
       default:
-          return new %s(value);
+          return new %s(value, Dafny.Sequence<char>.FromString(value.ToString()));
       """.formatted(dafnyUnknownErrorType)
     );
     final TokenTree cases = TokenTree
@@ -234,7 +234,7 @@ public class AwsSdkTypeConversionCodegen extends TypeConversionCodegen {
     final TokenTree handleBaseFromDafny = TokenTree
       .of(
         "case %1$s dafnyVal:".formatted(
-            DotNetNameResolver.dafnyUnknownErrorTypeForServiceShape(
+            DotNetNameResolver.dafnyUnknownWithTextErrorTypeForServiceShape(
               serviceShape
             )
           ),

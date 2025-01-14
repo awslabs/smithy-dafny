@@ -28,7 +28,31 @@ structure GetUnionOutput {
 
 union MyUnion {
     IntegerValue: Integer,
-    StringValue: String
+    StringValue: String,
+    BooleanValue: Boolean,
+    BlobValue: Blob,
+    DoubleValue: Double,
+    LongValue: Long,
+    ListValue: SimpleStringList,
+    MapValue: SimpleMap,
+    StructureValue: SimpleStruture,
+    InsideMyUnion: InsideMyUnion
+}
+
+union InsideMyUnion {
+  MyDouble: Double
+}
+structure SimpleStruture {
+  Intvalue: Integer
+}
+
+list SimpleStringList {
+  member: String
+}
+
+map SimpleMap {
+  key: String,
+  value: String
 }
 
 operation GetKnownValueUnion {
@@ -47,3 +71,42 @@ structure GetKnownValueUnionOutput {
 union KnownValueUnion {
     Value: Integer
 }
+
+// Resources are reference types
+// This means that Dafny needs a little help
+// to reason about their possible state.
+union WithReferenceType {
+  Ref: SimpleResourceReference,
+  // A non-reference type is added to the union
+  // because not all unions may have
+  // all elements be a reference
+  NotRef: Integer,
+}
+
+@aws.polymorph#reference(resource: SimpleResource)
+structure SimpleResourceReference {}
+
+resource SimpleResource {
+  operations: [ GetResourceData ]
+}
+
+operation GetResourceData {
+  input: GetResourceDataInput,
+  output: GetResourceDataOutput,
+}
+
+structure GetResourceDataInput {
+  @required
+  requiredUnion: WithReferenceType,
+
+  optionUnion: WithReferenceType,
+}
+
+structure GetResourceDataOutput {
+  @required
+  requiredUnion: WithReferenceType,
+
+  optionUnion: WithReferenceType,
+}
+
+

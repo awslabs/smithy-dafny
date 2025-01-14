@@ -3,7 +3,8 @@
 
 package software.amazon.polymorph;
 
-import com.google.common.base.Strings;
+import static software.amazon.smithy.utils.CaseUtils.toSnakeCase;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 import com.squareup.javapoet.ClassName;
@@ -12,6 +13,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +24,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,20 +42,32 @@ import software.amazon.polymorph.smithydotnet.TypeConversionDirection;
 import software.amazon.polymorph.smithydotnet.localServiceWrapper.LocalServiceWrappedCodegen;
 import software.amazon.polymorph.smithydotnet.localServiceWrapper.LocalServiceWrappedConversionCodegen;
 import software.amazon.polymorph.smithydotnet.localServiceWrapper.LocalServiceWrappedShimCodegen;
+import software.amazon.polymorph.smithygo.awssdk.DafnyGoAwsSdkClientCodegenPlugin;
+import software.amazon.polymorph.smithygo.localservice.DafnyLocalServiceCodegenPlugin;
 import software.amazon.polymorph.smithyjava.generator.CodegenSubject.AwsSdkVersion;
 import software.amazon.polymorph.smithyjava.generator.awssdk.v1.JavaAwsSdkV1;
 import software.amazon.polymorph.smithyjava.generator.awssdk.v2.JavaAwsSdkV2;
 import software.amazon.polymorph.smithyjava.generator.library.JavaLibrary;
 import software.amazon.polymorph.smithyjava.generator.library.TestJavaLibrary;
 import software.amazon.polymorph.smithyjava.nameresolver.AwsSdkNativeV2;
+import software.amazon.polymorph.smithypython.awssdk.extensions.DafnyPythonAwsSdkClientCodegenPlugin;
+import software.amazon.polymorph.smithypython.localservice.extensions.DafnyPythonLocalServiceClientCodegenPlugin;
+import software.amazon.polymorph.smithypython.wrappedlocalservice.extensions.DafnyPythonWrappedLocalServiceClientCodegenPlugin;
+import software.amazon.polymorph.smithyrust.generator.MergedServicesGenerator;
+import software.amazon.polymorph.smithyrust.generator.RustLibraryShimGenerator;
 import software.amazon.polymorph.traits.LocalServiceTrait;
 import software.amazon.polymorph.utils.DafnyNameResolverHelpers;
 import software.amazon.polymorph.utils.IOUtils;
 import software.amazon.polymorph.utils.ModelUtils;
 import software.amazon.polymorph.utils.TokenTree;
 import software.amazon.smithy.aws.traits.ServiceTrait;
+import software.amazon.smithy.build.FileManifest;
+import software.amazon.smithy.build.PluginContext;
 import software.amazon.smithy.model.Model;
+import software.amazon.smithy.model.node.ObjectNode;
+import software.amazon.smithy.model.selector.Selector;
 import software.amazon.smithy.model.shapes.ServiceShape;
+import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.utils.IoUtils;
 import software.amazon.smithy.utils.Pair;
 
@@ -62,12 +77,21 @@ public class CodegenEngine {
     CodegenEngine.class
   );
 
+  private static final DafnyVersion MIN_DAFNY_VERSION = DafnyVersion.parse(
+    "4.5"
+  );
+  // The highest released version of Dafny.
+  // Needed to handle pre-releases differently.
+  private static final DafnyVersion MAX_DAFNY_VERSION = DafnyVersion.parse(
+    "4.9"
+  );
+
   // Used to distinguish different conventions between the CLI
   // and the Smithy build plugin, such as where .NET project files live.
   private final boolean fromSmithyBuildPlugin;
   private final Path libraryRoot;
   private final Path[] dependentModelPaths;
-  private final String namespace;
+  private final Set<String> namespaces;
   private final Map<TargetLanguage, Path> targetLangOutputDirs;
   private final Map<TargetLanguage, Path> targetLangTestOutputDirs;
   private final DafnyVersion dafnyVersion;
@@ -84,6 +108,8 @@ public class CodegenEngine {
   // To be initialized in constructor
   private final Model model;
   private final ServiceShape serviceShape;
+  private final Map<String, String> dependencyLibraryNames;
+  private final Optional<String> libraryName;
 
   /**
    * This should only be called by {@link Builder#build()},
@@ -94,7 +120,7 @@ public class CodegenEngine {
     final boolean fromSmithyBuildPlugin,
     final Model serviceModel,
     final Path[] dependentModelPaths,
-    final String namespace,
+    final Set<String> namespaces,
     final Map<TargetLanguage, Path> targetLangOutputDirs,
     final Map<TargetLanguage, Path> targetLangTestOutputDirs,
     final DafnyVersion dafnyVersion,
@@ -106,12 +132,14 @@ public class CodegenEngine {
     final Set<GenerationAspect> generationAspects,
     final Path libraryRoot,
     final Optional<Path> patchFilesDir,
-    final boolean updatePatchFiles
+    final boolean updatePatchFiles,
+    final Map<String, String> dependencyLibraryNames,
+    final Optional<String> libraryName
   ) {
     // To be provided to constructor
     this.fromSmithyBuildPlugin = fromSmithyBuildPlugin;
     this.dependentModelPaths = dependentModelPaths;
-    this.namespace = namespace;
+    this.namespaces = namespaces;
     this.targetLangOutputDirs = targetLangOutputDirs;
     this.targetLangTestOutputDirs = targetLangTestOutputDirs;
     this.dafnyVersion = dafnyVersion;
@@ -124,6 +152,8 @@ public class CodegenEngine {
     this.libraryRoot = libraryRoot;
     this.patchFilesDir = patchFilesDir;
     this.updatePatchFiles = updatePatchFiles;
+    this.dependencyLibraryNames = dependencyLibraryNames;
+    this.libraryName = libraryName;
 
     this.model =
       this.awsSdkStyle
@@ -131,8 +161,13 @@ public class CodegenEngine {
         ? ModelUtils.addMissingErrorMessageMembers(serviceModel)
         : serviceModel;
 
+    // TODO: This should not be used by Rust since it supports (or really requires)
+    // generating for multiple namespaces.
     this.serviceShape =
-      ModelUtils.serviceFromNamespace(this.model, this.namespace);
+      ModelUtils.serviceFromNamespace(
+        this.model,
+        this.namespaces.stream().findFirst().get()
+      );
   }
 
   /**
@@ -169,7 +204,9 @@ public class CodegenEngine {
         case DAFNY -> generateDafny(outputDir);
         case JAVA -> generateJava(outputDir, testOutputDir);
         case DOTNET -> generateDotnet(outputDir);
+        case GO -> generateGo();
         case RUST -> generateRust(outputDir);
+        case PYTHON -> generatePython();
         default -> throw new UnsupportedOperationException(
           "Cannot generate code for target language %s".formatted(lang.name())
         );
@@ -194,7 +231,13 @@ public class CodegenEngine {
       "dafnyVersion",
       dafnyVersionString
     );
-    writeTemplatedFile("project.properties", outputPath.toString(), parameters);
+    // Don't use writeTemplatedFile since outputPath is an absolute path
+    final String propertiesFileContent = IOUtils.evalTemplateResource(
+      getClass(),
+      "project.properties",
+      parameters
+    );
+    IOUtils.writeToFile(propertiesFileContent, outputPath.toFile());
   }
 
   private void generateDafny(final Path outputDir) {
@@ -225,15 +268,7 @@ public class CodegenEngine {
 
     dafnyOtherGeneratedAspects(outputDir);
 
-    LOGGER.info("Formatting Dafny code in {}", outputDir);
-    runCommand(
-      outputDir,
-      "dafny",
-      "format",
-      "--function-syntax:3",
-      "--unicode-char:false",
-      "."
-    );
+    formatDafnyCode(outputDir);
 
     handlePatching(TargetLanguage.DAFNY, outputDir);
   }
@@ -294,16 +329,29 @@ public class CodegenEngine {
     // Perhaps we can make a `smithy init` template for that instead?
 
     if (!generationAspects.isEmpty()) {
-      Path srcDir = outputDir.resolve("../src");
-      LOGGER.info("Formatting Dafny code in {}", srcDir);
-      runCommand(
-        srcDir,
-        "dafny",
-        "format",
-        "--function-syntax:3",
-        "--unicode-char:false",
-        "."
-      );
+      formatDafnyCode(outputDir.resolve("../src"));
+    }
+  }
+
+  /**
+   * Formats the Dafny code in the given path using {@code dafny format},
+   * but does not throw an exception if the command fails.
+   * <p>
+   * This enables generating interdependent Dafny files
+   * across multiple smithy-dafny-codegen invocations.
+   */
+  private void formatDafnyCode(final Path path) {
+    LOGGER.info("Formatting Dafny code in {}", path);
+    final CommandResult formatResult = runCommand(
+      path,
+      "dafny",
+      "format",
+      "--function-syntax:3",
+      "--unicode-char:false",
+      "."
+    );
+    if (formatResult.exitCode != 0) {
+      LOGGER.warn("Formatting failed:\n{}", formatResult.output);
     }
   }
 
@@ -339,7 +387,7 @@ public class CodegenEngine {
     javaOtherGeneratedAspects();
 
     LOGGER.info("Formatting Java code in {}", outputDir);
-    runCommand(
+    runCommandOrThrow(
       outputDir,
       "npm",
       "i",
@@ -347,7 +395,7 @@ public class CodegenEngine {
       "prettier@3",
       "prettier-plugin-java@2.5"
     );
-    runCommand(
+    runCommandOrThrow(
       outputDir,
       "npx",
       "prettier@3",
@@ -492,6 +540,10 @@ public class CodegenEngine {
           "runtimes/java/src/main/java/Dafny/$namespaceDir;L/__default.java",
           parameters
         );
+        writeTemplatedFile(
+          "runtimes/java/src/main/java/Dafny/$namespaceDir;L/types/__default.java",
+          parameters
+        );
         if (localServiceTest) {
           writeTemplatedFile(
             "runtimes/java/src/test/java/$namespaceDir;L/internaldafny/wrapped/__default.java",
@@ -523,7 +575,7 @@ public class CodegenEngine {
           .filter(path -> path.toFile().getName().endsWith(".csproj"))
           .map(Path::toString)
       );
-      runCommand(dotnetRoot, args.toArray(String[]::new));
+      runCommandOrThrow(dotnetRoot, args.toArray(String[]::new));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -655,34 +707,33 @@ public class CodegenEngine {
       "Rust code generation is incomplete and may not function correctly!"
     );
 
-    // ...so incomplete it's starting out as a no-op and relying on 100% "patching" :)
+    // TODO: Can't get makefile working yet
+    final var namespacesToGenerate = model
+      .getServiceShapes()
+      .stream()
+      .map(s -> s.getId().getNamespace())
+      .collect(Collectors.toSet());
 
-    // Clear out all contents of src first to make sure if we didn't intend to generate it,
-    // it doesn't show up as generated code. This ensures patching has the right baseline.
-    // It would be great to do this for all languages,
-    // but we're not currently precise enough and do multiple passes
-    // to generate code for things like wrapped services.
-    //
-    // Be sure to NOT delete src/implementation_from_dafny.rs though,
-    // by temporarily moving it out of src/
-    Path outputSrcDir = outputDir.resolve("src");
-    Path implementationFromDafnyPath = outputSrcDir.resolve(
-      "implementation_from_dafny.rs"
+    final MergedServicesGenerator generator = new MergedServicesGenerator(
+      model,
+      serviceShape,
+      namespacesToGenerate,
+      localServiceTest,
+      generationAspects
     );
-    Path tmpPath = null;
-    try {
-      if (Files.exists(implementationFromDafnyPath)) {
-        tmpPath = outputDir.resolve("implementation_from_dafny.rs");
-        Files.move(implementationFromDafnyPath, tmpPath);
-      }
-      software.amazon.smithy.utils.IoUtils.rmdir(outputSrcDir);
-      outputSrcDir.toFile().mkdirs();
-      if (tmpPath != null) {
-        Files.move(tmpPath, implementationFromDafnyPath);
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    generator.generateAllNamespaces(outputDir);
+
+    // TODO: These should be part of the StandardLibrary instead,
+    // but since the Dafny Rust code generator doesn't yet support multiple crates,
+    // we have to inline it instead.
+    writeTemplatedFile(
+      "runtimes/rust/src/standard_library_conversions.rs",
+      Map.of()
+    );
+    writeTemplatedFile(
+      "runtimes/rust/src/standard_library_externs.rs",
+      Map.of()
+    );
 
     handlePatching(TargetLanguage.RUST, outputDir);
   }
@@ -720,13 +771,14 @@ public class CodegenEngine {
         );
         Path outputDirRelative = libraryRoot.relativize(outputDir);
         // Need to ignore the exit code because diff will return 1 if there is a diff
-        String patchContent = runCommandIgnoringExitCode(
+        String patchContent = runCommand(
           libraryRoot,
           "git",
           "diff",
           "-R",
           outputDirRelative.toString()
-        );
+        )
+          .output;
         if (!patchContent.isBlank()) {
           IOUtils.writeToFile(patchContent, patchFile.toFile());
         }
@@ -742,7 +794,13 @@ public class CodegenEngine {
           if (dafnyVersion.compareTo(patchFilePair.getKey()) >= 0) {
             Path patchFile = patchFilePair.getValue();
             LOGGER.info("Applying patch file {}", patchFile);
-            runCommand(libraryRoot, "git", "apply", "-v", patchFile.toString());
+            runCommandOrThrow(
+              libraryRoot,
+              "git",
+              "apply",
+              "-v",
+              patchFile.toString()
+            );
             return;
           }
         }
@@ -752,26 +810,207 @@ public class CodegenEngine {
     }
   }
 
-  private String runCommand(Path workingDir, String... args) {
-    List<String> argsList = List.of(args);
-    StringBuilder output = new StringBuilder();
-    int exitCode = IoUtils.runCommand(
+  private void generateGo() {
+    if (libraryName.isEmpty()) {
+      throw new IllegalArgumentException("Go codegen requires a library name");
+    }
+
+    ObjectNode.Builder goSettingsBuilder = ObjectNode
+      .builder()
+      .withMember("service", serviceShape.getId().toString())
+      .withMember("moduleName", libraryName.get());
+
+    final PluginContext pluginContext = PluginContext
+      .builder()
+      .model(model)
+      .fileManifest(
+        FileManifest.create(targetLangOutputDirs.get(TargetLanguage.GO))
+      )
+      .settings(goSettingsBuilder.build())
+      .build();
+
+    final Map<String, String> smithyNamespaceToGoModuleNameMap = new HashMap<>(
+      dependencyLibraryNames
+    );
+    smithyNamespaceToGoModuleNameMap.put(
+      serviceShape.getId().getNamespace(),
+      libraryName.get()
+    );
+    if (this.awsSdkStyle) {
+      new DafnyGoAwsSdkClientCodegenPlugin(smithyNamespaceToGoModuleNameMap)
+        .run(pluginContext);
+    } else {
+      new DafnyLocalServiceCodegenPlugin(smithyNamespaceToGoModuleNameMap)
+        .run(pluginContext);
+    }
+  }
+
+  private void generatePython() {
+    if (libraryName.isEmpty()) {
+      throw new IllegalArgumentException(
+        "Python codegen requires a module name"
+      );
+    }
+
+    ObjectNode.Builder pythonSettingsBuilder = ObjectNode
+      .builder()
+      .withMember("service", serviceShape.getId().toString())
+      .withMember("module", libraryName.get())
+      // Smithy-Python requires some string to be present here, but this is unused.
+      // Any references to this version are deleted as part of code generation.
+      .withMember("moduleVersion", "0.0.1");
+
+    final PluginContext pluginContext = PluginContext
+      .builder()
+      .model(model)
+      .fileManifest(
+        FileManifest.create(targetLangOutputDirs.get(TargetLanguage.PYTHON))
+      )
+      .settings(pythonSettingsBuilder.build())
+      .build();
+
+    final Map<String, String> smithyNamespaceToPythonModuleNameMap =
+      new HashMap<>();
+    smithyNamespaceToPythonModuleNameMap.put(
+      serviceShape.getId().getNamespace(),
+      libraryName.get()
+    );
+    smithyNamespaceToPythonModuleNameMap.putAll(dependencyLibraryNames);
+
+    if (this.awsSdkStyle) {
+      DafnyPythonAwsSdkClientCodegenPlugin dafnyPythonAwsSdkClientCodegenPlugin =
+        new DafnyPythonAwsSdkClientCodegenPlugin(
+          smithyNamespaceToPythonModuleNameMap
+        );
+      dafnyPythonAwsSdkClientCodegenPlugin.execute(pluginContext);
+    } else if (this.localServiceTest) {
+      DafnyPythonWrappedLocalServiceClientCodegenPlugin pythonClientCodegenPlugin =
+        new DafnyPythonWrappedLocalServiceClientCodegenPlugin(
+          smithyNamespaceToPythonModuleNameMap
+        );
+      pythonClientCodegenPlugin.execute(pluginContext);
+    } else {
+      DafnyPythonLocalServiceClientCodegenPlugin pythonClientCodegenPlugin =
+        new DafnyPythonLocalServiceClientCodegenPlugin(
+          smithyNamespaceToPythonModuleNameMap
+        );
+      pythonClientCodegenPlugin.execute(pluginContext);
+    }
+  }
+
+  public void patchAfterTranspiling() {
+    for (final TargetLanguage lang : targetLangOutputDirs.keySet()) {
+      switch (lang) {
+        case RUST -> patchRustAfterTranspiling();
+        default -> {}
+      }
+    }
+  }
+
+  private static final TokenTree EXTRA_SINGLE_CRATE_DECLARATIONS = TokenTree.of(
+    """
+    mod standard_library_conversions;
+    mod standard_library_externs;
+    """
+  );
+
+  private void patchRustAfterTranspiling() {
+    final MergedServicesGenerator generator = new MergedServicesGenerator(
+      model,
+      serviceShape,
+      namespaces,
+      localServiceTest,
+      generationAspects
+    );
+
+    final TokenTree extraRootServiceDeclarations = generator
+      .generatorForShape(serviceShape)
+      .topLevelModuleDeclarations();
+    String extraDeclarations = TokenTree
+      .of(extraRootServiceDeclarations, EXTRA_SINGLE_CRATE_DECLARATIONS)
+      .lineSeparated()
+      .toString();
+    if (!awsSdkStyle && serviceShape.hasTrait(LocalServiceTrait.class)) {
+      extraDeclarations =
+        extraDeclarations +
+        System.lineSeparator() +
+        extraTopLevelDeclarationsForLocalService(serviceShape) +
+        System.lineSeparator();
+    }
+    final Path implementationFromDafnyPath = libraryRoot
+      .resolve("runtimes")
+      .resolve("rust")
+      .resolve("src")
+      .resolve("implementation_from_dafny.rs");
+    try {
+      final List<String> lines = Files.readAllLines(
+        implementationFromDafnyPath
+      );
+      final int firstModDeclIndex = IntStream
+        .range(0, lines.size())
+        .filter(i -> lines.get(i).trim().startsWith("pub mod"))
+        .findFirst()
+        .getAsInt();
+      lines.add(firstModDeclIndex, extraDeclarations);
+      Files.write(implementationFromDafnyPath, lines);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private String extraTopLevelDeclarationsForLocalService(
+    ServiceShape serviceShape
+  ) {
+    final String configStructName = serviceShape
+      .expectTrait(LocalServiceTrait.class)
+      .getConfigId()
+      .getName();
+    final String configSnakeCase = toSnakeCase(configStructName);
+
+    return IOUtils.evalTemplate(
+      """
+      pub use client::Client;
+      pub use types::$configSnakeCase:L::$configStructName:L;
+      """,
+      Map.of(
+        "configSnakeCase",
+        configSnakeCase,
+        "configStructName",
+        configStructName,
+        "sharedTopLevelDecls",
+        RustLibraryShimGenerator.TOP_LEVEL_MOD_DECLS
+      )
+    );
+  }
+
+  private record CommandResult(int exitCode, String output) {}
+
+  /**
+   * Runs the given command and throws an exception if the exit code is nonzero.
+   */
+  private static String runCommandOrThrow(Path workingDir, String... args) {
+    final CommandResult result = runCommand(workingDir, args);
+    if (result.exitCode != 0) {
+      throw new RuntimeException(
+        "Command failed: " + List.of(args) + "\n" + result.output
+      );
+    }
+    return result.output;
+  }
+
+  /**
+   * Runs the given command.
+   */
+  private static CommandResult runCommand(Path workingDir, String... args) {
+    final List<String> argsList = List.of(args);
+    final StringBuilder output = new StringBuilder();
+    final int exitCode = IoUtils.runCommand(
       argsList,
       workingDir,
       output,
       Collections.emptyMap()
     );
-    if (exitCode != 0) {
-      throw new RuntimeException("Command failed: " + argsList + "\n" + output);
-    }
-    return output.toString();
-  }
-
-  private String runCommandIgnoringExitCode(Path workingDir, String... args) {
-    List<String> argsList = List.of(args);
-    StringBuilder output = new StringBuilder();
-    IoUtils.runCommand(argsList, workingDir, output, Collections.emptyMap());
-    return output.toString();
+    return new CommandResult(exitCode, output.toString());
   }
 
   private Path standardLibraryPath() {
@@ -815,12 +1054,12 @@ public class CodegenEngine {
     private boolean fromSmithyBuildPlugin = false;
     private Model serviceModel;
     private Path[] dependentModelPaths;
-    private String namespace;
+    private Set<String> namespaces;
     private Map<TargetLanguage, Path> targetLangOutputDirs =
       Collections.emptyMap();
     private Map<TargetLanguage, Path> targetLangTestOutputDirs =
       Collections.emptyMap();
-    private DafnyVersion dafnyVersion = new DafnyVersion(4, 1, 0);
+    private DafnyVersion dafnyVersion;
     private Path propertiesFile;
     private AwsSdkVersion javaAwsSdkVersion = AwsSdkVersion.V2;
     private Path includeDafnyFile;
@@ -830,6 +1069,8 @@ public class CodegenEngine {
     private Path libraryRoot;
     private Path patchFilesDir;
     private boolean updatePatchFiles = false;
+    private Map<String, String> dependencyLibraryNames;
+    private String libraryName;
 
     public Builder() {}
 
@@ -850,10 +1091,28 @@ public class CodegenEngine {
     }
 
     /**
-     * Sets the Smithy namespace for which to generate code (e.g. "com.foo").
+     * Sets the Smithy namespaces for which to generate code (e.g. "com.foo").
      */
-    public Builder withNamespace(final String namespace) {
-      this.namespace = namespace;
+    public Builder withNamespaces(final Set<String> namespaces) {
+      this.namespaces = namespaces;
+      return this;
+    }
+
+    /**
+     * Sets the directories in which to search for dependent model file(s).
+     */
+    public Builder withDependencyLibraryNames(
+      final Map<String, String> dependencyLibraryNames
+    ) {
+      this.dependencyLibraryNames = dependencyLibraryNames;
+      return this;
+    }
+
+    /**
+     * Sets the Python module name for any generated Python code.
+     */
+    public Builder withLibraryName(final String libraryName) {
+      this.libraryName = libraryName;
       return this;
     }
 
@@ -989,12 +1248,32 @@ public class CodegenEngine {
 
     public CodegenEngine build() {
       final Model serviceModel = Objects.requireNonNull(this.serviceModel);
+
+      if (this.namespaces.isEmpty()) {
+        throw new IllegalStateException(
+          "at least one namespace must be provided"
+        );
+      }
+      if (this.namespaces.size() > 1) {
+        for (final TargetLanguage targetLanguage : this.targetLangOutputDirs.keySet()) {
+          if (!targetLanguage.equals(TargetLanguage.RUST)) {
+            throw new IllegalStateException(
+              "generating for %s does not support multiple namespaces".formatted(
+                  targetLanguage
+                )
+            );
+          }
+        }
+      }
+
       final Path[] dependentModelPaths = this.dependentModelPaths == null
         ? new Path[] {}
         : this.dependentModelPaths.clone();
-      if (Strings.isNullOrEmpty(this.namespace)) {
-        throw new IllegalStateException("No namespace provided");
-      }
+
+      final Map<String, String> dependencyLibraryNames =
+        this.dependencyLibraryNames == null
+          ? new HashMap<>()
+          : this.dependencyLibraryNames;
 
       final Map<TargetLanguage, Path> targetLangOutputDirsRaw =
         Objects.requireNonNull(this.targetLangOutputDirs);
@@ -1012,9 +1291,30 @@ public class CodegenEngine {
       final Map<TargetLanguage, Path> targetLangTestOutputDirs =
         ImmutableMap.copyOf(targetLangTestOutputDirsRaw);
 
-      final DafnyVersion dafnyVersion = Objects.requireNonNull(
-        this.dafnyVersion
-      );
+      DafnyVersion dafnyVersion = Optional
+        .ofNullable(this.dafnyVersion)
+        .orElseGet(CodegenEngine::getDafnyVersionFromDafny);
+      if (dafnyVersion.compareTo(MIN_DAFNY_VERSION) < 0) {
+        throw new IllegalStateException(
+          "A minimum Dafny version of " +
+          MIN_DAFNY_VERSION.unparse() +
+          " is required, but found " +
+          dafnyVersion.unparse()
+        );
+      }
+      // If the version has not been released yet,
+      // downgrade it. Otherwise, the system will not find runtime libraries
+      // with the same version.
+      // The better fix for this is for Dafny to pre-release
+      if (dafnyVersion.compareTo(MAX_DAFNY_VERSION) > 0) {
+        LOGGER.warn(
+          "Dafny version {} appears to be unreleased, downgrading to {} to ensure runtimes are available",
+          dafnyVersion.unparse(),
+          MAX_DAFNY_VERSION.unparse()
+        );
+        dafnyVersion = MAX_DAFNY_VERSION;
+      }
+
       final Optional<Path> propertiesFile = Optional
         .ofNullable(this.propertiesFile)
         .map(path -> path.toAbsolutePath().normalize());
@@ -1040,6 +1340,10 @@ public class CodegenEngine {
         );
       }
 
+      final Optional<String> libraryName = Optional.ofNullable(
+        this.libraryName
+      );
+
       final Path libraryRoot = this.libraryRoot.toAbsolutePath().normalize();
 
       final Optional<Path> patchFilesDir = Optional
@@ -1055,7 +1359,7 @@ public class CodegenEngine {
         fromSmithyBuildPlugin,
         serviceModel,
         dependentModelPaths,
-        this.namespace,
+        this.namespaces,
         targetLangOutputDirs,
         targetLangTestOutputDirs,
         dafnyVersion,
@@ -1067,16 +1371,29 @@ public class CodegenEngine {
         this.generationAspects,
         libraryRoot,
         patchFilesDir,
-        updatePatchFiles
+        updatePatchFiles,
+        dependencyLibraryNames,
+        libraryName
       );
     }
+  }
+
+  public static DafnyVersion getDafnyVersionFromDafny() {
+    String versionString = runCommandOrThrow(
+      Path.of("."),
+      "dafny",
+      "--version"
+    );
+    return DafnyVersion.parse(versionString.trim());
   }
 
   public enum TargetLanguage {
     DAFNY,
     JAVA,
     DOTNET,
+    GO,
     RUST,
+    PYTHON,
   }
 
   public enum GenerationAspect {

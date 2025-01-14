@@ -17,8 +17,10 @@ import software.amazon.polymorph.traits.LocalServiceTrait;
 import software.amazon.polymorph.traits.MutableLocalStateTrait;
 import software.amazon.polymorph.traits.PositionalTrait;
 import software.amazon.polymorph.traits.ReferenceTrait;
+import software.amazon.smithy.codegen.core.TopologicalIndex;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.loader.ModelAssembler;
+import software.amazon.smithy.model.neighbor.Walker;
 import software.amazon.smithy.model.shapes.*;
 import software.amazon.smithy.model.traits.DocumentationTrait;
 import software.amazon.smithy.model.traits.EnumTrait;
@@ -34,7 +36,7 @@ public class ModelUtils {
   // The spec recommends a similar stricter definition for consistency (uppercase instead of title-case):
   // https://smithy.io/1.0/spec/core/constraint-traits.html?highlight=enum#enum-trait
   private static final Pattern ENUM_NAME_PATTERN = Pattern.compile(
-    "^[A-Z]+[A-Za-z_0-9]*$"
+    "^[A-Za-z_0-9]*$"
   );
 
   /**
@@ -63,6 +65,20 @@ public class ModelUtils {
     final StructureShape structureShape
   ) {
     return structureShape.getAllMembers().values().stream();
+  }
+
+  /**
+   * @return a stream of members of the given structure shape, sorted by name
+   */
+  public static Stream<MemberShape> streamStructureMembersSorted(
+    final StructureShape structureShape
+  ) {
+    return structureShape
+      .getAllMembers()
+      .entrySet()
+      .stream()
+      .sorted(Map.Entry.comparingByKey())
+      .map(Map.Entry::getValue);
   }
 
   public static Stream<MemberShape> streamUnionMembers(
@@ -97,13 +113,46 @@ public class ModelUtils {
   }
 
   /**
+   * Returns a stream of enum shapes in the given namespace.
+   * These include both Smithy v2 enums,
+   * and Smithy v1 @enum strings converted to {@link EnumShape}s.
+   */
+  public static Stream<EnumShape> streamEnumShapes(
+    final Model model,
+    final String namespace
+  ) {
+    @SuppressWarnings("deprecation")
+    final Stream<EnumShape> v1Enums = model
+      .getStringShapesWithTrait(EnumTrait.class)
+      .stream()
+      .map(ModelUtils::stringToEnumShape);
+    final Stream<EnumShape> v2Enums = model.getEnumShapes().stream();
+    return Stream
+      .concat(v1Enums, v2Enums)
+      .filter(shape -> shape.getId().getNamespace().equals(namespace));
+  }
+
+  public static EnumShape stringToEnumShape(final StringShape stringShape) {
+    return EnumShape
+      .fromStringShape(stringShape)
+      .orElseThrow(() ->
+        new UnsupportedOperationException(
+          "Could not convert %s to an enum".formatted(stringShape.getId())
+        )
+      );
+  }
+
+  /**
    * @return true if the given shape ID is in the given service's namespace
    */
   public static boolean isInServiceNamespace(
-    final ShapeId shapeId,
+    final ToShapeId shapeId,
     final ServiceShape serviceShape
   ) {
-    return shapeId.getNamespace().equals(serviceShape.getId().getNamespace());
+    return shapeId
+      .toShapeId()
+      .getNamespace()
+      .equals(serviceShape.getId().getNamespace());
   }
 
   /**
@@ -412,7 +461,6 @@ public class ModelUtils {
     Set<List<ShapeId>> pathsToShapes = new LinkedHashSet<>(
       new LinkedHashSet<>()
     );
-    Set<ShapeId> visited = new HashSet<>();
 
     // Breadth-first search via getDependencyShapeIds
     final Queue<List<ShapeId>> toTraverse = new LinkedList<>(
@@ -421,16 +469,16 @@ public class ModelUtils {
     while (!toTraverse.isEmpty()) {
       final List<ShapeId> currentShapeIdWithPath = toTraverse.remove();
 
-      // to avoid cycles, only keep the first list with a given last element
-      ShapeId last = currentShapeIdWithPath.get(
-        currentShapeIdWithPath.size() - 1
-      );
-      if (visited.add(last) && pathsToShapes.add(currentShapeIdWithPath)) {
+      if (pathsToShapes.add(currentShapeIdWithPath)) {
         final Shape currentShape = model.expectShape(
           currentShapeIdWithPath.get(currentShapeIdWithPath.size() - 1)
         );
         final List<List<ShapeId>> dependencyShapeIdsWithPaths =
           getDependencyShapeIds(currentShape)
+            // to avoid cycles, append only those dependencyShapeId which are not already in the path currentShapeIdWithPath
+            .filter(dependencyShapeId ->
+              !currentShapeIdWithPath.contains(dependencyShapeId)
+            )
             .map(dependencyShapeId ->
               Stream
                 .concat(
@@ -530,10 +578,11 @@ public class ModelUtils {
   }
 
   /**
-   * @param shapeId ShapeId that might have positional or reference trait
+   * @param toShapeId ToShapeId that might have positional or reference trait
    * @return Fully de-referenced shapeId and naive shapeId as a ResolvedShapeId
    */
-  public static ResolvedShapeId resolveShape(ShapeId shapeId, Model model) {
+  public static ResolvedShapeId resolveShape(ToShapeId toShapeId, Model model) {
+    final ShapeId shapeId = toShapeId.toShapeId();
     if (shapeId.equals(SMITHY_API_UNIT)) {
       return new ResolvedShapeId(shapeId, shapeId);
     }
@@ -591,10 +640,155 @@ public class ModelUtils {
       );
   }
 
+  /**
+   * Return a builder for the provided shape.
+   * @param shape
+   * @return
+   */
+  public static AbstractShapeBuilder<?, ?> getBuilderForShape(Shape shape) {
+    // This is painful, but there is nothing like `shape.getUnderlyingShapeType`...
+    // instead, check every possible shape for its builder...
+    AbstractShapeBuilder<?, ?> builder;
+    if (shape.isBlobShape()) {
+      builder = shape.asBlobShape().get().toBuilder();
+    } else if (shape.isBooleanShape()) {
+      builder = shape.asBooleanShape().get().toBuilder();
+    } else if (shape.isDocumentShape()) {
+      builder = shape.asDocumentShape().get().toBuilder();
+    } else if (shape.isStringShape()) {
+      builder = shape.asStringShape().get().toBuilder();
+    } else if (shape.isTimestampShape()) {
+      builder = shape.asTimestampShape().get().toBuilder();
+    } else if (shape.isByteShape()) {
+      builder = shape.asByteShape().get().toBuilder();
+    } else if (shape.isIntegerShape()) {
+      builder = shape.asIntegerShape().get().toBuilder();
+    } else if (shape.isFloatShape()) {
+      builder = shape.asFloatShape().get().toBuilder();
+    } else if (shape.isBigIntegerShape()) {
+      builder = shape.asBigIntegerShape().get().toBuilder();
+    } else if (shape.isShortShape()) {
+      builder = shape.asShortShape().get().toBuilder();
+    } else if (shape.isLongShape()) {
+      builder = shape.asLongShape().get().toBuilder();
+    } else if (shape.isDoubleShape()) {
+      builder = shape.asDoubleShape().get().toBuilder();
+    } else if (shape.isBigDecimalShape()) {
+      builder = shape.asBigDecimalShape().get().toBuilder();
+    } else if (shape.isListShape()) {
+      builder = shape.asListShape().get().toBuilder();
+    } else if (shape.isSetShape()) {
+      builder = shape.asSetShape().get().toBuilder();
+    } else if (shape.isMapShape()) {
+      builder = shape.asMapShape().get().toBuilder();
+    } else if (shape.isStructureShape()) {
+      builder = shape.asStructureShape().get().toBuilder();
+    } else if (shape.isUnionShape()) {
+      builder = shape.asUnionShape().get().toBuilder();
+    } else if (shape.isServiceShape()) {
+      builder = shape.asServiceShape().get().toBuilder();
+    } else if (shape.isOperationShape()) {
+      builder = shape.asOperationShape().get().toBuilder();
+    } else if (shape.isResourceShape()) {
+      builder = shape.asResourceShape().get().toBuilder();
+    } else if (shape.isMemberShape()) {
+      builder = shape.asMemberShape().get().toBuilder();
+    } else if (shape.isEnumShape()) {
+      builder = shape.asEnumShape().get().toBuilder();
+    } else if (shape.isIntEnumShape()) {
+      builder = shape.asIntEnumShape().get().toBuilder();
+    } else {
+      // Unfortunately, there is no "default" shape...
+      // The above should cover all shapes; if not, new shapes need to be added above.
+      throw new IllegalArgumentException(
+        "Unable to process @javadoc trait on unsupported shape type: " + shape
+      );
+    }
+    return builder;
+  }
+
   public static Optional<String> getDocumentationOrJavadoc(Shape shape) {
     return shape
       .getTrait(DocumentationTrait.class)
       .map(StringTrait::getValue)
       .or(() -> shape.getTrait(JavaDocTrait.class).map(StringTrait::getValue));
+  }
+
+  public static List<Shape> getTopologicallyOrderedOrphanedShapesForService(
+    ServiceShape serviceShape,
+    Model model
+  ) {
+    // Copy-paste Smithy-Core's shape discovery mechanism:
+    // Walk the model starting from the serviceShape.
+    // This generates shapes that are "known" to Smithy-Core's `generateShapesInService`.
+    Set<Shape> nonOrphanedShapes = new Walker(model).walkShapes(serviceShape);
+
+    // orphanedShapes = (all shapes in model) - (non-orphaned shapes)
+    Set<Shape> orphanedShapes = model.shapes().collect(Collectors.toSet());
+    orphanedShapes.removeAll(nonOrphanedShapes);
+
+    // Copy-paste Smithy-Core's shape ordering mechanism for topological ordering
+    // (Python needs topological ordering to write shapes in order; other languages might not matter)
+    List<Shape> orderedShapes = new ArrayList();
+
+    TopologicalIndex topologicalIndex = TopologicalIndex.of(model);
+
+    // Get orphaned shapes under the following conditions:
+    // 1. In the same namespace as the service. (Should only generate shapes in this service.)
+    // 2. Not a member shape. (Member shapes don't have their own shapes generated for them.)
+    for (Shape shape : topologicalIndex.getOrderedShapes()) {
+      if (
+        orphanedShapes.contains(shape) &&
+        ModelUtils.isInServiceNamespace(shape, serviceShape) &&
+        !shape.isMemberShape()
+      ) {
+        orderedShapes.add(shape);
+      }
+    }
+    for (Shape shape : topologicalIndex.getRecursiveShapes()) {
+      if (
+        orphanedShapes.contains(shape) &&
+        ModelUtils.isInServiceNamespace(shape, serviceShape) &&
+        !shape.isMemberShape()
+      ) {
+        orderedShapes.add(shape);
+      }
+    }
+
+    return orderedShapes;
+  }
+
+  public static Stream<ServiceShape> streamLocalServiceDependencies(
+    final Model model,
+    final ServiceShape serviceShape
+  ) {
+    final Optional<LocalServiceTrait> localServiceTrait = serviceShape.getTrait(
+      LocalServiceTrait.class
+    );
+    if (!localServiceTrait.isPresent()) {
+      return Stream.empty();
+    }
+
+    final Set<ShapeId> dependentIds = localServiceTrait.get().getDependencies();
+    if (dependentIds == null) {
+      return Stream.empty();
+    }
+
+    return dependentIds
+      .stream()
+      .map(id -> model.expectShape(id, ServiceShape.class));
+  }
+
+  public static StructureShape getConfigShape(
+    final Model model,
+    final ServiceShape serviceShape
+  ) {
+    final Optional<LocalServiceTrait> localServiceTrait = serviceShape.getTrait(
+      LocalServiceTrait.class
+    );
+    return model.expectShape(
+      localServiceTrait.get().getConfigId(),
+      StructureShape.class
+    );
   }
 }

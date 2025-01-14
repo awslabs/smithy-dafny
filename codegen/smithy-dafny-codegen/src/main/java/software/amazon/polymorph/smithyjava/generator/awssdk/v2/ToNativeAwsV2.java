@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 package software.amazon.polymorph.smithyjava.generator.awssdk.v2;
 
+import static software.amazon.polymorph.smithyjava.nameresolver.Dafny.datatypeConstructorIs;
+import static software.amazon.polymorph.smithyjava.nameresolver.Dafny.datatypeDeconstructor;
 import static software.amazon.smithy.utils.StringUtils.capitalize;
 
 import com.squareup.javapoet.ClassName;
@@ -11,19 +13,25 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Modifier;
+import software.amazon.polymorph.smithydafny.DafnyNameResolver;
 import software.amazon.polymorph.smithyjava.MethodReference;
 import software.amazon.polymorph.smithyjava.generator.ToNative;
 import software.amazon.polymorph.smithyjava.nameresolver.AwsSdkDafnyV2;
 import software.amazon.polymorph.smithyjava.nameresolver.AwsSdkNativeV2;
 import software.amazon.polymorph.smithyjava.nameresolver.Dafny;
+import software.amazon.polymorph.smithyjava.unmodeled.OpaqueError;
+import software.amazon.polymorph.smithyjava.unmodeled.OpaqueWithTextError;
+import software.amazon.polymorph.traits.LocalServiceTrait;
 import software.amazon.polymorph.utils.AwsSdkNameResolverHelpers;
 import software.amazon.polymorph.utils.DafnyNameResolverHelpers;
 import software.amazon.polymorph.utils.ModelUtils;
@@ -176,6 +184,8 @@ public class ToNativeAwsV2 extends ToNative {
       .addMethods(convertServiceErrors)
       .addMethod(modeledService(subject.serviceShape))
       .addMethod(errorOpaque())
+      .addMethod(errorOpaqueWithText())
+      .addMethod(dafnyError())
       .build();
   }
 
@@ -230,6 +240,7 @@ public class ToNativeAwsV2 extends ToNative {
       case MAP -> modeledMap(shape.asMapShape().get());
       case STRUCTURE -> modeledStructure(shape.asStructureShape().get());
       case UNION -> modeledUnion(shape.asUnionShape().get());
+      case ENUM -> generateConvertEnum(shapeId);
       default -> throw new UnsupportedOperationException(
         "ShapeId %s is of Type %s, which is not yet supported for ToNative".formatted(
             shapeId,
@@ -245,7 +256,7 @@ public class ToNativeAwsV2 extends ToNative {
     ShapeId shapeId,
     ShapeType shapeType
   ) {
-    // BinarySetAttributeValue conversion is special.
+    // List of Blob conversion is special.
     // The input Dafny type is DafnySequence<? extends DafnySequence<? extends Byte>>.
     // The output native type is List<SdkBytes>.
     // dafny-java-conversion can convert most input types directly to the output types;
@@ -257,7 +268,10 @@ public class ToNativeAwsV2 extends ToNative {
     // This is the only time when Polymorph needs to convert a list of a Dafny type to a list
     //     of a type that Polymorph does not know about. So this is a special case and warrants
     //     its own generation logic.
-    if (shapeId.getName().contains("BinarySetAttributeValue")) {
+    final Shape memberTarget = subject.model.expectShape(
+      memberShape.getTarget()
+    );
+    if (memberTarget.isBlobShape()) {
       ParameterSpec parameterSpec = ParameterSpec
         .builder(subject.dafnyNameResolver.typeForShape(shapeId), VAR_INPUT)
         .build();
@@ -540,18 +554,31 @@ public class ToNativeAwsV2 extends ToNative {
         VAR_INPUT,
         Dafny.datatypeDeconstructor("obj")
       )
-      // If obj is ANY Exception
+      // If obj is A RuntimeException
       .nextControlFlow(
         "else if ($L.$L instanceof $T)",
         VAR_INPUT,
         Dafny.datatypeDeconstructor("obj"),
-        Exception.class
+        RuntimeException.class
       )
       .addStatement(
         "return ($T) $L.$L",
         RuntimeException.class,
         VAR_INPUT,
         Dafny.datatypeDeconstructor("obj")
+      )
+      // If obj is A Throwable
+      .nextControlFlow(
+        "else if ($L.$L instanceof $T)",
+        VAR_INPUT,
+        Dafny.datatypeDeconstructor("obj"),
+        Throwable.class
+      )
+      .addStatement(
+        "return new RuntimeException(String.format($S, (Throwable) dafnyValue.dtor_obj()))",
+        "Unknown error thrown while calling " +
+        AwsSdkNativeV2.titleForService(subject.serviceShape) +
+        ". %s"
       )
       .endControlFlow()
       // If obj is not ANY exception and String is not set, Give Up with IllegalStateException
@@ -564,5 +591,121 @@ public class ToNativeAwsV2 extends ToNative {
         VAR_INPUT
       )
       .build();
+  }
+
+  protected MethodSpec errorOpaqueWithText() {
+    final String methodName = "Error";
+    final TypeName inputType =
+      subject.dafnyNameResolver.classForOpaqueWithTextError();
+    final ClassName returnType = ClassName.get(RuntimeException.class);
+    return initializeMethodSpec(methodName, inputType, returnType)
+      .addComment("While the first two cases are logically identical,")
+      .addComment("there is a semantic distinction.")
+      .addComment(
+        "An un-modeled Service Error is different from a Java Heap Exhaustion error."
+      )
+      .addComment("In the future, Smithy-Dafny MAY allow for this distinction.")
+      .addComment(
+        "Which would allow Dafny developers to treat the two differently."
+      )
+      // If obj is an instance of the Service's Base Exception
+      .beginControlFlow(
+        "if ($L.$L instanceof $T)",
+        VAR_INPUT,
+        Dafny.datatypeDeconstructor("obj"),
+        subject.nativeNameResolver.baseErrorForService()
+      )
+      .addStatement(
+        "return ($T) $L.$L",
+        subject.nativeNameResolver.baseErrorForService(),
+        VAR_INPUT,
+        Dafny.datatypeDeconstructor("obj")
+      )
+      // If obj is A RuntimeException
+      .nextControlFlow(
+        "else if ($L.$L instanceof $T)",
+        VAR_INPUT,
+        Dafny.datatypeDeconstructor("obj"),
+        RuntimeException.class
+      )
+      .addStatement(
+        "return ($T) $L.$L",
+        RuntimeException.class,
+        VAR_INPUT,
+        Dafny.datatypeDeconstructor("obj")
+      )
+      // If obj is A Throwable
+      .nextControlFlow(
+        "else if ($L.$L instanceof $T)",
+        VAR_INPUT,
+        Dafny.datatypeDeconstructor("obj"),
+        Throwable.class
+      )
+      .addStatement(
+        "return new RuntimeException(String.format($S, (Throwable) dafnyValue.dtor_obj()))",
+        "Unknown error thrown while calling " +
+        AwsSdkNativeV2.titleForService(subject.serviceShape) +
+        ". %s"
+      )
+      .endControlFlow()
+      // If obj is not ANY exception and String is not set, Give Up with IllegalStateException
+      .addStatement(
+        "return new $T(String.format($S, $L))",
+        IllegalStateException.class,
+        "Unknown error thrown while calling " +
+        AwsSdkNativeV2.titleForService(subject.serviceShape) +
+        ". %s",
+        VAR_INPUT
+      )
+      .build();
+  }
+
+  MethodSpec dafnyError() {
+    ClassName inputType = subject.dafnyNameResolver.abstractClassForError();
+    ClassName returnType = ClassName.get(RuntimeException.class);
+    MethodSpec.Builder method = super.initializeErrorMethodSpec(
+      inputType,
+      returnType
+    );
+    // We need a list of `<datatypeConstructor>`.
+    // We have the logic exposed to look up the ClassName,
+    // which, as a string, will be <modelPackage>.Error_<datatypeConstructor>.
+    // We get the "simpleName" (i.e.: Error_<datatypeConstructor>),
+    // and, finally, replace "Error_" with nothing, thus getting just "<datatypeConstructor>".
+    List<String> allDafnyErrorConstructors = ModelUtils
+      .streamServiceErrors(subject.model, subject.serviceShape)
+      .map(subject.dafnyNameResolver::classForError)
+      .map(ClassName::simpleName)
+      .map(simpleName -> simpleName.replaceFirst("Error_", ""))
+      .collect(Collectors.toCollection(ArrayList::new)); // We need a mutable list, so we can't use stream().toList()
+    allDafnyErrorConstructors.add("Opaque");
+    allDafnyErrorConstructors.add("OpaqueWithText");
+    allDafnyErrorConstructors.forEach(constructorName ->
+      method
+        .beginControlFlow(
+          "if ($L.$L())",
+          VAR_INPUT,
+          datatypeConstructorIs(constructorName)
+        )
+        .addStatement(
+          "return $T.Error(($T) $L)",
+          thisClassName,
+          subject.dafnyNameResolver.classForDatatypeConstructor(
+            "Error",
+            constructorName
+          ),
+          VAR_INPUT
+        )
+        .endControlFlow()
+    );
+    method.addStatement(
+      """
+      // TODO This should indicate a codegen bug; every error Should have been taken care of.
+      return new IllegalStateException(
+        String.format("Unknown error thrown while calling service. %s", dafnyValue)
+      )
+      """
+    );
+    return method.build();
   }
 }
