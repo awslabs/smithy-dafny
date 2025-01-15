@@ -49,11 +49,13 @@ public class UnionGenerator {
       .values()
       .stream()
       .filter(memberShape -> !isEventStreamErrorMember(memberShape))
+      .sorted()
       .collect(Collectors.toCollection(TreeSet::new));
 
     memberShapes
       .stream()
       .map(symbolProvider::toMemberName)
+      .sorted()
       .forEach(name -> {
         writer.write("//  " + name);
       });
