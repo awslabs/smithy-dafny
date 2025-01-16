@@ -9,9 +9,9 @@ use std::rc::Rc;
 pub mod internal_ExternDefinitions_Compile {
 
     use crate::conversions::*;
-    use crate::simple::orphaned::internaldafny::types as internaldafny_types;
     use crate::implementation_from_dafny::_ExternDefinitions_Compile::_default;
     use crate::implementation_from_dafny::_OrphanedResource_Compile::*;
+    use crate::simple::orphaned::internaldafny::types as internaldafny_types;
     use crate::simple::orphaned::internaldafny::types::*;
     use crate::types::*;
 
@@ -33,7 +33,8 @@ pub mod internal_ExternDefinitions_Compile {
 
         pub fn CallNativeOrphanedResource(
             dafny_resource: &Object<dyn IOrphanedResource>,
-        ) -> Rc<Result<Rc<internaldafny_types::OrphanedResourceOperationOutput>, Rc<Error>>> {
+        ) -> Rc<Result<Rc<internaldafny_types::OrphanedResourceOperationOutput>, Rc<Error>>>
+        {
             let native_resource_ref =
                 crate::conversions::orphaned_resource::from_dafny(dafny_resource.clone());
             let native_resource = native_resource_ref.inner.borrow();
@@ -51,11 +52,12 @@ pub mod internal_ExternDefinitions_Compile {
                     native_output.unwrap(),
                 );
 
-            ::std::rc::Rc::new(
-                Result::<Rc<internaldafny_types::OrphanedResourceOperationOutput>, Rc<Error>>::Success {
-                    value: dafny_output,
-                },
-            )
+            ::std::rc::Rc::new(Result::<
+                Rc<internaldafny_types::OrphanedResourceOperationOutput>,
+                Rc<Error>,
+            >::Success {
+                value: dafny_output,
+            })
         }
 
         pub fn CallNativeOrphanedError(dafny_error: &Rc<Error>) -> Rc<Error> {
