@@ -432,16 +432,10 @@ public class DafnyLocalServiceTypeConversionProtocol
 
   public void generateOrphanShapeSerializer(
     final GenerationContext context,
-    final Shape currentShape,
+    final Shape shape,
     final Set<ShapeId> alreadyVisited,
     ServiceShape serviceShape
   ) {
-    final Shape shape;
-    if (currentShape.hasTrait(ReferenceTrait.class)) {
-      return;
-    } else {
-      shape = currentShape;
-    }
     if (alreadyVisited.contains(shape.toShapeId())) {
       return;
     }
@@ -458,8 +452,14 @@ public class DafnyLocalServiceTypeConversionProtocol
       ""
     );
     final var writerDelegator = context.writerDelegator();
-    final String outputType;
+    String outputType;
     final var inputSymbol = context.symbolProvider().toSymbol(shape);
+    String inputType = GoCodegenUtils.getType(inputSymbol, shape, true);
+    Boolean isPointable = context
+            .symbolProvider()
+            .toSymbol(shape)
+            .getProperty(POINTABLE, Boolean.class)
+            .orElse(false);
     alreadyVisited.add(shape.toShapeId());
     if (shape.hasTrait(PositionalTrait.class)) {
       // Output type in To Dafny should be unwrapped
@@ -476,6 +476,57 @@ public class DafnyLocalServiceTypeConversionProtocol
     } else {
       outputType = DafnyNameResolver.getDafnyType(shape, inputSymbol);
     }
+
+    if (shape.hasTrait(ReferenceTrait.class)) {
+      final var referenceTrait = shape.expectTrait(
+        ReferenceTrait.class
+      );
+      final var resourceOrService = context
+        .model()
+        .expectShape(referenceTrait.getReferentId());
+      isPointable =
+        context
+          .symbolProvider()
+          .toSymbol(resourceOrService)
+          .getProperty(POINTABLE, Boolean.class)
+          .orElse(false);
+      if (resourceOrService.isServiceShape()) {
+        if (resourceOrService.hasTrait(ServiceTrait.class)) {
+          outputType =
+              DafnyNameResolver.getDafnyInterfaceClient(
+                resourceOrService.asServiceShape().get(),
+                resourceOrService.getTrait(ServiceTrait.class).get()
+              );
+          inputType =
+            GoCodegenUtils.getType(
+              context.symbolProvider().toSymbol(resourceOrService),
+              resourceOrService,
+              true
+            );
+        } else {
+          outputType =
+              DafnyNameResolver.getDafnyInterfaceClient(
+                resourceOrService
+              );
+              System.out.println("Here");
+              System.out.println(DafnyNameResolver.getDafnyInterfaceClient(
+                resourceOrService
+              ));
+              System.out.println(inputToDafnyMethodName);
+          inputType =
+            SmithyNameResolver
+              .shapeNamespace(resourceOrService)
+              .concat(".")
+              .concat(
+                context.symbolProvider().toSymbol(serviceShape).getName()
+              );
+        }
+      }
+    }
+
+    inputType = isPointable ? "*".concat(inputType) : inputType;
+    final var iptype = inputType;
+    final var optype = outputType;
     writerDelegator.useFileWriter(
       "%s/%s".formatted(
           SmithyNameResolver.shapeNamespace(serviceShape),
@@ -495,9 +546,9 @@ public class DafnyLocalServiceTypeConversionProtocol
               ${C|}
           }""",
           inputToDafnyMethodName,
-          GoCodegenUtils.getType(inputSymbol, shape, true),
+          iptype,
           // SmithyNameResolver.getSmithyType(shape, inputSymbol),
-          outputType,
+          optype,
           writer.consumer(w -> {
             final String shapeVisitorOutput = shape.accept(
               new SmithyToDafnyShapeVisitor(
@@ -915,16 +966,10 @@ public class DafnyLocalServiceTypeConversionProtocol
 
   public void generateOrphanShapeDeserializer(
     final GenerationContext context,
-    final Shape currentShape,
+    final Shape shape,
     final Set<ShapeId> alreadyVisited,
     ServiceShape serviceShape
   ) {
-    final Shape shape;
-    if (currentShape.hasTrait(ReferenceTrait.class)) {
-      return;
-    } else {
-      shape = currentShape;
-    }
     if (alreadyVisited.contains(shape.toShapeId())) {
       return;
     }
@@ -936,25 +981,41 @@ public class DafnyLocalServiceTypeConversionProtocol
       return;
     }
     final var writerDelegator = context.writerDelegator();
+    var outputType = GoCodegenUtils.getType(
+      context.symbolProvider().toSymbol(shape),
+      shape,
+      true
+    );
     final var inputFromDafnyMethodName =
       SmithyNameResolver.getFromDafnyMethodName(serviceShape, shape, "");
-    final var inputSymbol = context.symbolProvider().toSymbol(shape);
-    final String inputType;
-    if (shape.hasTrait(PositionalTrait.class)) {
-      // shape in To native should be unwrapped
-      Shape inputForPositional = context
-        .model()
-        .expectShape(
-          shape.getAllMembers().values().stream().findFirst().get().getTarget()
+      if (shape.hasTrait(ReferenceTrait.class)) {
+        final var referenceTrait = shape.expectTrait(
+          ReferenceTrait.class
         );
-      Symbol symbolForPositional = context
-        .symbolProvider()
-        .toSymbol(inputForPositional);
-      inputType =
-        DafnyNameResolver.getDafnyType(inputForPositional, symbolForPositional);
-    } else {
-      inputType = DafnyNameResolver.getDafnyType(shape, inputSymbol);
-    }
+        final var resourceOrService = context
+          .model()
+          .expectShape(referenceTrait.getReferentId());
+        if (resourceOrService.isServiceShape()) {
+          if (resourceOrService.hasTrait(ServiceTrait.class)) {
+            outputType =
+              SmithyNameResolver.getAwsServiceClient(
+                resourceOrService.expectTrait(ServiceTrait.class)
+              );
+          } else {
+            final var namespace = SmithyNameResolver
+              .shapeNamespace(resourceOrService)
+              .concat(".");
+            outputType =
+              "*".concat(namespace.concat(
+                context
+                  .symbolProvider()
+                  .toSymbol(resourceOrService)
+                  .getName()
+              ));
+          }
+        }
+      }
+    final var op = outputType;
     writerDelegator.useFileWriter(
       "%s/%s".formatted(
           SmithyNameResolver.shapeNamespace(serviceShape),
@@ -974,12 +1035,7 @@ public class DafnyLocalServiceTypeConversionProtocol
               ${C|}
           }""",
           inputFromDafnyMethodName,
-          // inputType,
-          GoCodegenUtils.getType(
-            context.symbolProvider().toSymbol(shape),
-            shape,
-            true
-          ),
+          op,
           writer.consumer(w -> {
             final var shapeVisitorOutput = shape.accept(
               new DafnyToSmithyShapeVisitor(
