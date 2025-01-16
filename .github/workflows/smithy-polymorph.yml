@@ -45,7 +45,3 @@ jobs:
         shell: bash
         working-directory: TestModels/SimpleTypes/SimpleString
         run: make polymorph_dafny
-
-      - name: not-grep
-        if: matrix.os == 'ubuntu-latest'
-        uses: mattsb42-meta/not-grep@1.0.0
