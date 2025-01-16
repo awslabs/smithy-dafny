@@ -17,8 +17,8 @@ pub mod internal_ExternDefinitions_Compile {
 
     impl _default {
         pub fn InitializeOrphanedStructure(
-            uninitialized_structure: &Rc<types::OrphanedStructure>,
-        ) -> Rc<types::OrphanedStructure> {
+            uninitialized_structure: &Rc<crate::simple::orphaned::internaldafny::types::OrphanedStructure>,
+        ) -> Rc<crate::simple::orphaned::internaldafny::types::OrphanedStructure> {
             let native_structure = orphaned_structure::from_dafny(uninitialized_structure.clone());
             // I don't think generated Rust objects have a "toBuilder" method.
             // Ideally, this extern would convert the Dafny structure to native,
@@ -33,7 +33,7 @@ pub mod internal_ExternDefinitions_Compile {
 
         pub fn CallNativeOrphanedResource(
             dafny_resource: &Object<dyn IOrphanedResource>,
-        ) -> Rc<Result<Rc<types::OrphanedResourceOperationOutput>, Rc<Error>>> {
+        ) -> Rc<Result<Rc<crate::simple::orphaned::internaldafny::types::OrphanedResourceOperationOutput>, Rc<Error>>> {
             let native_resource_ref =
                 crate::conversions::orphaned_resource::from_dafny(dafny_resource.clone());
             let native_resource = native_resource_ref.inner.borrow();
@@ -52,7 +52,7 @@ pub mod internal_ExternDefinitions_Compile {
                 );
 
             ::std::rc::Rc::new(
-                Result::<Rc<types::OrphanedResourceOperationOutput>, Rc<Error>>::Success {
+                Result::<Rc<crate::simple::orphaned::internaldafny::types::OrphanedResourceOperationOutput>, Rc<Error>>::Success {
                     value: dafny_output,
                 },
             )
