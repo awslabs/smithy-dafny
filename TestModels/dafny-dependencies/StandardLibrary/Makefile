@@ -11,7 +11,7 @@ MAX_RESOURCE_COUNT=500000000
 PYTHON_MODULE_NAME=smithy_dafny_standard_library
 LIBRARIES :=
 
-GO_MODULE_NAME="github.com/dafny-lang/DafnyStandardLibGo"
+GO_MODULE_NAME="github.com/aws/aws-cryptographic-material-providers-library/releases/go/smithy-dafny-standard-library"
 
 # define standard colors
 ifneq (,$(findstring xterm,${TERM}))
