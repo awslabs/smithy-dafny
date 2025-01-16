@@ -214,6 +214,7 @@ public class DafnyLocalServiceTypeConversionProtocol
       final var resource = refResource
         .expectTrait(ReferenceTrait.class)
         .getReferentId();
+      alreadyVisited.add(resource);
       if (!refResource.expectTrait(ReferenceTrait.class).isService()) {
         final var resourceShape = model.expectShape(
           resource,
@@ -715,7 +716,7 @@ public class DafnyLocalServiceTypeConversionProtocol
       final var resource = refResource
         .expectTrait(ReferenceTrait.class)
         .getReferentId();
-
+      alreadyVisited.add(resource);
       if (!refResource.expectTrait(ReferenceTrait.class).isService()) {
         final var resourceShape = context
           .model()
