@@ -5,7 +5,10 @@ package software.amazon.polymorph.smithygo.localservice;
 
 import static software.amazon.polymorph.smithygo.codegen.SymbolUtils.POINTABLE;
 import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_GO_LIBRARY_MODULE;
+import static software.amazon.polymorph.smithygo.utils.Constants.SMITHY_DAFNY_STD_LIB_GO;
 
+import java.util.LinkedHashSet;
+import java.util.stream.Collectors;
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoDelegator;
 import software.amazon.polymorph.smithygo.codegen.GoWriter;
@@ -28,10 +31,8 @@ import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.ResourceShape;
 import software.amazon.smithy.model.shapes.ServiceShape;
-import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.UnitTypeTrait;
-import software.amazon.smithy.utils.StringUtils;
 
 public class DafnyLocalServiceGenerator implements Runnable {
 
@@ -90,6 +91,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
               .getNamespace()
               .equals(service.getId().getNamespace())
           )
+          .sorted()
           .forEach(unionShape -> {
             new UnionGenerator(model, symbolProvider, unionShape)
               .generateUnion(writer1);
@@ -403,10 +405,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
           ),
           DafnyNameResolver.dafnyTypesNamespace(service)
         );
-        writer.addImportFromModule(
-          "github.com/dafny-lang/DafnyStandardLibGo",
-          "Wrappers"
-        );
+        writer.addImportFromModule(SMITHY_DAFNY_STD_LIB_GO, "Wrappers");
         writer.addImportFromModule(
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
             context.settings().getService().getNamespace()
@@ -623,7 +622,11 @@ public class DafnyLocalServiceGenerator implements Runnable {
   }
 
   void shimErrors(GoWriter writer) {
-    for (final var error : model.getShapesWithTrait(ErrorTrait.class)) {
+    for (final var error : model
+      .getShapesWithTrait(ErrorTrait.class)
+      .stream()
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new))) {
       writer.write(
         """
         case $L.$L:
@@ -641,7 +644,11 @@ public class DafnyLocalServiceGenerator implements Runnable {
   }
 
   void resourceErrors(GoWriter writer) {
-    for (final var error : model.getShapesWithTrait(ErrorTrait.class)) {
+    for (final var error : model
+      .getShapesWithTrait(ErrorTrait.class)
+      .stream()
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new))) {
       writer.write(
         """
         case $L:
@@ -710,7 +717,11 @@ public class DafnyLocalServiceGenerator implements Runnable {
   }
 
   void generateReferencedResources(final GenerationContext context) {
-    final var refResources = model.getShapesWithTrait(ReferenceTrait.class);
+    final var refResources = model
+      .getShapesWithTrait(ReferenceTrait.class)
+      .stream()
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var refResource : refResources) {
       if (!refResource.expectTrait(ReferenceTrait.class).isService()) {
         final var resource = refResource
@@ -1019,10 +1030,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
           context.settings().getModuleName(),
           SmithyNameResolver.smithyTypesNamespace(service)
         );
-        writer.addImportFromModule(
-          "github.com/dafny-lang/DafnyStandardLibGo",
-          "Wrappers"
-        );
+        writer.addImportFromModule(SMITHY_DAFNY_STD_LIB_GO, "Wrappers");
         writer.addImportFromModule(
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
             resourceShape.toShapeId().getNamespace()
