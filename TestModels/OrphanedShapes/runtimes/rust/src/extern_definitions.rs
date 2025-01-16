@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::r#_Wrappers_Compile::Result;
-use crate::simple::orphaned::internaldafny::types;
 use dafny_runtime::rcmut;
 use std::cell::UnsafeCell;
 use std::rc::Rc;
@@ -10,6 +9,7 @@ use std::rc::Rc;
 pub mod internal_ExternDefinitions_Compile {
 
     use crate::conversions::*;
+    use crate::simple::orphaned::internaldafny::types as internaldafny_types;
     use crate::implementation_from_dafny::_ExternDefinitions_Compile::_default;
     use crate::implementation_from_dafny::_OrphanedResource_Compile::*;
     use crate::simple::orphaned::internaldafny::types::*;
@@ -17,8 +17,8 @@ pub mod internal_ExternDefinitions_Compile {
 
     impl _default {
         pub fn InitializeOrphanedStructure(
-            uninitialized_structure: &Rc<crate::simple::orphaned::internaldafny::types::OrphanedStructure>,
-        ) -> Rc<crate::simple::orphaned::internaldafny::types::OrphanedStructure> {
+            uninitialized_structure: &Rc<internaldafny_types::OrphanedStructure>,
+        ) -> Rc<internaldafny_types::OrphanedStructure> {
             let native_structure = orphaned_structure::from_dafny(uninitialized_structure.clone());
             // I don't think generated Rust objects have a "toBuilder" method.
             // Ideally, this extern would convert the Dafny structure to native,
@@ -33,7 +33,7 @@ pub mod internal_ExternDefinitions_Compile {
 
         pub fn CallNativeOrphanedResource(
             dafny_resource: &Object<dyn IOrphanedResource>,
-        ) -> Rc<Result<Rc<crate::simple::orphaned::internaldafny::types::OrphanedResourceOperationOutput>, Rc<Error>>> {
+        ) -> Rc<Result<Rc<internaldafny_types::OrphanedResourceOperationOutput>, Rc<Error>>> {
             let native_resource_ref =
                 crate::conversions::orphaned_resource::from_dafny(dafny_resource.clone());
             let native_resource = native_resource_ref.inner.borrow();
@@ -52,7 +52,7 @@ pub mod internal_ExternDefinitions_Compile {
                 );
 
             ::std::rc::Rc::new(
-                Result::<Rc<crate::simple::orphaned::internaldafny::types::OrphanedResourceOperationOutput>, Rc<Error>>::Success {
+                Result::<Rc<internaldafny_types::OrphanedResourceOperationOutput>, Rc<Error>>::Success {
                     value: dafny_output,
                 },
             )
