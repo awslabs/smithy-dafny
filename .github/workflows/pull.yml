@@ -6,7 +6,7 @@ on:
 
 jobs:
   pr-populate-dafny-versions:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Populate Dafny versions list
         id: populate-dafny-versions-list
@@ -85,7 +85,7 @@ jobs:
       - pr-ci-rust
       - pr-ci-python
       - pr-ci-go
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Verify all required jobs passed
         uses: re-actors/alls-green@release/v1
