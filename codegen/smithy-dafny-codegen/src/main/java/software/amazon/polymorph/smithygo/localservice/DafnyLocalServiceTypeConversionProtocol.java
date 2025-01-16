@@ -5,6 +5,7 @@ import static software.amazon.polymorph.smithygo.utils.Constants.DAFNY_RUNTIME_G
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -65,6 +66,8 @@ public class DafnyLocalServiceTypeConversionProtocol
     final var writerDelegator = context.writerDelegator();
     serviceShape
       .getOperations()
+      .stream()
+      .sorted()
       .forEach(eachOperation -> {
         final var operation = model.expectShape(
           eachOperation,
@@ -203,7 +206,10 @@ public class DafnyLocalServiceTypeConversionProtocol
 
     final var refResources = context
       .model()
-      .getShapesWithTrait(ReferenceTrait.class);
+      .getShapesWithTrait(ReferenceTrait.class)
+      .stream()
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var refResource : refResources) {
       final var resource = refResource
         .expectTrait(ReferenceTrait.class)
@@ -215,6 +221,8 @@ public class DafnyLocalServiceTypeConversionProtocol
         );
         resourceShape
           .getOperations()
+          .stream()
+          .sorted()
           .forEach(eachOperation -> {
             final var operation = model.expectShape(
               eachOperation,
@@ -425,6 +433,8 @@ public class DafnyLocalServiceTypeConversionProtocol
 
     serviceShape
       .getOperations()
+      .stream()
+      .sorted()
       .forEach(eachOperation -> {
         final var operation = context
           .model()
@@ -578,7 +588,10 @@ public class DafnyLocalServiceTypeConversionProtocol
 
     final var refResources = context
       .model()
-      .getShapesWithTrait(ReferenceTrait.class);
+      .getShapesWithTrait(ReferenceTrait.class)
+      .stream()
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var refResource : refResources) {
       final var resource = refResource
         .expectTrait(ReferenceTrait.class)
@@ -590,6 +603,8 @@ public class DafnyLocalServiceTypeConversionProtocol
           .expectShape(resource, ResourceShape.class);
         resourceShape
           .getOperations()
+          .stream()
+          .sorted()
           .forEach(eachOperation -> {
             final var operation = context
               .model()
@@ -976,7 +991,10 @@ public class DafnyLocalServiceTypeConversionProtocol
     final var serviceShape = context.settings().getService(context.model());
     final var errorShapes = context
       .model()
-      .getShapesWithTrait(ErrorTrait.class);
+      .getShapesWithTrait(ErrorTrait.class)
+      .stream()
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new));
 
     for (final var errorShape : errorShapes) {
       if (
@@ -1076,7 +1094,8 @@ public class DafnyLocalServiceTypeConversionProtocol
       .filter(shape ->
         ModelUtils.isInServiceNamespace(shape.getId(), serviceShape)
       )
-      .collect(Collectors.toSet());
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new));
 
     context
       .writerDelegator()
@@ -1332,7 +1351,10 @@ public class DafnyLocalServiceTypeConversionProtocol
     final var serviceShape = context.settings().getService(context.model());
     final var errorShapes = context
       .model()
-      .getShapesWithTrait(ErrorTrait.class);
+      .getShapesWithTrait(ErrorTrait.class)
+      .stream()
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new));
     for (final var errorShape : errorShapes) {
       if (
         !errorShape
@@ -1457,7 +1479,8 @@ public class DafnyLocalServiceTypeConversionProtocol
       .filter(shape ->
         ModelUtils.isInServiceNamespace(shape.getId(), serviceShape)
       )
-      .collect(Collectors.toSet());
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new));
 
     context
       .writerDelegator()
