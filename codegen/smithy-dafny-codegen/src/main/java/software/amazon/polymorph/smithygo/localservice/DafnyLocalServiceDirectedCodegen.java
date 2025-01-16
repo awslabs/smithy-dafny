@@ -215,7 +215,9 @@ public class DafnyLocalServiceDirectedCodegen
       ShapeType.STRING,
       ShapeType.LONG,
       ShapeType.MAP,
-      ShapeType.LIST
+      ShapeType.LIST,
+      ShapeType.BOOLEAN,
+      ShapeType.BLOB
     );
 
     for (final var shapeToGenerate : orderedShapes) {
