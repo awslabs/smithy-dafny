@@ -1,6 +1,6 @@
 
 $rustResourceComment:L
-pub trait $rustResourceName:L {
+pub trait $rustResourceName:L : Send + Sync {
   $resourceOperations:L
 }
 
