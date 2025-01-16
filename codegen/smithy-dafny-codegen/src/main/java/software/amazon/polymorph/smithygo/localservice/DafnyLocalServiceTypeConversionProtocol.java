@@ -214,7 +214,7 @@ public class DafnyLocalServiceTypeConversionProtocol
       final var resource = refResource
         .expectTrait(ReferenceTrait.class)
         .getReferentId();
-      alreadyVisited.add(resource);
+      alreadyVisited.add(refResource.toShapeId());
       if (!refResource.expectTrait(ReferenceTrait.class).isService()) {
         final var resourceShape = model.expectShape(
           resource,
@@ -473,7 +473,7 @@ public class DafnyLocalServiceTypeConversionProtocol
         .expectShape(referenceTrait.getReferentId());
       if (resourceOrService.isResourceShape()) {
         throw new IllegalStateException(
-          "Reference to resource shapes are already handled in generateDeserializers function."
+          "Reference to resource shapes are already handled in generateSerializers function."
         );
       }
       if (resourceOrService.hasTrait(ServiceTrait.class)) {
@@ -716,7 +716,7 @@ public class DafnyLocalServiceTypeConversionProtocol
       final var resource = refResource
         .expectTrait(ReferenceTrait.class)
         .getReferentId();
-      alreadyVisited.add(resource);
+      alreadyVisited.add(refResource.toShapeId());
       if (!refResource.expectTrait(ReferenceTrait.class).isService()) {
         final var resourceShape = context
           .model()
