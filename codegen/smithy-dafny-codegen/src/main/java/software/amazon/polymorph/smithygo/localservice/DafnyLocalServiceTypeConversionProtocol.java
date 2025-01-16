@@ -414,6 +414,11 @@ public class DafnyLocalServiceTypeConversionProtocol
     if (serviceShape.hasTrait(LocalServiceTrait.class)) {
       generateConfigSerializer(context);
     }
+    final var orphanShapes = ModelUtils.getTopologicallyOrderedOrphanedShapesForService(serviceShape,model);
+    // Loop through each Shape in orphanShapes
+    for (Shape shape : orphanShapes) {
+        generateOrphanShapeSerializer(context, shape, alreadyVisited, serviceShape);
+    }
     generateSerializerFunctions(context, alreadyVisited);
   }
 
@@ -425,12 +430,7 @@ public class DafnyLocalServiceTypeConversionProtocol
   ) {
     final Shape shape;
     if (currentShape.hasTrait(ReferenceTrait.class)) {
-      shape =
-        context
-          .model()
-          .expectShape(
-            currentShape.expectTrait(ReferenceTrait.class).getReferentId()
-          );
+      return;
     } else {
       shape = currentShape;
     }
@@ -890,6 +890,11 @@ public class DafnyLocalServiceTypeConversionProtocol
     if (serviceShape.hasTrait(LocalServiceTrait.class)) {
       generateConfigDeserializer(context);
     }
+    final var orphanShapes = ModelUtils.getTopologicallyOrderedOrphanedShapesForService(serviceShape,context.model());
+    // Loop through each Shape in orphanShapes
+    for (Shape shape : orphanShapes) {
+      generateOrphanShapeDeserializer(context, shape, alreadyVisited, serviceShape);
+    }
     generateDeserializerFunctions(context, alreadyVisited);
   }
 
@@ -901,12 +906,7 @@ public class DafnyLocalServiceTypeConversionProtocol
   ) {
     final Shape shape;
     if (currentShape.hasTrait(ReferenceTrait.class)) {
-      shape =
-        context
-          .model()
-          .expectShape(
-            currentShape.expectTrait(ReferenceTrait.class).getReferentId()
-          );
+      return;
     } else {
       shape = currentShape;
     }
@@ -1106,6 +1106,7 @@ public class DafnyLocalServiceTypeConversionProtocol
   }
 
   private void generateConfigSerializer(final GenerationContext context) {
+
     final var service = context.settings().getService(context.model());
     final var localServiceTrait = service.expectTrait(LocalServiceTrait.class);
     final var configShape = context
@@ -1113,7 +1114,14 @@ public class DafnyLocalServiceTypeConversionProtocol
       .expectShape(localServiceTrait.getConfigId(), StructureShape.class);
     final var getInputToDafnyMethodName =
       SmithyNameResolver.getToDafnyMethodName(service, configShape, "");
-
+      if (
+        !configShape
+          .toShapeId()
+          .getNamespace()
+          .equals(service.toShapeId().getNamespace())
+      ) {
+        return;
+      }
     context
       .writerDelegator()
       .useFileWriter(
@@ -1462,6 +1470,14 @@ public class DafnyLocalServiceTypeConversionProtocol
     final var configShape = context
       .model()
       .expectShape(localServiceTrait.getConfigId(), StructureShape.class);
+      if (
+        !configShape
+          .toShapeId()
+          .getNamespace()
+          .equals(serviceShape.toShapeId().getNamespace())
+      ) {
+        return;
+      }
     final var getOutputFromDafnyMethodName =
       SmithyNameResolver.getFromDafnyMethodName(serviceShape, configShape, "");
 
