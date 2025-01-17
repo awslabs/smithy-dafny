@@ -446,7 +446,10 @@ public class DafnyLocalServiceTypeConversionProtocol
     final Set<ShapeId> alreadyVisited,
     ServiceShape serviceShape
   ) {
-    if (GoCodegenUtils.shapeShouldHaveConversionFunction(shape) == false || alreadyVisited.contains(shape.toShapeId())) {
+    if (
+      GoCodegenUtils.shapeShouldHaveConversionFunction(shape) == false ||
+      alreadyVisited.contains(shape.toShapeId())
+    ) {
       return;
     }
     if (shape.hasTrait(UnitTypeTrait.class)) {
@@ -948,7 +951,10 @@ public class DafnyLocalServiceTypeConversionProtocol
     final Set<ShapeId> alreadyVisited,
     ServiceShape serviceShape
   ) {
-    if (GoCodegenUtils.shapeShouldHaveConversionFunction(shape) == false || alreadyVisited.contains(shape.toShapeId())) {
+    if (
+      GoCodegenUtils.shapeShouldHaveConversionFunction(shape) == false ||
+      alreadyVisited.contains(shape.toShapeId())
+    ) {
       return;
     }
     if (shape.hasTrait(UnitTypeTrait.class)) {

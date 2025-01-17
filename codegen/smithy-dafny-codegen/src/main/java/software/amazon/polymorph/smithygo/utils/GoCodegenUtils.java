@@ -7,7 +7,6 @@ import software.amazon.polymorph.smithygo.codegen.SymbolUtils;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
 import software.amazon.polymorph.smithypython.awssdk.nameresolver.AwsSdkNameResolver;
-import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.polymorph.traits.PositionalTrait;
 import software.amazon.polymorph.traits.ReferenceTrait;
 import software.amazon.smithy.aws.traits.ServiceTrait;
@@ -22,6 +21,7 @@ import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.shapes.ShapeType;
 import software.amazon.smithy.model.traits.EnumTrait;
+import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.UnitTypeTrait;
 
 public class GoCodegenUtils {
@@ -190,7 +190,7 @@ public class GoCodegenUtils {
       );
     }
   }
-  
+
   /**
    * Returns true if a conversion function should be written for the shape, false otherwise.
    * Conversion functions are only written for "complex" shapes:
