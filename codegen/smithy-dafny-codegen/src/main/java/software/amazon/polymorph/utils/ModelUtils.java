@@ -721,7 +721,20 @@ public class ModelUtils {
     // Copy-paste Smithy-Core's shape discovery mechanism:
     // Walk the model starting from the serviceShape.
     // This generates shapes that are "known" to Smithy-Core's `generateShapesInService`.
-    Set<Shape> nonOrphanedShapes = new Walker(model).walkShapes(serviceShape);
+    final var walker = new Walker(model);
+    final Set<Shape> nonOrphanedShapes = walker.walkShapes(serviceShape);
+
+    // Walker will not walk into a referedShape in ReferenceTrait.
+    // Find refered shape and walk into it. 
+    final Set<Shape> additionalShapes = new HashSet<>();
+    for (Shape shape : nonOrphanedShapes) {
+        if(shape.hasTrait(ReferenceTrait.class)) {
+            final ReferenceTrait referenceTrait = shape.expectTrait(ReferenceTrait.class);
+            final var referedShape = model.expectShape(referenceTrait.getReferentId());
+            additionalShapes.addAll(walker.walkShapes(referedShape));
+        }
+    }
+    nonOrphanedShapes.addAll(additionalShapes);
 
     // orphanedShapes = (all shapes in model) - (non-orphaned shapes)
     Set<Shape> orphanedShapes = model.shapes().collect(Collectors.toSet());
