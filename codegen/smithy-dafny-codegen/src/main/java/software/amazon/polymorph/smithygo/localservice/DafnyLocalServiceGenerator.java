@@ -734,6 +734,20 @@ public class DafnyLocalServiceGenerator implements Runnable {
         ) {
           continue;
         }
+        model.expectShape(resource, ResourceShape.class).getOperations()
+                  .forEach(operation -> {
+                    final var operationShape = model.expectShape(
+                      operation,
+                      OperationShape.class
+                    );
+        var inputShape = operationShape.getInput().isPresent() ? context.model().expectShape(operationShape.getInput().orElseThrow()).asStructureShape().orElseThrow() : null;
+        var outputShape = operationShape.getOutput().isPresent() ? context.model().expectShape(operationShape.getOutput().orElseThrow()).asStructureShape().orElseThrow() : null;
+        var directedCodegen = new DafnyLocalServiceDirectedCodegen();
+        if (inputShape != null) 
+          directedCodegen.writeStructure(context, inputShape);
+        if (outputShape != null)
+          directedCodegen.writeStructure(context, outputShape);
+                  });
         writerDelegator.useFileWriter(
           "%s/types.go".formatted(
               SmithyNameResolver.smithyTypesNamespace(service)
