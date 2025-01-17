@@ -724,14 +724,14 @@ public class ModelUtils {
     final var walker = new Walker(model);
     final Set<Shape> nonOrphanedShapes = walker.walkShapes(serviceShape);
 
-    // Walker will not walk into a referedShape in ReferenceTrait.
-    // Find refered shape and walk into it. 
+    // Walker will not walk into a referred Shape in ReferenceTrait.
+    // Find referred  shape and walk into it. 
     final Set<Shape> additionalShapes = new HashSet<>();
     for (Shape shape : nonOrphanedShapes) {
         if(shape.hasTrait(ReferenceTrait.class)) {
             final ReferenceTrait referenceTrait = shape.expectTrait(ReferenceTrait.class);
-            final var referedShape = model.expectShape(referenceTrait.getReferentId());
-            additionalShapes.addAll(walker.walkShapes(referedShape));
+            final var referredShape = model.expectShape(referenceTrait.getReferentId());
+            additionalShapes.addAll(walker.walkShapes(referredShape));
         }
     }
     nonOrphanedShapes.addAll(additionalShapes);
