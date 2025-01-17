@@ -446,11 +446,7 @@ public class DafnyLocalServiceTypeConversionProtocol
     final Set<ShapeId> alreadyVisited,
     ServiceShape serviceShape
   ) {
-    if (alreadyVisited.contains(shape.toShapeId())) {
-      return;
-    }
-    // We don't need type conversion for operation shape and resource shape
-    if (shape.isOperationShape() || shape.isResourceShape()) {
+    if (GoCodegenUtils.shapeShouldHaveConversionFunction(shape) == false || alreadyVisited.contains(shape.toShapeId())) {
       return;
     }
     if (shape.hasTrait(UnitTypeTrait.class)) {
@@ -952,10 +948,7 @@ public class DafnyLocalServiceTypeConversionProtocol
     final Set<ShapeId> alreadyVisited,
     ServiceShape serviceShape
   ) {
-    if (alreadyVisited.contains(shape.toShapeId())) {
-      return;
-    }
-    if (shape.isOperationShape() || shape.isResourceShape()) {
+    if (GoCodegenUtils.shapeShouldHaveConversionFunction(shape) == false || alreadyVisited.contains(shape.toShapeId())) {
       return;
     }
     if (shape.hasTrait(UnitTypeTrait.class)) {
