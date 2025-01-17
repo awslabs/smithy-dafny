@@ -423,7 +423,6 @@ public class DafnyLocalServiceTypeConversionProtocol
     if (serviceShape.hasTrait(LocalServiceTrait.class)) {
       generateConfigSerializer(context, alreadyVisited);
     }
-    generateSerializerFunctions(context, alreadyVisited);
     final var orphanShapes =
       ModelUtils.getTopologicallyOrderedOrphanedShapesForService(
         serviceShape,
@@ -438,6 +437,7 @@ public class DafnyLocalServiceTypeConversionProtocol
         serviceShape
       );
     }
+    generateSerializerFunctions(context, alreadyVisited);
   }
 
   public void generateOrphanShapeSerializer(
@@ -929,7 +929,6 @@ public class DafnyLocalServiceTypeConversionProtocol
     if (serviceShape.hasTrait(LocalServiceTrait.class)) {
       generateConfigDeserializer(context, alreadyVisited);
     }
-    generateDeserializerFunctions(context, alreadyVisited);
     final var orphanShapes =
       ModelUtils.getTopologicallyOrderedOrphanedShapesForService(
         serviceShape,
@@ -944,6 +943,7 @@ public class DafnyLocalServiceTypeConversionProtocol
         serviceShape
       );
     }
+    generateDeserializerFunctions(context, alreadyVisited);
   }
 
   public void generateOrphanShapeDeserializer(
