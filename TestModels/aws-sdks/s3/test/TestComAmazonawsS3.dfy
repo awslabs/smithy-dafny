@@ -94,7 +94,7 @@ module TestComAmazonawsS3 {
 
         var ret := client.PutObject(input);
 
-        expect(ret.Success?);
+        expect ret.Success?, ret;
 
         // just check that an ETag was returned
         var MyETag := ret.value.ETag;
