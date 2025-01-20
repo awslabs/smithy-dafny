@@ -6,10 +6,10 @@ include "../src/Index.dfy"
 module TestComAmazonawsS3 {
     import Com.Amazonaws.S3
     import opened StandardLibrary.UInt
-    import opened StandardLibrary.Streams
     import opened Wrappers
     import opened Std.Enumerators
     import opened Std.Aggregators
+    import opened Std.Streams
 
     const testBucket := "s3-dafny-test-bucket"
     const testObjectKey := "smithy-dafny-test-model-object-key"
@@ -21,8 +21,8 @@ module TestComAmazonawsS3 {
                 Key := testObjectKey
             )
         );
-        var s: DataStream := new SeqDataStream([ 97, 115, 100, 102 ], 2);
-        expect s is RewindableDataStream;
+        var s: ByteStream := new SeqByteStream([ 97, 115, 100, 102 ], 2);
+        expect s is RewindableByteStream;
         PutObjectTest(
             input := S3.Types.PutObjectRequest(
                 Bucket := testBucket,
@@ -113,7 +113,7 @@ module TestComAmazonawsS3 {
         expect(ret.Success?);
     }
 
-    method Collect(e: DataStream) returns (s: BoundedInts.bytes) 
+    method Collect(e: ByteStream) returns (s: BoundedInts.bytes) 
         requires e.Valid()
         modifies e.Repr
     {
