@@ -96,9 +96,9 @@ public class DafnyToLocalServiceShapeVisitor
     if (shape.hasTrait(StreamingTrait.class)) {
       writer.addStdlibImport(
         "smithy_dafny_standard_library.internaldafny.extern.streams",
-        "DataStreamByteStream"
+        "DafnyByteStreamAsByteStream"
       );
-      return "DataStreamByteStream(%1$s)".formatted(dataSource);
+      return "DafnyByteStreamAsByteStream(%1$s)".formatted(dataSource);
     } else {
       return "bytes(%1$s)".formatted(dataSource);
     }

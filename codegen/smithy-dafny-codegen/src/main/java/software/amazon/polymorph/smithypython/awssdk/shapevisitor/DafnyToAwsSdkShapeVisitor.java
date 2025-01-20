@@ -78,9 +78,9 @@ public class DafnyToAwsSdkShapeVisitor extends ShapeVisitor.Default<String> {
     if (shape.hasTrait(StreamingTrait.class)) {
       writer.addStdlibImport(
         "smithy_dafny_standard_library.internaldafny.extern.streams",
-        "RewindableDataStreamByteStream"
+        "RewindableDafnyByteStreamAsByteStream"
       );
-      return "RewindableDataStreamByteStream(%1$s)".formatted(dataSource);
+      return "RewindableDafnyByteStreamAsByteStream(%1$s)".formatted(dataSource);
     } else {
       return "bytes(%1$s)".formatted(dataSource);
     }

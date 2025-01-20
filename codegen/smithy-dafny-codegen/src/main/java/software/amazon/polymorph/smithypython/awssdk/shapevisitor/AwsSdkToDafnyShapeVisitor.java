@@ -78,9 +78,9 @@ public class AwsSdkToDafnyShapeVisitor extends ShapeVisitor.Default<String> {
     if (shape.hasTrait(StreamingTrait.class)) {
       writer.addStdlibImport(
         "smithy_dafny_standard_library.internaldafny.extern.streams",
-        "StreamingBlobDataStream"
+        "StreamingBlobAsDafnyDataStream"
       );
-      return "StreamingBlobDataStream(%1$s)".formatted(dataSource);
+      return "StreamingBlobAsDafnyDataStream(%1$s)".formatted(dataSource);
     } else {
       writer.addStdlibImport("_dafny", "Seq");
       return "Seq(" + dataSource + ")";
