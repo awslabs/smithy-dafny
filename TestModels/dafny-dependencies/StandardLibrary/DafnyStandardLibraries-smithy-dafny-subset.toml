@@ -26,7 +26,6 @@ unicode-char = false
 
 # TODO
 allow-warnings = true
-# no-verify = true
 
 # Options important for sustainable development
 # of the libraries themselves.
