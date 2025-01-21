@@ -36,7 +36,7 @@ public class GoCodegenUtils {
     ) {
       return includeNamespace
         ? SmithyNameResolver.getSmithyTypeAws(serviceTrait, symbol, true)
-        : symbol.getName();
+        : symbol.getName();make
     }
     final var type = getType(
       symbol.expectProperty(SymbolUtils.GO_ELEMENT_TYPE, Symbol.class),
