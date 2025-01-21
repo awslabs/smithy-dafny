@@ -367,6 +367,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                 );
               }
             }
+          });
             if (
               !alreadyVisited.contains(resourceShape.toShapeId()) &&
               resourceShape
@@ -416,7 +417,6 @@ public class DafnyLocalServiceTypeConversionProtocol
                 }
               );
             }
-          });
       }
     }
     generateErrorSerializer(context, alreadyVisited);
@@ -878,6 +878,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                 );
               }
             }
+          });
             if (
               !alreadyVisited.contains(resourceShape.toShapeId()) &&
               resourceShape
@@ -921,7 +922,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                 }
               );
             }
-          });
+          
       }
     }
     generateErrorDeserializer(context, alreadyVisited);
