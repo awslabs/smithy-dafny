@@ -4,7 +4,7 @@ pub fn to_opaque_error(value: String) ->
 {
     let error_msg = value.clone();
     let error_msg = ::dafny_runtime::dafny_runtime_conversions::unicode_chars_false::string_to_dafny_string(&error_msg);
-    let error_obj: ::dafny_runtime::Object<dyn::std::any::Any> = ::dafny_runtime::Object(Some(
+    let error_obj: ::dafny_runtime::Object<::dafny_runtime::DynAny> = ::dafny_runtime::Object(Some(
         ::dafny_runtime::Rc::new(::dafny_runtime::UnsafeCell::new(value)),
     ));
     ::dafny_runtime::Rc::new(

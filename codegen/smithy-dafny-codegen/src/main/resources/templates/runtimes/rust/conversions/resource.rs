@@ -15,8 +15,8 @@ pub struct $rustResourceName:LWrapper {
   obj: $rustTypesModuleName:L::$snakeCaseResourceName:L::$rustResourceName:LRef,
 }
 
-impl ::dafny_runtime::UpcastObject<dyn ::std::any::Any> for $rustResourceName:LWrapper {
-  ::dafny_runtime::UpcastObjectFn!(dyn ::std::any::Any);
+impl ::dafny_runtime::UpcastObject<::dafny_runtime::DynAny> for $rustResourceName:LWrapper {
+  ::dafny_runtime::UpcastObjectFn!(::dafny_runtime::DynAny);
 }
 
 #[allow(dead_code)]

@@ -12,7 +12,7 @@ pub fn to_dafny(
         $qualifiedRustServiceErrorType:L::ValidationError(inner) =>
             crate::r#$dafnyTypesModuleName:L::Error::Opaque {
                 obj: {
-                    let rc = ::dafny_runtime::Rc::new(inner) as ::dafny_runtime::Rc<dyn ::std::any::Any>;
+                    let rc = ::dafny_runtime::Rc::new(inner) as ::dafny_runtime::Rc<::dafny_runtime::DynAny>;
                     // safety: `rc` is new, ensuring it has refcount 1 and is uniquely owned.
                     // we should use `dafny_runtime_conversions::rc_struct_to_dafny_class` once it
                     // accepts unsized types (https://github.com/dafny-lang/dafny/pull/5769)

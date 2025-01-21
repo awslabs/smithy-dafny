@@ -17,8 +17,8 @@ impl dafny_runtime::UpcastObject<dyn crate::r#$dafnyTypesModuleName:L::I$service
   ::dafny_runtime::UpcastObjectFn!(dyn crate::r#$dafnyTypesModuleName:L::I$serviceName:LClient);
 }
 
-impl dafny_runtime::UpcastObject<dyn std::any::Any> for Client {
-    ::dafny_runtime::UpcastObjectFn!(dyn ::std::any::Any);
+impl dafny_runtime::UpcastObject<::dafny_runtime::DynAny> for Client {
+    ::dafny_runtime::UpcastObjectFn!(::dafny_runtime::DynAny);
 }
 
 impl Client {
