@@ -4,15 +4,6 @@ $version: "2"
 // SPDX-License-Identifier: Apache-2.0
 namespace simple.streaming
 
-
-
-// TODO: Call streaming operations on SDKs from Dafny
-//       Sync Dafny client good enough, or do we start supporting async code in Dafny?
-// TODO: model the Java ESDK EncryptingInputStream/EncryptingOutputStream type operations
-//       Definitely possible, may not be very directly supported with AsyncRequestBody/AsyncResponseTransformer
-// TODO: event streams (i.e. unions) as well
-// TODO: @requiresLength as well
-
 @aws.polymorph#localService(
   sdkId: "SimpleStreaming",
   config: SimpleStreamingConfig,
