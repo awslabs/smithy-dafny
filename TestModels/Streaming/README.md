@@ -8,4 +8,3 @@ This project only currently works on Python: the Dafny code generation
 has been updated to support `@streaming` on blob shapes,
 but only Python includes shim adaptors between the Dafny types
 and the types used for Smithy-generated interfaces.
-
