@@ -16,6 +16,7 @@ module SimpleStreamingImplTest {
     method{:test} TestClient(){
         var client :- expect SimpleStreaming.SimpleStreaming();
         TestCountBits(client);
+        TestBinaryOf(client);
     }
 
     method TestCountBits(client: ISimpleStreamingClient)

@@ -21,6 +21,8 @@ module TestComAmazonawsS3 {
                 Key := testObjectKey
             )
         );
+        // Note the chunk size has to ensure all but the last chunk is >= 8192 bytes.
+        // For a small stream like this that means just one chunk.
         var s: ByteStream := new SeqByteStream([ 97, 115, 100, 102 ], 10);
         expect s is RewindableByteStream;
         PutObjectTest(
