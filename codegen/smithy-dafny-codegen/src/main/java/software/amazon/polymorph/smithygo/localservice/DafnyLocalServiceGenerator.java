@@ -120,7 +120,29 @@ public class DafnyLocalServiceGenerator implements Runnable {
       SmithyNameResolver.smithyTypesNamespace(service)
     );
     writer.addUseImports(SmithyGoDependency.CONTEXT);
-
+    var configShape = configSymbol.expectProperty(
+      SymbolUtils.SHAPE,
+      Shape.class
+    );
+    if (
+      !configShape
+        .toShapeId()
+        .getNamespace()
+        .equals(service.toShapeId().getNamespace())
+    ) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+          configShape.toShapeId().getNamespace()
+        ),
+        SmithyNameResolver.smithyTypesNamespace(configShape)
+      );
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+          configShape.toShapeId().getNamespace()
+        ),
+        SmithyNameResolver.shapeNamespace(configShape)
+      );
+    }
     final var dafnyClient = DafnyNameResolver.getDafnyInterfaceClient(service);
     writer.write(
       """
@@ -142,7 +164,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
       serviceSymbol,
       dafnyClient,
       SmithyNameResolver.getSmithyType(
-        configSymbol.expectProperty(SymbolUtils.SHAPE, Shape.class),
+        configShape,
         configSymbol
       ),
       serviceSymbol,
