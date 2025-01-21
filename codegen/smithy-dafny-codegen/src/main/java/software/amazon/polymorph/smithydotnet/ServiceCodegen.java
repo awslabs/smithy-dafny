@@ -70,7 +70,7 @@ public class ServiceCodegen {
   }
 
   // TODO: get smarter about imports. maybe just fully qualify all model-agnostic types?
-  protected static final List<String> UNCONDITIONAL_IMPORTS = List.of("System");
+  protected static final List<String> UNCONDITIONAL_IMPORTS = List.of("System", "System.Collections.Generic");
 
   /**
    * @return map of skeleton's file paths to generated ASTs
@@ -91,7 +91,6 @@ public class ServiceCodegen {
     final Path collectionOfErrorsPath = Path.of("CollectionOfErrors.cs");
     final TokenTree collectionOfErrorsPathCode =
       generateCollectionExceptionClass();
-    importNamespaces.add("System.Collections.Generic");
     codeByPath.put(
       collectionOfErrorsPath,
       collectionOfErrorsPathCode.prepend(prelude)
