@@ -163,10 +163,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
       """,
       serviceSymbol,
       dafnyClient,
-      SmithyNameResolver.getSmithyType(
-        configShape,
-        configSymbol
-      ),
+      SmithyNameResolver.getSmithyType(configShape, configSymbol),
       serviceSymbol,
       SmithyNameResolver.getToDafnyMethodName(
         service,
