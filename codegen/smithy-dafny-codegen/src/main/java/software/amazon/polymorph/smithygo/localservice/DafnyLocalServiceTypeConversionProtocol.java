@@ -368,55 +368,55 @@ public class DafnyLocalServiceTypeConversionProtocol
               }
             }
           });
-            if (
-              !alreadyVisited.contains(resourceShape.toShapeId()) &&
-              resourceShape
-                .toShapeId()
-                .getNamespace()
-                .equals(serviceShape.toShapeId().getNamespace())
-            ) {
-              alreadyVisited.add(resourceShape.toShapeId());
-              writerDelegator.useFileWriter(
-                "%s/%s".formatted(
-                    SmithyNameResolver.shapeNamespace(serviceShape),
-                    TO_DAFNY
-                  ),
+        if (
+          !alreadyVisited.contains(resourceShape.toShapeId()) &&
+          resourceShape
+            .toShapeId()
+            .getNamespace()
+            .equals(serviceShape.toShapeId().getNamespace())
+        ) {
+          alreadyVisited.add(resourceShape.toShapeId());
+          writerDelegator.useFileWriter(
+            "%s/%s".formatted(
                 SmithyNameResolver.shapeNamespace(serviceShape),
-                writer -> {
-                  var goBody =
-                    """
-                    return nativeResource.(*%s).Impl
-                    """.formatted(resourceShape.getId().getName());
-                  if (resourceShape.hasTrait(ExtendableTrait.class)) {
-                    goBody =
-                      """
-                                                         val, ok := nativeResource.(*%s)
-                      if ok {
-                      	return val.Impl
-                      }
-                      return %s{&%sNativeWrapper{Impl: nativeResource}}.Impl
-                                                         """.formatted(
-                          resourceShape.getId().getName(),
-                          resourceShape.getId().getName(),
-                          resourceShape.getId().getName()
-                        );
+                TO_DAFNY
+              ),
+            SmithyNameResolver.shapeNamespace(serviceShape),
+            writer -> {
+              var goBody =
+                """
+                return nativeResource.(*%s).Impl
+                """.formatted(resourceShape.getId().getName());
+              if (resourceShape.hasTrait(ExtendableTrait.class)) {
+                goBody =
+                  """
+                                                     val, ok := nativeResource.(*%s)
+                  if ok {
+                  	return val.Impl
                   }
-                  writer.write(
-                    """
-                    func $L_ToDafny(nativeResource $L.I$L) $L.I$L {
-                        $L
-                    }
-                    """,
-                    resourceShape.getId().getName(),
-                    SmithyNameResolver.smithyTypesNamespace(resourceShape),
-                    resourceShape.getId().getName(),
-                    DafnyNameResolver.dafnyTypesNamespace(resourceShape),
-                    resourceShape.getId().getName(),
-                    goBody
-                  );
+                  return %s{&%sNativeWrapper{Impl: nativeResource}}.Impl
+                                                     """.formatted(
+                      resourceShape.getId().getName(),
+                      resourceShape.getId().getName(),
+                      resourceShape.getId().getName()
+                    );
+              }
+              writer.write(
+                """
+                func $L_ToDafny(nativeResource $L.I$L) $L.I$L {
+                    $L
                 }
+                """,
+                resourceShape.getId().getName(),
+                SmithyNameResolver.smithyTypesNamespace(resourceShape),
+                resourceShape.getId().getName(),
+                DafnyNameResolver.dafnyTypesNamespace(resourceShape),
+                resourceShape.getId().getName(),
+                goBody
               );
             }
+          );
+        }
       }
     }
     generateErrorSerializer(context, alreadyVisited);
@@ -879,50 +879,49 @@ public class DafnyLocalServiceTypeConversionProtocol
               }
             }
           });
-            if (
-              !alreadyVisited.contains(resourceShape.toShapeId()) &&
-              resourceShape
-                .toShapeId()
-                .getNamespace()
-                .equals(serviceShape.toShapeId().getNamespace())
-            ) {
-              alreadyVisited.add(resourceShape.toShapeId());
-              delegator.useFileWriter(
-                "%s/%s".formatted(
-                    SmithyNameResolver.shapeNamespace(serviceShape),
-                    TO_NATIVE
-                  ),
+        if (
+          !alreadyVisited.contains(resourceShape.toShapeId()) &&
+          resourceShape
+            .toShapeId()
+            .getNamespace()
+            .equals(serviceShape.toShapeId().getNamespace())
+        ) {
+          alreadyVisited.add(resourceShape.toShapeId());
+          delegator.useFileWriter(
+            "%s/%s".formatted(
                 SmithyNameResolver.shapeNamespace(serviceShape),
-                writer -> {
-                  var extendableResourceWrapperCheck = "";
-                  if (resourceShape.hasTrait(ExtendableTrait.class)) {
-                    extendableResourceWrapperCheck =
-                      """
-                      val, ok := dafnyResource.(*%sNativeWrapper)
-                      if ok {
-                          return val.Impl
-                      }
-                      """.formatted(resourceShape.getId().getName());
+                TO_NATIVE
+              ),
+            SmithyNameResolver.shapeNamespace(serviceShape),
+            writer -> {
+              var extendableResourceWrapperCheck = "";
+              if (resourceShape.hasTrait(ExtendableTrait.class)) {
+                extendableResourceWrapperCheck =
+                  """
+                  val, ok := dafnyResource.(*%sNativeWrapper)
+                  if ok {
+                      return val.Impl
                   }
-                  writer.write(
-                    """
-                    func $L_FromDafny(dafnyResource $L.I$L)($L.I$L) {
-                        $L
-                        return &$L{dafnyResource}
-                    }
-                    """,
-                    resourceShape.getId().getName(),
-                    DafnyNameResolver.dafnyTypesNamespace(resourceShape),
-                    resourceShape.getId().getName(),
-                    SmithyNameResolver.smithyTypesNamespace(resourceShape),
-                    resourceShape.getId().getName(),
-                    extendableResourceWrapperCheck,
-                    resourceShape.getId().getName()
-                  );
+                  """.formatted(resourceShape.getId().getName());
+              }
+              writer.write(
+                """
+                func $L_FromDafny(dafnyResource $L.I$L)($L.I$L) {
+                    $L
+                    return &$L{dafnyResource}
                 }
+                """,
+                resourceShape.getId().getName(),
+                DafnyNameResolver.dafnyTypesNamespace(resourceShape),
+                resourceShape.getId().getName(),
+                SmithyNameResolver.smithyTypesNamespace(resourceShape),
+                resourceShape.getId().getName(),
+                extendableResourceWrapperCheck,
+                resourceShape.getId().getName()
               );
             }
-          
+          );
+        }
       }
     }
     generateErrorDeserializer(context, alreadyVisited);
