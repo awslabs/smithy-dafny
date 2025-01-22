@@ -217,7 +217,7 @@ public class RustAwsSdkShimGenerator extends AbstractRustShimGenerator {
         .stream()
         .map(member ->
           evalTemplate(
-            ".set_$fieldName:L(inner_input.$fieldName:L)",
+            ".set_$fieldName:L(inner_input.r#$fieldName:L)",
             structureMemberVariables(member)
           )
         )

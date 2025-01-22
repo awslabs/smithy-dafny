@@ -6,6 +6,7 @@ import software.amazon.polymorph.smithygo.codegen.GoWriter;
 import software.amazon.polymorph.smithygo.codegen.SymbolUtils;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
+import software.amazon.polymorph.smithypython.awssdk.nameresolver.AwsSdkNameResolver;
 import software.amazon.polymorph.traits.PositionalTrait;
 import software.amazon.polymorph.traits.ReferenceTrait;
 import software.amazon.smithy.aws.traits.ServiceTrait;
@@ -20,6 +21,7 @@ import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.shapes.ShapeType;
 import software.amazon.smithy.model.traits.EnumTrait;
+import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.UnitTypeTrait;
 
 public class GoCodegenUtils {
@@ -187,5 +189,35 @@ public class GoCodegenUtils {
           : shape.getId().getName()
       );
     }
+  }
+
+  /**
+   * Returns true if a conversion function should be written for the shape, false otherwise.
+   * Conversion functions are only written for "complex" shapes:
+   *  - StructureShapes ("complex" because StructureShapes can be recursive)
+   *    - except for non-AWS SDK StructureShapes with ErrorTrait; these aren't "complex"
+   *  - UnionShapes ("complex" because the conversion is not a one-liner)
+   *  - EnumShapes or StringShapes with EnumTrait ("complex" because the conversion is not a one-liner)
+   * @param shape
+   * @return
+   */
+  public static boolean shapeShouldHaveConversionFunction(Shape shape) {
+    if (shape.isStructureShape()) {
+      if (
+        !SmithyNameResolver.isShapeFromAWSSDK(shape) &&
+        shape.hasTrait(ErrorTrait.class)
+      ) {
+        return false;
+      }
+      return true;
+    } else if (shape.isUnionShape()) {
+      return true;
+    } else if (
+      (shape.isStringShape() && shape.hasTrait(EnumTrait.class)) ||
+      shape.isEnumShape()
+    ) {
+      return true;
+    }
+    return false;
   }
 }

@@ -798,7 +798,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         // but not on the Dafny side.
         final MemberShape onlyMember = PositionalTrait.onlyMember(inputShape);
         final String rustValue =
-          "input." + toSnakeCase(onlyMember.getMemberName());
+          "input.r#" + toSnakeCase(onlyMember.getMemberName());
         variables.put(
           "inputToDafny",
           toDafny(inputShape, rustValue, true, false).toString()
@@ -1096,14 +1096,14 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
             ) {
               validationBlocks.add(
                 evalTemplate(
-                  "$memberValidationFunctionName:L(&Some(input.$fieldName:L.clone()))?;",
+                  "$memberValidationFunctionName:L(&Some(input.r#$fieldName:L.clone()))?;",
                   memberVariables
                 )
               );
             } else {
               validationBlocks.add(
                 evalTemplate(
-                  "$memberValidationFunctionName:L(&input.$fieldName:L)?;",
+                  "$memberValidationFunctionName:L(&input.r#$fieldName:L)?;",
                   memberVariables
                 )
               );
@@ -1851,7 +1851,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       // since on the Rust side there is still an input structure
       // but not on the Dafny side.
       final MemberShape onlyMember = PositionalTrait.onlyMember(inputShape);
-      final String rustValue = "input." + onlyMember.getMemberName() + "()";
+      final String rustValue = "input.r#" + onlyMember.getMemberName() + "()";
       variables.put(
         "inputFromDafny",
         fromDafny(inputShape, rustValue, false, false).toString()
@@ -1912,7 +1912,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       // but not on the Dafny side.
       final MemberShape onlyMember = PositionalTrait.onlyMember(inputShape);
       final String rustValue =
-        "input." + toSnakeCase(onlyMember.getMemberName());
+        "input.r#" + toSnakeCase(onlyMember.getMemberName());
       variables.put(
         "inputToDafny",
         toDafny(inputShape, rustValue, true, false).toString()
