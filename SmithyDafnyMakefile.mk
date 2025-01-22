@@ -193,6 +193,7 @@ transpile_implementation: SRC_INDEX_TRANSPILE=$(if $(SRC_INDEX),$(SRC_INDEX),src
 # Also the expectation is that verification happens in the `verify` target
 # `find` looks for `Index.dfy` files in either V1 or V2-styled project directories (single vs. multiple model files).
 transpile_implementation:
+	dafny --version
 	find ./dafny/**/$(SRC_INDEX_TRANSPILE)/ ./$(SRC_INDEX_TRANSPILE)/ -name 'Index.dfy' | sed -e 's/^/include "/' -e 's/$$/"/' | dafny \
 	translate $(TARGET) \
 		--stdin \
@@ -637,6 +638,7 @@ build_rust:
 	cargo build
 
 test_rust:
+	rustc --version
 	cd runtimes/rust; \
 	cargo test --release -- --nocapture
 
