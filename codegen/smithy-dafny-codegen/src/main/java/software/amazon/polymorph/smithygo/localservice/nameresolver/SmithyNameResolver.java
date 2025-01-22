@@ -64,20 +64,6 @@ public class SmithyNameResolver {
       .concat("smithygenerated");
   }
 
-  public static String smithyTypesNamespace(final Shape shape) {
-    if (isShapeFromAWSSDK(shape)) {
-      throw new CodegenException(
-        "Unsupported function used for namespace resolution of AWS SDK shapes. Use smithyTypesNamespace(shape, model) instead."
-      );
-    }
-    return shape
-      .toShapeId()
-      .getNamespace()
-      .replace(DOT, BLANK)
-      .toLowerCase()
-      .concat("smithygeneratedtypes");
-  }
-
   public static String smithyTypesNamespace(
     final Shape shape,
     final Model model
@@ -99,7 +85,12 @@ public class SmithyNameResolver {
         );
       return isTopLevelShape ? sdkName : sdkName.concat("types");
     }
-    return smithyTypesNamespace(shape);
+    return shape
+    .toShapeId()
+    .getNamespace()
+    .replace(DOT, BLANK)
+    .toLowerCase()
+    .concat("smithygeneratedtypes");
   }
 
   public static String getGoModuleNameForSdkNamespace(
@@ -118,7 +109,7 @@ public class SmithyNameResolver {
     return serviceTrait.getSdkId().toLowerCase();
   }
 
-  public static String getSmithyType(final Shape shape, final Symbol symbol) {
+  public static String getSmithyType(final Shape shape, final Symbol symbol, final Model model) {
     if (
       symbol.getNamespace().contains("smithy.") ||
       symbol.getNamespace().equals("smithyapitypes") ||
@@ -128,7 +119,7 @@ public class SmithyNameResolver {
     }
     if (shape.isResourceShape()) {
       return SmithyNameResolver
-        .smithyTypesNamespace(shape)
+        .smithyTypesNamespace(shape, model)
         .concat(DOT)
         .concat("I")
         .concat(shape.toShapeId().getName());
@@ -138,14 +129,14 @@ public class SmithyNameResolver {
       return "time".concat(DOT).concat(symbol.getName());
     }
     return SmithyNameResolver
-      .smithyTypesNamespace(shape)
+      .smithyTypesNamespace(shape, model)
       .concat(DOT)
       .concat(symbol.getName());
   }
 
-  public static String getSmithyType(final Shape shape) {
+  public static String getSmithyType(final Shape shape, Model model) {
     return SmithyNameResolver
-      .smithyTypesNamespace(shape)
+      .smithyTypesNamespace(shape, model)
       .concat(DOT)
       .concat(shape.toShapeId().getName());
   }
