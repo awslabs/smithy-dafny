@@ -3,8 +3,8 @@
 
 use crate::r#_Wrappers_Compile::Result;
 use dafny_runtime::rcmut;
-use std::cell::UnsafeCell;
 use dafny_runtime::Rc;
+use std::cell::UnsafeCell;
 
 pub mod internal_ExternDefinitions_Compile {
 
