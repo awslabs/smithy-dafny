@@ -86,11 +86,11 @@ public class SmithyNameResolver {
       return isTopLevelShape ? sdkName : sdkName.concat("types");
     }
     return shape
-    .toShapeId()
-    .getNamespace()
-    .replace(DOT, BLANK)
-    .toLowerCase()
-    .concat("smithygeneratedtypes");
+      .toShapeId()
+      .getNamespace()
+      .replace(DOT, BLANK)
+      .toLowerCase()
+      .concat("smithygeneratedtypes");
   }
 
   public static String getGoModuleNameForSdkNamespace(
@@ -109,7 +109,11 @@ public class SmithyNameResolver {
     return serviceTrait.getSdkId().toLowerCase();
   }
 
-  public static String getSmithyType(final Shape shape, final Symbol symbol, final Model model) {
+  public static String getSmithyType(
+    final Shape shape,
+    final Symbol symbol,
+    final Model model
+  ) {
     if (
       symbol.getNamespace().contains("smithy.") ||
       symbol.getNamespace().equals("smithyapitypes") ||

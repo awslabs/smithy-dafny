@@ -496,7 +496,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       .expectShape(valueMemberShape.getTarget());
     final var type = SmithyNameResolver.getSmithyType(
       valueTargetShape,
-      context.symbolProvider().toSymbol(valueTargetShape), 
+      context.symbolProvider().toSymbol(valueTargetShape),
       context.model()
     );
     final String valueDataSource = "(*val.(dafny.Tuple).IndexInt(1))";

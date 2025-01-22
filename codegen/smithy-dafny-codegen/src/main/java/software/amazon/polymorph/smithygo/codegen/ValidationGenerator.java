@@ -675,10 +675,12 @@ public class ValidationGenerator {
     var dataSourceForUnion = dataSource;
     final var currServiceShapeNamespace =
       SmithyNameResolver.smithyTypesNamespace(
-        context.settings().getService(model), model
+        context.settings().getService(model),
+        model
       );
     final var currShapeNamespace = SmithyNameResolver.smithyTypesNamespace(
-      memberShape, model
+      memberShape,
+      model
     );
     if (!funcInput.isEmpty()) {
       final Boolean isExternalShape =
@@ -727,7 +729,8 @@ public class ValidationGenerator {
       );
       for (final var memberInUnion : currentShape.getAllMembers().values()) {
         final var currMemberNamespace = SmithyNameResolver.smithyTypesNamespace(
-          currentShape, model
+          currentShape,
+          model
         );
         final Boolean isExternalShape =
           !currServiceShapeNamespace.equals(currMemberNamespace) &&
