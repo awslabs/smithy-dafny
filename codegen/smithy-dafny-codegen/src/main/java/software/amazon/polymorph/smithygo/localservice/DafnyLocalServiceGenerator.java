@@ -13,7 +13,6 @@ import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoDelegator;
 import software.amazon.polymorph.smithygo.codegen.GoWriter;
 import software.amazon.polymorph.smithygo.codegen.SmithyGoDependency;
-import software.amazon.polymorph.smithygo.codegen.SymbolUtils;
 import software.amazon.polymorph.smithygo.codegen.UnionGenerator;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
@@ -32,7 +31,6 @@ import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.ResourceShape;
 import software.amazon.smithy.model.shapes.ServiceShape;
-import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.UnitTypeTrait;
 
@@ -141,7 +139,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
       """,
       serviceSymbol,
       dafnyClient,
-      SmithyNameResolver.getSmithyType(configSymbol.expectProperty(SymbolUtils.SHAPE, Shape.class), configSymbol),
+      SmithyNameResolver.getSmithyType(service, configSymbol),
       serviceSymbol,
       SmithyNameResolver.getToDafnyMethodName(
         service,
