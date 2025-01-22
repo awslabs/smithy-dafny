@@ -79,8 +79,10 @@ public class DafnyLocalServiceGenerator implements Runnable {
     );
 
     writerDelegator.useFileWriter(
-      "%s/types.go".formatted(SmithyNameResolver.smithyTypesNamespace(service)),
-      SmithyNameResolver.smithyTypesNamespace(service),
+      "%s/types.go".formatted(
+          SmithyNameResolver.smithyTypesNamespace(service, model)
+        ),
+      SmithyNameResolver.smithyTypesNamespace(service, model),
       writer1 -> {
         model
           .getUnionShapes()
@@ -115,7 +117,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
       SmithyNameResolver.getGoModuleNameForSmithyNamespace(
         context.settings().getService().getNamespace()
       ),
-      SmithyNameResolver.smithyTypesNamespace(service)
+      SmithyNameResolver.smithyTypesNamespace(service, model)
     );
     writer.addUseImports(SmithyGoDependency.CONTEXT);
 
@@ -139,7 +141,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
       """,
       serviceSymbol,
       dafnyClient,
-      SmithyNameResolver.getSmithyType(service, configSymbol),
+      SmithyNameResolver.getSmithyType(service, configSymbol, model),
       serviceSymbol,
       SmithyNameResolver.getToDafnyMethodName(
         service,
@@ -183,7 +185,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
             outputShape.toShapeId().getNamespace()
           ),
-          SmithyNameResolver.smithyTypesNamespace(outputShape)
+          SmithyNameResolver.smithyTypesNamespace(outputShape, model)
         );
         if (
           !outputShape
@@ -201,13 +203,13 @@ public class DafnyLocalServiceGenerator implements Runnable {
         var inputType = inputShape.hasTrait(UnitTypeTrait.class)
           ? ""
           : ", params %s.%s".formatted(
-              SmithyNameResolver.smithyTypesNamespace(inputShape),
+              SmithyNameResolver.smithyTypesNamespace(inputShape, model),
               inputShape.toShapeId().getName()
             );
         var outputType = outputShape.hasTrait(UnitTypeTrait.class)
           ? ""
           : "*%s.%s,".formatted(
-              SmithyNameResolver.smithyTypesNamespace(outputShape),
+              SmithyNameResolver.smithyTypesNamespace(outputShape, model),
               outputShape.toShapeId().getName()
             );
         String baseClientCall;
@@ -238,7 +240,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
               ", params %s".formatted(
                   SmithyNameResolver.getSmithyType(
                     inputShape,
-                    symbolProvider.toSymbol(inputShape)
+                    symbolProvider.toSymbol(inputShape),
+                    model
                   )
                 );
           } else {
@@ -295,7 +298,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
               SmithyNameResolver
                 .getSmithyType(
                   outputShape,
-                  symbolProvider.toSymbol(outputShape)
+                  symbolProvider.toSymbol(outputShape),
+                  model
                 )
                 .concat(",");
             GoCodegenUtils.importNamespace(outputShape, writer);
@@ -316,7 +320,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
               return defaultVal,""".formatted(
                   SmithyNameResolver.getSmithyType(
                     outputShape,
-                    symbolProvider.toSymbol(outputShape)
+                    symbolProvider.toSymbol(outputShape),
+                    model
                   )
                 );
           } else {
@@ -361,7 +366,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   %s opaqueErr
                 }
             """.formatted(
-                SmithyNameResolver.smithyTypesNamespace(inputShape),
+                SmithyNameResolver.smithyTypesNamespace(inputShape, model),
                 returnError
               );
         }
@@ -410,7 +415,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
             context.settings().getService().getNamespace()
           ),
-          SmithyNameResolver.smithyTypesNamespace(service)
+          SmithyNameResolver.smithyTypesNamespace(service, model)
         );
         writer.addUseImports(SmithyGoDependency.CONTEXT);
         writer.addImportFromModule(
@@ -634,10 +639,10 @@ public class DafnyLocalServiceGenerator implements Runnable {
 
 
         """,
-        SmithyNameResolver.smithyTypesNamespace(error),
+        SmithyNameResolver.smithyTypesNamespace(error, model),
         symbolProvider.toSymbol(error).getName(),
         SmithyNameResolver.getToDafnyMethodName(service, error, ""),
-        SmithyNameResolver.smithyTypesNamespace(error),
+        SmithyNameResolver.smithyTypesNamespace(error, model),
         symbolProvider.toSymbol(error).getName()
       );
     }
@@ -656,17 +661,27 @@ public class DafnyLocalServiceGenerator implements Runnable {
 
 
         """,
-        SmithyNameResolver.getSmithyType(error, symbolProvider.toSymbol(error)),
+        SmithyNameResolver.getSmithyType(
+          error,
+          symbolProvider.toSymbol(error),
+          model
+        ),
         SmithyNameResolver.getToDafnyMethodName(service, error, ""),
-        SmithyNameResolver.getSmithyType(error, symbolProvider.toSymbol(error))
+        SmithyNameResolver.getSmithyType(
+          error,
+          symbolProvider.toSymbol(error),
+          model
+        )
       );
     }
   }
 
   void generateUnmodelledErrors(GenerationContext context) {
     writerDelegator.useFileWriter(
-      "%s/types.go".formatted(SmithyNameResolver.smithyTypesNamespace(service)),
-      SmithyNameResolver.smithyTypesNamespace(service),
+      "%s/types.go".formatted(
+          SmithyNameResolver.smithyTypesNamespace(service, model)
+        ),
+      SmithyNameResolver.smithyTypesNamespace(service, model),
       writer -> {
         writer.write(
           """
@@ -683,9 +698,9 @@ public class DafnyLocalServiceGenerator implements Runnable {
     );
     writerDelegator.useFileWriter(
       "%s/unmodelled_errors.go".formatted(
-          SmithyNameResolver.smithyTypesNamespace(service)
+          SmithyNameResolver.smithyTypesNamespace(service, model)
         ),
-      SmithyNameResolver.smithyTypesNamespace(service),
+      SmithyNameResolver.smithyTypesNamespace(service, model),
       writer -> {
         writer.addUseImports(SmithyGoDependency.FMT);
         writer.write(
@@ -736,9 +751,9 @@ public class DafnyLocalServiceGenerator implements Runnable {
         }
         writerDelegator.useFileWriter(
           "%s/types.go".formatted(
-              SmithyNameResolver.smithyTypesNamespace(service)
+              SmithyNameResolver.smithyTypesNamespace(service, model)
             ),
-          SmithyNameResolver.smithyTypesNamespace(service),
+          SmithyNameResolver.smithyTypesNamespace(service, model),
           writer -> {
             writer.write(
               """
@@ -805,7 +820,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
               SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                 context.settings().getService().getNamespace()
               ),
-              SmithyNameResolver.smithyTypesNamespace(service)
+              SmithyNameResolver.smithyTypesNamespace(service, model)
             );
             writer.addImportFromModule(
               SmithyNameResolver.getGoModuleNameForSmithyNamespace(
@@ -846,7 +861,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   : "*%s,".formatted(
                       SmithyNameResolver.getSmithyType(
                         outputShape,
-                        symbolProvider.toSymbol(outputShape)
+                        symbolProvider.toSymbol(outputShape),
+                        model
                       )
                     );
 
@@ -874,7 +890,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     "params %s".formatted(
                         SmithyNameResolver.getSmithyType(
                           inputShape,
-                          symbolProvider.toSymbol(inputShape)
+                          symbolProvider.toSymbol(inputShape),
+                          model
                         )
                       );
                   baseClientCall =
@@ -934,7 +951,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       SmithyNameResolver
                         .getSmithyType(
                           outputShape,
-                          symbolProvider.toSymbol(outputShape)
+                          symbolProvider.toSymbol(outputShape),
+                          model
                         )
                         .concat(",");
                     final var typeAssertion = outputShape.isResourceShape()
@@ -962,7 +980,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       return defaultVal,""".formatted(
                           SmithyNameResolver.getSmithyType(
                             outputShape,
-                            symbolProvider.toSymbol(outputShape)
+                            symbolProvider.toSymbol(outputShape),
+                            model
                           )
                         );
                   } else {
@@ -1028,7 +1047,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
       writer -> {
         writer.addImportFromModule(
           context.settings().getModuleName(),
-          SmithyNameResolver.smithyTypesNamespace(service)
+          SmithyNameResolver.smithyTypesNamespace(service, model)
         );
         writer.addImportFromModule(SMITHY_DAFNY_STD_LIB_GO, "Wrappers");
         writer.addImportFromModule(
@@ -1048,7 +1067,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
               resourceShape.getId().getName(),
               DafnyNameResolver.dafnyTypesNamespace(resourceShape),
               resourceShape.getId().getName(),
-              SmithyNameResolver.smithyTypesNamespace(resourceShape),
+              SmithyNameResolver.smithyTypesNamespace(resourceShape, model),
               resourceShape.getId().getName()
             )
         );
@@ -1069,7 +1088,8 @@ public class DafnyLocalServiceGenerator implements Runnable {
               : "*%s,".formatted(
                   SmithyNameResolver.getSmithyType(
                     outputShape,
-                    symbolProvider.toSymbol(outputShape)
+                    symbolProvider.toSymbol(outputShape),
+                    model
                   )
                 );
             String fromDafnyConvMethodNameForInput =
