@@ -232,6 +232,7 @@ _transpile_test_all: TRANSPILE_DEPENDENCIES=$(if ${DIR_STRUCTURE_V2}, $(patsubst
 _transpile_test_all: transpile_test
 
 transpile_test:
+	dafny --version
 	find ./dafny/**/$(TEST_INDEX_TRANSPILE) ./$(TEST_INDEX_TRANSPILE) -name "*.dfy" -name '*.dfy' | sed -e 's/^/include "/' -e 's/$$/"/' | dafny \
 		translate $(TARGET) \
 		--stdin \
@@ -630,7 +631,7 @@ _mv_implementation_rust:
 # Pre-process the Dafny-generated Rust code to remove them.
 	sed -i -e 's/[[:space:]]*$$//' runtimes/rust/src/implementation_from_dafny.rs 
 	rm -f runtimes/rust/src/implementation_from_dafny.rs-e
-	rustfmt --edition 2021 runtimes/rust/src/implementation_from_dafny.rs
+#	rustfmt --edition 2021 runtimes/rust/src/implementation_from_dafny.rs
 	rm -rf implementation_from_dafny-rust
 
 build_rust:
