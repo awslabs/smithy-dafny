@@ -400,9 +400,8 @@ public class SymbolVisitor implements SymbolProvider, ShapeVisitor<Symbol> {
 
   private Symbol.Builder symbolBuilderFor(Shape shape, String typeName) {
     final String namespace;
-    if (shape.hasTrait(ServiceTrait.class)) {
-      namespace =
-        shape.expectTrait(ServiceTrait.class).getSdkId().toLowerCase();
+    if (SmithyNameResolver.isShapeFromAWSSDK(shape)) {
+      namespace = SmithyNameResolver.smithyTypesNamespace(shape, model);
     } else {
       namespace = SmithyNameResolver.smithyTypesNamespace(shape);
     }

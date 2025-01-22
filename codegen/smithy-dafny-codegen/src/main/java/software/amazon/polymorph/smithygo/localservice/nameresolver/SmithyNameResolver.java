@@ -9,10 +9,10 @@ import java.util.Map;
 import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.CodegenException;
 import software.amazon.smithy.codegen.core.Symbol;
+import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.ServiceShape;
 import software.amazon.smithy.model.shapes.Shape;
-import software.amazon.smithy.model.Model;
 
 public class SmithyNameResolver {
 
@@ -70,13 +70,18 @@ public class SmithyNameResolver {
         "Unsupported function used for namespace resolution of AWS SDK shapes. Use smithyTypesNamespace(shape, model) instead."
       );
     }
-    return shape.toShapeId().getNamespace()
+    return shape
+      .toShapeId()
+      .getNamespace()
       .replace(DOT, BLANK)
       .toLowerCase()
       .concat("smithygeneratedtypes");
   }
 
-  public static String smithyTypesNamespace(final Shape shape, final Model model) {
+  public static String smithyTypesNamespace(
+    final Shape shape,
+    final Model model
+  ) {
     final String shapeNameSpace = shape.toShapeId().getNamespace();
     if (isShapeFromAWSSDK(shape)) {
       final String sdkName = shapeNameSpace
@@ -86,9 +91,12 @@ public class SmithyNameResolver {
         return sdkName;
       }
       // Boolean to hold if shape is input or output of any operation
-      boolean isTopLevelShape = model.shapes(OperationShape.class)
-      .anyMatch( op -> op.getInput().filter(shape.getId()::equals).isPresent() ||
-                        op.getOutput().filter(shape.getId()::equals).isPresent());
+      boolean isTopLevelShape = model
+        .shapes(OperationShape.class)
+        .anyMatch(op ->
+          op.getInput().filter(shape.getId()::equals).isPresent() ||
+          op.getOutput().filter(shape.getId()::equals).isPresent()
+        );
       return isTopLevelShape ? sdkName : sdkName.concat("types");
     }
     return smithyTypesNamespace(shape);
