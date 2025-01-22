@@ -1947,19 +1947,6 @@ public class DafnyLocalServiceTypeConversionProtocol
               true,
               context.model()
             );
-          if (
-            model
-              .shapes(OperationShape.class)
-              .anyMatch(op ->
-                op
-                  .getInput()
-                  .filter(visitingShape.getId()::equals)
-                  .isPresent() ||
-                op.getOutput().filter(visitingShape.getId()::equals).isPresent()
-              )
-          ) {
-            System.out.println(visitingShape);
-          }
           Boolean isPointable = context
             .symbolProvider()
             .toSymbol(visitingMemberShape)
