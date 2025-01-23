@@ -7,7 +7,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import software.amazon.smithy.aws.traits.ServiceTrait;
+import software.amazon.smithy.codegen.core.CodegenException;
 import software.amazon.smithy.codegen.core.Symbol;
+import software.amazon.smithy.model.Model;
+import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.ServiceShape;
 import software.amazon.smithy.model.shapes.Shape;
 
@@ -61,7 +64,10 @@ public class SmithyNameResolver {
       .concat("smithygenerated");
   }
 
-  public static String smithyTypesNamespace(final Shape shape) {
+  public static String smithyTypesNamespace(
+    final Shape shape,
+    final Model model
+  ) {
     final String shapeNameSpace = shape.toShapeId().getNamespace();
     if (isShapeFromAWSSDK(shape)) {
       final String sdkName = shapeNameSpace
@@ -70,9 +76,18 @@ public class SmithyNameResolver {
       if (shape.hasTrait(ServiceTrait.class)) {
         return sdkName;
       }
-      return sdkName.concat("types");
+      // Boolean to hold if shape is input or output of any operation
+      boolean isTopLevelShape = model
+        .shapes(OperationShape.class)
+        .anyMatch(op ->
+          op.getInput().filter(shape.getId()::equals).isPresent() ||
+          op.getOutput().filter(shape.getId()::equals).isPresent()
+        );
+      return isTopLevelShape ? sdkName : sdkName.concat("types");
     }
-    return shapeNameSpace
+    return shape
+      .toShapeId()
+      .getNamespace()
       .replace(DOT, BLANK)
       .toLowerCase()
       .concat("smithygeneratedtypes");
@@ -94,7 +109,11 @@ public class SmithyNameResolver {
     return serviceTrait.getSdkId().toLowerCase();
   }
 
-  public static String getSmithyType(final Shape shape, final Symbol symbol) {
+  public static String getSmithyType(
+    final Shape shape,
+    final Symbol symbol,
+    final Model model
+  ) {
     if (
       symbol.getNamespace().contains("smithy.") ||
       symbol.getNamespace().equals("smithyapitypes") ||
@@ -104,7 +123,7 @@ public class SmithyNameResolver {
     }
     if (shape.isResourceShape()) {
       return SmithyNameResolver
-        .smithyTypesNamespace(shape)
+        .smithyTypesNamespace(shape, model)
         .concat(DOT)
         .concat("I")
         .concat(shape.toShapeId().getName());
@@ -114,14 +133,14 @@ public class SmithyNameResolver {
       return "time".concat(DOT).concat(symbol.getName());
     }
     return SmithyNameResolver
-      .smithyTypesNamespace(shape)
+      .smithyTypesNamespace(shape, model)
       .concat(DOT)
       .concat(symbol.getName());
   }
 
-  public static String getSmithyType(final Shape shape) {
+  public static String getSmithyType(final Shape shape, Model model) {
     return SmithyNameResolver
-      .smithyTypesNamespace(shape)
+      .smithyTypesNamespace(shape, model)
       .concat(DOT)
       .concat(shape.toShapeId().getName());
   }
