@@ -54,19 +54,20 @@ public class GoCodegenUtils {
 
   public static String getType(
     final Symbol symbol,
-    final Shape shape,
     final Boolean includeNamespace
   ) {
     if (
       symbol.getProperty(SymbolUtils.GO_ELEMENT_TYPE, Symbol.class).isEmpty()
     ) {
       return includeNamespace
-        ? SmithyNameResolver.getSmithyType(shape, symbol)
+        ? SmithyNameResolver.getSmithyType(
+          symbol.expectProperty(SymbolUtils.SHAPE, Shape.class),
+          symbol
+        )
         : symbol.getName();
     }
     var type = getType(
       symbol.expectProperty(SymbolUtils.GO_ELEMENT_TYPE, Symbol.class),
-      shape,
       includeNamespace
     );
     if (symbol.getProperty(SymbolUtils.GO_MAP).isPresent()) {

@@ -484,7 +484,6 @@ public class DafnyLocalServiceTypeConversionProtocol
         inputType =
           GoCodegenUtils.getType(
             context.symbolProvider().toSymbol(resourceOrService),
-            resourceOrService,
             true
           );
       } else {
@@ -497,7 +496,7 @@ public class DafnyLocalServiceTypeConversionProtocol
             .concat(context.symbolProvider().toSymbol(serviceShape).getName());
       }
     } else {
-      inputType = GoCodegenUtils.getType(curSymbol, shape, true);
+      inputType = GoCodegenUtils.getType(curSymbol, true);
       outputType = DafnyNameResolver.getDafnyType(shape, curSymbol);
     }
     writerDelegator.useFileWriter(
@@ -992,11 +991,7 @@ public class DafnyLocalServiceTypeConversionProtocol
       }
     } else {
       outputType =
-        GoCodegenUtils.getType(
-          context.symbolProvider().toSymbol(shape),
-          shape,
-          true
-        );
+        GoCodegenUtils.getType(context.symbolProvider().toSymbol(shape), true);
     }
     writerDelegator.useFileWriter(
       "%s/%s".formatted(
@@ -1858,7 +1853,6 @@ public class DafnyLocalServiceTypeConversionProtocol
           inputType =
             GoCodegenUtils.getType(
               context.symbolProvider().toSymbol(visitingShape),
-              visitingShape,
               true
             );
           Boolean isPointable = context
@@ -1891,7 +1885,6 @@ public class DafnyLocalServiceTypeConversionProtocol
                 inputType =
                   GoCodegenUtils.getType(
                     context.symbolProvider().toSymbol(resourceOrService),
-                    resourceOrService,
                     true
                   );
               } else {
@@ -1962,7 +1955,6 @@ public class DafnyLocalServiceTypeConversionProtocol
           alreadyVisited.add(visitingMemberShape.toShapeId());
           var outputType = GoCodegenUtils.getType(
             context.symbolProvider().toSymbol(visitingShape),
-            visitingShape,
             true
           );
           Boolean isPointable = context

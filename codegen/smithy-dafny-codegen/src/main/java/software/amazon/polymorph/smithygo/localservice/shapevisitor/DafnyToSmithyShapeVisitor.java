@@ -459,7 +459,7 @@ public class DafnyToSmithyShapeVisitor extends ShapeVisitor.Default<String> {
       	}
       	fieldValue = append(fieldValue, %s)}
       	""".formatted(
-          GoCodegenUtils.getType(symbol, shape, true),
+          GoCodegenUtils.getType(symbol, true),
           dataSource,
           ShapeVisitorHelper.toNativeShapeVisitorWriter(
             memberShape,

@@ -514,7 +514,6 @@ public class ValidationGenerator {
         );
         final var inputType = GoCodegenUtils.getType(
           symbolProvider.toSymbol(currentShape),
-          currentShape,
           isExternalShape
         );
         if (isExternalShape) {
@@ -611,7 +610,6 @@ public class ValidationGenerator {
         );
         final var inputType = GoCodegenUtils.getType(
           symbolProvider.toSymbol(currentShape),
-          currentShape,
           isExternalShape
         );
         if (isExternalShape) {
@@ -684,7 +682,6 @@ public class ValidationGenerator {
         !currShapeNamespace.startsWith("smithy");
       final var inputType = GoCodegenUtils.getType(
         symbolProvider.toSymbol(currentShape),
-        currentShape,
         isExternalShape
       );
       if (isExternalShape) {
