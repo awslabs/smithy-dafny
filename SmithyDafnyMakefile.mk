@@ -530,9 +530,11 @@ setup_net:
 	dotnet restore runtimes/net/
 
 format_net:
+	dotnet --version
 	dotnet format runtimes/net/*.csproj
 
 format_net-check:
+	dotnet --version
 	dotnet format runtimes/net/*.csproj --verify-no-changes
 
 ########################## Java targets
