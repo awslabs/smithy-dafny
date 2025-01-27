@@ -853,7 +853,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
       variables.put(
         "operationSendBody",
         evalTemplate(
-          "$snakeCaseResourceName:L.inner.borrow_mut().$snakeCaseOperationName:L(input)",
+          "$snakeCaseResourceName:L.inner.lock().unwrap().$snakeCaseOperationName:L(input)",
           MapUtils.merge(
             variables,
             resourceVariables(bindingShape.asResourceShape().orElseThrow())
@@ -2003,10 +2003,10 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         #[allow(dead_code)]
         pub fn to_dafny(
             value: $rustRootModuleName:L::operation::$snakeCaseOperationName:L::$rustStructureName:L,
-        ) -> ::std::rc::Rc<
+        ) -> ::dafny_runtime::Rc<
             crate::r#$dafnyTypesModuleName:L::$structureName:L,
         >{
-            ::std::rc::Rc::new(crate::r#$dafnyTypesModuleName:L::$structureName:L::$structureName:L {
+            ::dafny_runtime::Rc::new(crate::r#$dafnyTypesModuleName:L::$structureName:L::$structureName:L {
                 $variants:L
             })
         }
@@ -2064,7 +2064,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         """
         #[allow(dead_code)]
         pub fn from_dafny(
-            dafny_value: ::std::rc::Rc<
+            dafny_value: ::dafny_runtime::Rc<
                 crate::r#$dafnyTypesModuleName:L::$structureName:L,
             >,
         ) -> $rustRootModuleName:L::operation::$snakeCaseOperationName:L::$rustStructureName:L {
@@ -2364,7 +2364,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
           if (isDafnyOption) {
             yield TokenTree.of(
               """
-              ::std::rc::Rc::new(match &%s {
+              ::dafny_runtime::Rc::new(match &%s {
                   Some(x) => crate::_Wrappers_Compile::Option::Some { value: %s::conversions::%s::to_dafny(x.clone()) },
                   None => crate::_Wrappers_Compile::Option::None { }
               })
@@ -2396,7 +2396,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
           final String coercion = isDafnyOption ? "into()" : "Extract()";
           yield TokenTree.of(
             """
-            std::rc::Rc::new(match %s {
+            dafny_runtime::Rc::new(match %s {
               Some(s) => crate::_Wrappers_Compile::Option::Some { value: %s },
               None => crate::_Wrappers_Compile::Option::None {},
             }).%s""".formatted(rustValue, rustToDafny.formatted("s"), coercion)
@@ -2577,7 +2577,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         } else {
           yield TokenTree.of(
             """
-            ::std::rc::Rc::new(match &%s {
+            ::dafny_runtime::Rc::new(match &%s {
                 Some(x) => crate::r#_Wrappers_Compile::Option::Some { value :
                     ::dafny_runtime::dafny_runtime_conversions::vec_to_dafny_sequence(x,
                         |e| %s,
@@ -2625,7 +2625,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
           yield TokenTree.of(
             """
 
-            ::std::rc::Rc::new(match &%s {
+            ::dafny_runtime::Rc::new(match &%s {
                 Some(x) => crate::r#_Wrappers_Compile::Option::Some { value :
                     ::dafny_runtime::dafny_runtime_conversions::hashmap_to_dafny_map(x,
                         |k| %s,
@@ -2663,7 +2663,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         } else {
           yield TokenTree.of(
             """
-            ::std::rc::Rc::new(match &%s {
+            ::dafny_runtime::Rc::new(match &%s {
                 Some(x) => crate::_Wrappers_Compile::Option::Some { value: %s::to_dafny(&x.clone()) },
                 None => crate::_Wrappers_Compile::Option::None { }
             })
@@ -2693,7 +2693,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         } else {
           yield TokenTree.of(
             """
-            ::std::rc::Rc::new(match &%s {
+            ::dafny_runtime::Rc::new(match &%s {
                 Some(x) => crate::_Wrappers_Compile::Option::Some { value: %s::conversions::%s::to_dafny(&x.clone()) },
                 None => crate::_Wrappers_Compile::Option::None { }
             })
@@ -2720,7 +2720,7 @@ public class RustLibraryShimGenerator extends AbstractRustShimGenerator {
         } else {
           yield TokenTree.of(
             """
-            ::std::rc::Rc::new(match &%s {
+            ::dafny_runtime::Rc::new(match &%s {
                 Some(x) => crate::_Wrappers_Compile::Option::Some { value: %s::conversions::client::to_dafny(&x.clone()) },
                 None => crate::_Wrappers_Compile::Option::None { }
             })
