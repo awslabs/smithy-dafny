@@ -507,7 +507,7 @@ public class ValidationGenerator {
           context.settings().getService(model)
         );
         final var currShapeNamespace = SmithyNameResolver.shapeNamespace(
-          memberShape
+          model.expectShape(memberShape.getTarget())
         );
         final Boolean isExternalShape = !currServiceShapeNamespace.equals(
           currShapeNamespace
@@ -604,7 +604,7 @@ public class ValidationGenerator {
           context.settings().getService(model)
         );
         final var currShapeNamespace = SmithyNameResolver.shapeNamespace(
-          memberShape
+          model.expectShape(memberShape.getTarget())
         );
         final Boolean isExternalShape = !currServiceShapeNamespace.equals(
           currShapeNamespace
@@ -676,7 +676,7 @@ public class ValidationGenerator {
         context.settings().getService(model)
       );
     final var currShapeNamespace = SmithyNameResolver.smithyTypesNamespace(
-      memberShape
+      model.expectShape(memberShape.getTarget())
     );
     if (!funcInput.isEmpty()) {
       final Boolean isExternalShape =

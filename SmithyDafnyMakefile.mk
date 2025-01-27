@@ -193,6 +193,7 @@ transpile_implementation: SRC_INDEX_TRANSPILE=$(if $(SRC_INDEX),$(SRC_INDEX),src
 # Also the expectation is that verification happens in the `verify` target
 # `find` looks for `Index.dfy` files in either V1 or V2-styled project directories (single vs. multiple model files).
 transpile_implementation:
+	dafny --version
 	find ./dafny/**/$(SRC_INDEX_TRANSPILE)/ ./$(SRC_INDEX_TRANSPILE)/ -name 'Index.dfy' | sed -e 's/^/include "/' -e 's/$$/"/' | dafny \
 	translate $(TARGET) \
 		--stdin \
@@ -231,6 +232,7 @@ _transpile_test_all: TRANSPILE_DEPENDENCIES=$(if ${DIR_STRUCTURE_V2}, $(patsubst
 _transpile_test_all: transpile_test
 
 transpile_test:
+	dafny --version
 	find ./dafny/**/$(TEST_INDEX_TRANSPILE) ./$(TEST_INDEX_TRANSPILE) -name "*.dfy" -name '*.dfy' | sed -e 's/^/include "/' -e 's/$$/"/' | dafny \
 		translate $(TARGET) \
 		--stdin \
@@ -609,7 +611,7 @@ transpile_implementation_rust: SRC_INDEX=$(RUST_SRC_INDEX)
 transpile_implementation_rust: TEST_INDEX=$(RUST_TEST_INDEX)
 # The Dafny Rust code generator is not complete yet,
 # so we want to emit code even if there are unsupported features in the input.
-transpile_implementation_rust: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix --rust-module-name implementation_from_dafny
+transpile_implementation_rust: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix --rust-module-name implementation_from_dafny --rust-sync
 # The Dafny Rust code generator only supports a single crate for everything,
 # so we inline all dependencies by not passing `-library` to Dafny.
 transpile_implementation_rust: TRANSPILE_DEPENDENCIES=
@@ -629,7 +631,7 @@ _mv_implementation_rust:
 # Pre-process the Dafny-generated Rust code to remove them.
 	sed -i -e 's/[[:space:]]*$$//' runtimes/rust/src/implementation_from_dafny.rs 
 	rm -f runtimes/rust/src/implementation_from_dafny.rs-e
-	rustfmt --edition 2021 runtimes/rust/src/implementation_from_dafny.rs
+#	rustfmt --edition 2021 runtimes/rust/src/implementation_from_dafny.rs
 	rm -rf implementation_from_dafny-rust
 
 build_rust:
@@ -637,6 +639,7 @@ build_rust:
 	cargo build
 
 test_rust:
+	rustc --version
 	cd runtimes/rust; \
 	cargo test --release -- --nocapture
 
@@ -776,7 +779,7 @@ local_transpile_impl_rust_single: TARGET=rs
 local_transpile_impl_rust_single: OUT=implementation_from_dafny
 local_transpile_impl_rust_single: SRC_INDEX=$(RUST_SRC_INDEX)
 local_transpile_impl_rust_single: TEST_INDEX=$(RUST_TEST_INDEX)
-local_transpile_impl_rust_single: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix
+local_transpile_impl_rust_single: DAFNY_OPTIONS=--emit-uncompilable-code --allow-warnings --compile-suffix --rust-sync
 local_transpile_impl_rust_single: TRANSPILE_DEPENDENCIES=
 local_transpile_impl_rust_single: STD_LIBRARY=
 local_transpile_impl_rust_single: SRC_INDEX_TRANSPILE=$(if $(SRC_INDEX),$(SRC_INDEX),src)
