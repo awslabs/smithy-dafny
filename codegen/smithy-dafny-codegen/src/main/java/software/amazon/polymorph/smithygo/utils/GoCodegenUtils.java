@@ -61,7 +61,11 @@ public class GoCodegenUtils {
       symbol.getProperty(SymbolUtils.GO_ELEMENT_TYPE, Symbol.class).isEmpty()
     ) {
       return includeNamespace
-        ? SmithyNameResolver.getSmithyType(symbol.expectProperty(SymbolUtils.SHAPE, Shape.class), symbol, model)
+        ? SmithyNameResolver.getSmithyType(
+          symbol.expectProperty(SymbolUtils.SHAPE, Shape.class),
+          symbol,
+          model
+        )
         : symbol.getName();
     }
     var type = getType(

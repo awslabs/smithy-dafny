@@ -420,10 +420,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                 }
                 """,
                 resourceShape.getId().getName(),
-                SmithyNameResolver.smithyTypesNamespace(
-                      resourceShape,
-                      model
-                    ),
+                SmithyNameResolver.smithyTypesNamespace(resourceShape, model),
                 resourceShape.getId().getName(),
                 DafnyNameResolver.dafnyTypesNamespace(resourceShape),
                 resourceShape.getId().getName(),
@@ -512,8 +509,7 @@ public class DafnyLocalServiceTypeConversionProtocol
             .concat(context.symbolProvider().toSymbol(serviceShape).getName());
       }
     } else {
-      inputType =
-        GoCodegenUtils.getType(curSymbol, true, context.model());
+      inputType = GoCodegenUtils.getType(curSymbol, true, context.model());
       outputType = DafnyNameResolver.getDafnyType(shape, curSymbol);
     }
     writerDelegator.useFileWriter(
@@ -959,9 +955,9 @@ public class DafnyLocalServiceTypeConversionProtocol
                 DafnyNameResolver.dafnyTypesNamespace(resourceShape),
                 resourceShape.getId().getName(),
                 SmithyNameResolver.smithyTypesNamespace(
-                      resourceShape,
-                      context.model()
-                    ),
+                  resourceShape,
+                  context.model()
+                ),
                 resourceShape.getId().getName(),
                 extendableResourceWrapperCheck,
                 resourceShape.getId().getName()
@@ -1039,8 +1035,11 @@ public class DafnyLocalServiceTypeConversionProtocol
       }
     } else {
       outputType =
-        GoCodegenUtils.getType(context.symbolProvider().toSymbol(shape), true,
-          context.model());
+        GoCodegenUtils.getType(
+          context.symbolProvider().toSymbol(shape),
+          true,
+          context.model()
+        );
     }
     writerDelegator.useFileWriter(
       "%s/%s".formatted(
