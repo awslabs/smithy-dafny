@@ -54,6 +54,7 @@ public class GoCodegenUtils {
 
   public static String getType(
     final Symbol symbol,
+    final Shape shape,
     final Boolean includeNamespace,
     final Model model
   ) {
@@ -61,15 +62,12 @@ public class GoCodegenUtils {
       symbol.getProperty(SymbolUtils.GO_ELEMENT_TYPE, Symbol.class).isEmpty()
     ) {
       return includeNamespace
-        ? SmithyNameResolver.getSmithyType(
-          symbol.expectProperty(SymbolUtils.SHAPE, Shape.class),
-          symbol,
-          model
-        )
+        ? SmithyNameResolver.getSmithyType(shape, symbol, model)
         : symbol.getName();
     }
     var type = getType(
       symbol.expectProperty(SymbolUtils.GO_ELEMENT_TYPE, Symbol.class),
+      shape,
       includeNamespace,
       model
     );

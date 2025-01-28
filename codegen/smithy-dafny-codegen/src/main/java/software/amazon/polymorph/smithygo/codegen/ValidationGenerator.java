@@ -506,13 +506,14 @@ public class ValidationGenerator {
           context.settings().getService(model)
         );
         final var currShapeNamespace = SmithyNameResolver.shapeNamespace(
-          model.expectShape(memberShape.getTarget())
+          memberShape
         );
         final Boolean isExternalShape = !currServiceShapeNamespace.equals(
           currShapeNamespace
         );
         final var inputType = GoCodegenUtils.getType(
           symbolProvider.toSymbol(currentShape),
+          currentShape,
           isExternalShape,
           context.model()
         );
@@ -602,13 +603,14 @@ public class ValidationGenerator {
           context.settings().getService(model)
         );
         final var currShapeNamespace = SmithyNameResolver.shapeNamespace(
-          model.expectShape(memberShape.getTarget())
+          memberShape
         );
         final Boolean isExternalShape = !currServiceShapeNamespace.equals(
           currShapeNamespace
         );
         final var inputType = GoCodegenUtils.getType(
           symbolProvider.toSymbol(currentShape),
+          currentShape,
           isExternalShape,
           context.model()
         );
@@ -674,7 +676,7 @@ public class ValidationGenerator {
         model
       );
     final var currShapeNamespace = SmithyNameResolver.smithyTypesNamespace(
-      model.expectShape(memberShape.getTarget()),
+      memberShape,
       model
     );
     if (!funcInput.isEmpty()) {
@@ -683,6 +685,7 @@ public class ValidationGenerator {
         !currShapeNamespace.startsWith("smithy");
       final var inputType = GoCodegenUtils.getType(
         symbolProvider.toSymbol(currentShape),
+        currentShape,
         isExternalShape,
         context.model()
       );

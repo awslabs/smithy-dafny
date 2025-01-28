@@ -7,10 +7,10 @@ pub enum Error {
     },
     ValidationError(ValidationError),
     Opaque {
-        obj: ::dafny_runtime::Object<::dafny_runtime::DynAny>,
+        obj: ::dafny_runtime::Object<dyn ::std::any::Any>,
     },
     OpaqueWithText {
-        obj: ::dafny_runtime::Object<::dafny_runtime::DynAny>,
+        obj: ::dafny_runtime::Object<dyn ::std::any::Any>,
         objMessage: ::std::string::String,
     },
 }
@@ -38,18 +38,18 @@ impl ::std::error::Error for Error {
 impl Error {
     pub fn wrap_validation_err<E>(err: E) -> Self
     where
-        E: ::std::error::Error + Send + Sync + 'static,
+        E: ::std::error::Error + 'static,
     {
-        Self::ValidationError(ValidationError(::dafny_runtime::Rc::new(err)))
+        Self::ValidationError(ValidationError(::std::rc::Rc::new(err)))
     }
 }
 
 #[derive(::std::clone::Clone, ::std::fmt::Debug)]
-pub struct ValidationError(::dafny_runtime::Rc<dyn ::std::error::Error + Send + Sync>);
+pub struct ValidationError(::std::rc::Rc<dyn ::std::error::Error>);
 
 impl ::std::cmp::PartialEq for ValidationError {
     fn eq(&self, other: &Self) -> bool {
-        ::dafny_runtime::Rc::<(dyn std::error::Error + Send + Sync + 'static)>::ptr_eq(&self.0, &other.0)
+        ::std::rc::Rc::<(dyn std::error::Error + 'static)>::ptr_eq(&self.0, &other.0)
     }
 }
 

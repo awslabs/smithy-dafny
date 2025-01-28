@@ -2,10 +2,10 @@
 pub enum Error {
     $modeledErrorVariants:L
     Opaque {
-        obj: ::dafny_runtime::Object<::dafny_runtime::DynAny>,
+        obj: ::dafny_runtime::Object<dyn ::std::any::Any>,
     },
     OpaqueWithText {
-        obj: ::dafny_runtime::Object<::dafny_runtime::DynAny>,
+        obj: ::dafny_runtime::Object<dyn ::std::any::Any>,
         objMessage: ::std::string::String,
     },
 }
