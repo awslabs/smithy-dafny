@@ -13,6 +13,7 @@ import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoDelegator;
 import software.amazon.polymorph.smithygo.codegen.GoWriter;
 import software.amazon.polymorph.smithygo.codegen.SmithyGoDependency;
+import software.amazon.polymorph.smithygo.codegen.SymbolUtils;
 import software.amazon.polymorph.smithygo.codegen.UnionGenerator;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
@@ -31,6 +32,7 @@ import software.amazon.smithy.model.shapes.MemberShape;
 import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.ResourceShape;
 import software.amazon.smithy.model.shapes.ServiceShape;
+import software.amazon.smithy.model.shapes.Shape;
 import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.UnitTypeTrait;
 
@@ -118,7 +120,29 @@ public class DafnyLocalServiceGenerator implements Runnable {
       SmithyNameResolver.smithyTypesNamespace(service)
     );
     writer.addUseImports(SmithyGoDependency.CONTEXT);
-
+    var configShape = configSymbol.expectProperty(
+      SymbolUtils.SHAPE,
+      Shape.class
+    );
+    if (
+      !configShape
+        .toShapeId()
+        .getNamespace()
+        .equals(service.toShapeId().getNamespace())
+    ) {
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+          configShape.toShapeId().getNamespace()
+        ),
+        SmithyNameResolver.smithyTypesNamespace(configShape)
+      );
+      writer.addImportFromModule(
+        SmithyNameResolver.getGoModuleNameForSmithyNamespace(
+          configShape.toShapeId().getNamespace()
+        ),
+        SmithyNameResolver.shapeNamespace(configShape)
+      );
+    }
     final var dafnyClient = DafnyNameResolver.getDafnyInterfaceClient(service);
     writer.write(
       """
@@ -139,7 +163,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
       """,
       serviceSymbol,
       dafnyClient,
-      SmithyNameResolver.getSmithyType(service, configSymbol),
+      SmithyNameResolver.getSmithyType(configShape, configSymbol),
       serviceSymbol,
       SmithyNameResolver.getToDafnyMethodName(
         service,
