@@ -946,8 +946,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                         )
                         : Constants.funcNameGenerator(
                           postionalMemShape,
-                          "FromDafny",
-                          model
+                          "FromDafny"
                         );
 
                     outputType =
