@@ -1999,8 +1999,7 @@ public class DafnyLocalServiceTypeConversionProtocol
             """,
             Constants.funcNameGenerator(
               visitingMemberShape,
-              "ToDafny",
-              context.model()
+              "ToDafny"
             ),
             inputType,
             outputType,
@@ -2093,8 +2092,7 @@ public class DafnyLocalServiceTypeConversionProtocol
             }""",
             Constants.funcNameGenerator(
               visitingMemberShape,
-              "FromDafny",
-              context.model()
+              "FromDafny"
             ),
             outputType,
             DafnyToSmithyShapeVisitor.getConversionFunc(visitingMemberShape)

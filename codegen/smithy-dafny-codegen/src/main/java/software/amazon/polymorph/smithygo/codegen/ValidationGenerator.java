@@ -498,8 +498,7 @@ public class ValidationGenerator {
     ) {
       final String funcName = Constants.funcNameGenerator(
         memberShape,
-        "Validate",
-        context.model()
+        "Validate"
       );
       final String funcInput = dataSource.startsWith("input") ? "" : dataSource;
       if (!funcInput.isEmpty()) {
@@ -595,8 +594,7 @@ public class ValidationGenerator {
     ) {
       final var funcName = Constants.funcNameGenerator(
         memberShape,
-        "Validate",
-        context.model()
+        "Validate"
       );
       final var funcInput = dataSource.startsWith("input") ? "" : dataSource;
       if (!funcInput.isEmpty()) {
@@ -666,8 +664,7 @@ public class ValidationGenerator {
   ) {
     final var funcName = Constants.funcNameGenerator(
       memberShape,
-      "Validate",
-      context.model()
+      "Validate"
     );
     final var funcInput = dataSource.startsWith("input") ? "" : dataSource;
     var dataSourceForUnion = dataSource;

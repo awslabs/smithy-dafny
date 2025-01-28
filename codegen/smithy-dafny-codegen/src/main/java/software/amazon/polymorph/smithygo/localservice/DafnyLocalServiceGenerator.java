@@ -257,8 +257,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
             toDafnyMethod =
               Constants.funcNameGenerator(
                 inputMemberShapeForPositional,
-                "ToDafny",
-                model
+                "ToDafny"
               );
             inputType =
               ", params %s".formatted(
@@ -315,8 +314,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
               )
               : Constants.funcNameGenerator(
                 postionalMemShape,
-                "FromDafny",
-                model
+                "FromDafny"
               );
             outputType =
               SmithyNameResolver
@@ -536,8 +534,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     .concat(
                       Constants.funcNameGenerator(
                         postionalMemShape,
-                        "ToDafny",
-                        model
+                        "ToDafny"
                       )
                     );
             }
@@ -606,8 +603,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   .concat(
                     Constants.funcNameGenerator(
                       postionalMemShape,
-                      "FromDafny",
-                      model
+                      "FromDafny"
                     )
                   );
               final Symbol symbolForPositional = symbolProvider.toSymbol(
@@ -1145,8 +1141,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   )
                   : Constants.funcNameGenerator(
                     postionalMemShape,
-                    "FromDafny",
-                    model
+                    "FromDafny"
                   );
             }
             final var inputType = inputShape.hasTrait(UnitTypeTrait.class)
@@ -1219,8 +1214,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     )
                     : Constants.funcNameGenerator(
                       postionalMemShape,
-                      "ToDafny",
-                      model
+                      "ToDafny"
                     );
                 deReferenceRequired = false;
               }

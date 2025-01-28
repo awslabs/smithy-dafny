@@ -5,10 +5,12 @@ import java.util.Map;
 import software.amazon.polymorph.smithygo.codegen.GenerationContext;
 import software.amazon.polymorph.smithygo.codegen.GoWriter;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
+import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
 import software.amazon.polymorph.smithygo.utils.Constants;
 import software.amazon.polymorph.traits.ReferenceTrait;
 import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.model.shapes.MemberShape;
+import software.amazon.smithy.model.shapes.ServiceShape;
 import software.amazon.smithy.model.shapes.Shape;
 
 /**
@@ -89,6 +91,28 @@ public class ShapeVisitorHelper {
         );
       }
     }
+    final String funcName = Constants.funcNameGenerator(
+      memberShape,
+      "FromDafny"
+    );
+    final var serviceShape = context
+      .model()
+      .expectShape(context.settings().getService(), ServiceShape.class);
+    if (
+      !serviceShape
+        .getId()
+        .getNamespace()
+        .equals(memberShape.getId().getNamespace())
+    ) {
+      var memberShapeNameSpace = SmithyNameResolver.shapeNamespace(memberShape);
+      return (
+        memberShapeNameSpace
+          .concat(".")
+          .concat(funcName.concat("("))
+          .concat(dataSource)
+          .concat(")")
+      );
+    }
     final String funcDataSource = "input";
     if (
       !DafnyToSmithyShapeVisitor
@@ -109,11 +133,6 @@ public class ShapeVisitorHelper {
         )
       );
     }
-    final String funcName = Constants.funcNameGenerator(
-      memberShape,
-      "FromDafny",
-      context.model()
-    );
     return (funcName.concat("(").concat(dataSource).concat(")"));
   }
 
@@ -185,8 +204,7 @@ public class ShapeVisitorHelper {
     }
     final String funcName = Constants.funcNameGenerator(
       memberShape,
-      "ToDafny",
-      context.model()
+      "ToDafny"
     );
     return (funcName.concat("(").concat(dataSource).concat(")"));
   }
