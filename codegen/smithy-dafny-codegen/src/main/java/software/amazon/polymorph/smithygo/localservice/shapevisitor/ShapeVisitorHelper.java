@@ -180,10 +180,7 @@ public class ShapeVisitorHelper {
         );
       }
     }
-    final String funcName = Constants.funcNameGenerator(
-      memberShape,
-      "ToDafny"
-    );
+    final String funcName = Constants.funcNameGenerator(memberShape, "ToDafny");
     final var serviceShape = context
       .model()
       .expectShape(context.settings().getService(), ServiceShape.class);

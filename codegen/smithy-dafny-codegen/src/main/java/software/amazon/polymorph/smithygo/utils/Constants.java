@@ -26,11 +26,13 @@ public class Constants {
     final MemberShape memberShape,
     final String suffix
   ) {
-    return  StringUtils.capitalize(memberShape
-      .getId()
-      .toString()
-      .replaceAll("[.$#]", "_")
-      .concat("_")
-      .concat(suffix));
+    return StringUtils.capitalize(
+      memberShape
+        .getId()
+        .toString()
+        .replaceAll("[.$#]", "_")
+        .concat("_")
+        .concat(suffix)
+    );
   }
 }

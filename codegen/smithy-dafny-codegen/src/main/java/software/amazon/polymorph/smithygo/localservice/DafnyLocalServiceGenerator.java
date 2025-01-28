@@ -309,10 +309,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                 outputShape,
                 ""
               )
-              : Constants.funcNameGenerator(
-                postionalMemShape,
-                "FromDafny"
-              );
+              : Constants.funcNameGenerator(postionalMemShape, "FromDafny");
             outputType =
               SmithyNameResolver
                 .getSmithyType(
@@ -527,10 +524,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     .shapeNamespace(postionalMemShape)
                     .concat(".")
                     .concat(
-                      Constants.funcNameGenerator(
-                        postionalMemShape,
-                        "ToDafny"
-                      )
+                      Constants.funcNameGenerator(postionalMemShape, "ToDafny")
                     );
             }
             // this is maybe because positional trait can change this
@@ -596,10 +590,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                   .shapeNamespace(postionalMemShape)
                   .concat(".")
                   .concat(
-                    Constants.funcNameGenerator(
-                      postionalMemShape,
-                      "FromDafny"
-                    )
+                    Constants.funcNameGenerator(postionalMemShape, "FromDafny")
                   );
               final Symbol symbolForPositional = symbolProvider.toSymbol(
                 inputShape
@@ -1118,10 +1109,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                     inputShape,
                     ""
                   )
-                  : Constants.funcNameGenerator(
-                    postionalMemShape,
-                    "FromDafny"
-                  );
+                  : Constants.funcNameGenerator(postionalMemShape, "FromDafny");
             }
             final var inputType = inputShape.hasTrait(UnitTypeTrait.class)
               ? ""
@@ -1191,10 +1179,7 @@ public class DafnyLocalServiceGenerator implements Runnable {
                       outputShape,
                       ""
                     )
-                    : Constants.funcNameGenerator(
-                      postionalMemShape,
-                      "ToDafny"
-                    );
+                    : Constants.funcNameGenerator(postionalMemShape, "ToDafny");
                 deReferenceRequired = false;
               }
               clientResponse = "var native_response, native_error";
