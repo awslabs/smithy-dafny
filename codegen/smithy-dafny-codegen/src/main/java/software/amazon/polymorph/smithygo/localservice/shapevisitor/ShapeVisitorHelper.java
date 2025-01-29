@@ -98,6 +98,7 @@ public class ShapeVisitorHelper {
     final var serviceShape = context
       .model()
       .expectShape(context.settings().getService(), ServiceShape.class);
+    // if the memberShape is an external shape, delegate to the type conversion in that namespace
     if (
       !serviceShape
         .getId()
