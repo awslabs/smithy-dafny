@@ -120,7 +120,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                   SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                     input.toShapeId().getNamespace()
                   ),
-                  SmithyNameResolver.smithyTypesNamespace(input)
+                  SmithyNameResolver.smithyTypesNamespace(input, model)
                 );
                 writer.write(
                   """
@@ -128,7 +128,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                       ${C|}
                   }""",
                   inputToDafnyMethodName,
-                  SmithyNameResolver.getSmithyType(input, inputSymbol),
+                  SmithyNameResolver.getSmithyType(input, inputSymbol, model),
                   outputType,
                   writer.consumer(w ->
                     generateRequestSerializer(
@@ -179,7 +179,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                     SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                       output.toShapeId().getNamespace()
                     ),
-                    SmithyNameResolver.smithyTypesNamespace(output)
+                    SmithyNameResolver.smithyTypesNamespace(output, model)
                   );
                   writer.write(
                     """
@@ -187,7 +187,11 @@ public class DafnyLocalServiceTypeConversionProtocol
                         ${C|}
                     }""",
                     outputToDafnyMethodName,
-                    SmithyNameResolver.getSmithyType(output, outputSymbol),
+                    SmithyNameResolver.getSmithyType(
+                      output,
+                      outputSymbol,
+                      model
+                    ),
                     DafnyNameResolver.getDafnyType(output, outputSymbol),
                     writer.consumer(w ->
                       generateResponseSerializer(
@@ -281,7 +285,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                       SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                         input.toShapeId().getNamespace()
                       ),
-                      SmithyNameResolver.smithyTypesNamespace(input)
+                      SmithyNameResolver.smithyTypesNamespace(input, model)
                     );
                     writer.write(
                       """
@@ -289,7 +293,11 @@ public class DafnyLocalServiceTypeConversionProtocol
                           ${C|}
                       }""",
                       inputToDafnyMethodName,
-                      SmithyNameResolver.getSmithyType(input, inputSymbol),
+                      SmithyNameResolver.getSmithyType(
+                        input,
+                        inputSymbol,
+                        model
+                      ),
                       outputType,
                       writer.consumer(w ->
                         generateRequestSerializer(
@@ -344,7 +352,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                         SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                           output.toShapeId().getNamespace()
                         ),
-                        SmithyNameResolver.smithyTypesNamespace(output)
+                        SmithyNameResolver.smithyTypesNamespace(output, model)
                       );
                       writer.write(
                         """
@@ -352,7 +360,11 @@ public class DafnyLocalServiceTypeConversionProtocol
                             ${C|}
                         }""",
                         outputToDafnyMethodName,
-                        SmithyNameResolver.getSmithyType(output, outputSymbol),
+                        SmithyNameResolver.getSmithyType(
+                          output,
+                          outputSymbol,
+                          model
+                        ),
                         DafnyNameResolver.getDafnyType(output, outputSymbol),
                         writer.consumer(w ->
                           generateResponseSerializer(
@@ -408,7 +420,7 @@ public class DafnyLocalServiceTypeConversionProtocol
                 }
                 """,
                 resourceShape.getId().getName(),
-                SmithyNameResolver.smithyTypesNamespace(resourceShape),
+                SmithyNameResolver.smithyTypesNamespace(resourceShape, model),
                 resourceShape.getId().getName(),
                 DafnyNameResolver.dafnyTypesNamespace(resourceShape),
                 resourceShape.getId().getName(),
@@ -484,7 +496,8 @@ public class DafnyLocalServiceTypeConversionProtocol
         inputType =
           GoCodegenUtils.getType(
             context.symbolProvider().toSymbol(resourceOrService),
-            true
+            true,
+            context.model()
           );
       } else {
         outputType =
@@ -496,7 +509,7 @@ public class DafnyLocalServiceTypeConversionProtocol
             .concat(context.symbolProvider().toSymbol(serviceShape).getName());
       }
     } else {
-      inputType = GoCodegenUtils.getType(curSymbol, true);
+      inputType = GoCodegenUtils.getType(curSymbol, true, context.model());
       outputType = DafnyNameResolver.getDafnyType(shape, curSymbol);
     }
     writerDelegator.useFileWriter(
@@ -510,7 +523,7 @@ public class DafnyLocalServiceTypeConversionProtocol
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
             shape.toShapeId().getNamespace()
           ),
-          SmithyNameResolver.smithyTypesNamespace(shape)
+          SmithyNameResolver.smithyTypesNamespace(shape, context.model())
         );
         writer.write(
           """
@@ -613,7 +626,10 @@ public class DafnyLocalServiceTypeConversionProtocol
                   SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                     input.toShapeId().getNamespace()
                   ),
-                  SmithyNameResolver.smithyTypesNamespace(input)
+                  SmithyNameResolver.smithyTypesNamespace(
+                    input,
+                    context.model()
+                  )
                 );
 
                 writer.write(
@@ -623,7 +639,11 @@ public class DafnyLocalServiceTypeConversionProtocol
                   }""",
                   inputFromDafnyMethodName,
                   inputType,
-                  SmithyNameResolver.getSmithyType(input, inputSymbol),
+                  SmithyNameResolver.getSmithyType(
+                    input,
+                    inputSymbol,
+                    context.model()
+                  ),
                   writer.consumer(w ->
                     generateRequestDeserializer(
                       context,
@@ -678,7 +698,10 @@ public class DafnyLocalServiceTypeConversionProtocol
                     SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                       output.toShapeId().getNamespace()
                     ),
-                    SmithyNameResolver.smithyTypesNamespace(output)
+                    SmithyNameResolver.smithyTypesNamespace(
+                      output,
+                      context.model()
+                    )
                   );
 
                   writer.write(
@@ -688,7 +711,11 @@ public class DafnyLocalServiceTypeConversionProtocol
                     }""",
                     outputFromDafnyMethodName,
                     DafnyNameResolver.getDafnyType(output, outputSymbol),
-                    SmithyNameResolver.getSmithyType(output, outputSymbol),
+                    SmithyNameResolver.getSmithyType(
+                      output,
+                      outputSymbol,
+                      context.model()
+                    ),
                     writer.consumer(w ->
                       generateResponseDeserializer(
                         context,
@@ -786,7 +813,10 @@ public class DafnyLocalServiceTypeConversionProtocol
                       SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                         input.toShapeId().getNamespace()
                       ),
-                      SmithyNameResolver.smithyTypesNamespace(input)
+                      SmithyNameResolver.smithyTypesNamespace(
+                        input,
+                        context.model()
+                      )
                     );
 
                     writer.write(
@@ -796,7 +826,11 @@ public class DafnyLocalServiceTypeConversionProtocol
                       }""",
                       inputFromDafnyMethodName,
                       inputType,
-                      SmithyNameResolver.getSmithyType(input, inputSymbol),
+                      SmithyNameResolver.getSmithyType(
+                        input,
+                        inputSymbol,
+                        context.model()
+                      ),
                       writer.consumer(w ->
                         generateRequestDeserializer(
                           context,
@@ -853,7 +887,10 @@ public class DafnyLocalServiceTypeConversionProtocol
                         SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                           output.toShapeId().getNamespace()
                         ),
-                        SmithyNameResolver.smithyTypesNamespace(output)
+                        SmithyNameResolver.smithyTypesNamespace(
+                          output,
+                          context.model()
+                        )
                       );
 
                       writer.write(
@@ -863,7 +900,11 @@ public class DafnyLocalServiceTypeConversionProtocol
                         }""",
                         outputFromDafnyMethodName,
                         DafnyNameResolver.getDafnyType(output, outputSymbol),
-                        SmithyNameResolver.getSmithyType(output, outputSymbol),
+                        SmithyNameResolver.getSmithyType(
+                          output,
+                          outputSymbol,
+                          context.model()
+                        ),
                         writer.consumer(w ->
                           generateResponseDeserializer(
                             context,
@@ -913,7 +954,10 @@ public class DafnyLocalServiceTypeConversionProtocol
                 resourceShape.getId().getName(),
                 DafnyNameResolver.dafnyTypesNamespace(resourceShape),
                 resourceShape.getId().getName(),
-                SmithyNameResolver.smithyTypesNamespace(resourceShape),
+                SmithyNameResolver.smithyTypesNamespace(
+                  resourceShape,
+                  context.model()
+                ),
                 resourceShape.getId().getName(),
                 extendableResourceWrapperCheck,
                 resourceShape.getId().getName()
@@ -991,7 +1035,11 @@ public class DafnyLocalServiceTypeConversionProtocol
       }
     } else {
       outputType =
-        GoCodegenUtils.getType(context.symbolProvider().toSymbol(shape), true);
+        GoCodegenUtils.getType(
+          context.symbolProvider().toSymbol(shape),
+          true,
+          context.model()
+        );
     }
     writerDelegator.useFileWriter(
       "%s/%s".formatted(
@@ -1004,7 +1052,7 @@ public class DafnyLocalServiceTypeConversionProtocol
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
             shape.toShapeId().getNamespace()
           ),
-          SmithyNameResolver.smithyTypesNamespace(shape)
+          SmithyNameResolver.smithyTypesNamespace(shape, context.model())
         );
         writer.write(
           """
@@ -1185,7 +1233,8 @@ public class DafnyLocalServiceTypeConversionProtocol
             getInputToDafnyMethodName,
             SmithyNameResolver.getSmithyType(
               configShape,
-              context.symbolProvider().toSymbol(configShape)
+              context.symbolProvider().toSymbol(configShape),
+              context.model()
             ),
             DafnyNameResolver.getDafnyType(
               configShape,
@@ -1257,7 +1306,8 @@ public class DafnyLocalServiceTypeConversionProtocol
                 getInputToDafnyMethodName,
                 SmithyNameResolver.getSmithyType(
                   errorShape,
-                  context.symbolProvider().toSymbol(errorShape)
+                  context.symbolProvider().toSymbol(errorShape),
+                  context.model()
                 ),
                 DafnyNameResolver.getDafnyBaseErrorType(errorShape),
                 writer.consumer(w -> {
@@ -1306,10 +1356,16 @@ public class DafnyLocalServiceTypeConversionProtocol
             func OpaqueError_Input_ToDafny(nativeInput $L.OpaqueError)($L.Error) {
             	return $L.Companion_Error_.Create_Opaque_(nativeInput.ErrObject)
             }""",
-            SmithyNameResolver.smithyTypesNamespace(serviceShape),
+            SmithyNameResolver.smithyTypesNamespace(
+              serviceShape,
+              context.model()
+            ),
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
-            SmithyNameResolver.smithyTypesNamespace(serviceShape),
+            SmithyNameResolver.smithyTypesNamespace(
+              serviceShape,
+              context.model()
+            ),
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
             DafnyNameResolver.dafnyTypesNamespace(serviceShape)
           );
@@ -1375,7 +1431,8 @@ public class DafnyLocalServiceTypeConversionProtocol
                     context.model().expectShape(error),
                     context
                       .symbolProvider()
-                      .toSymbol(context.model().expectShape(error))
+                      .toSymbol(context.model().expectShape(error)),
+                    context.model()
                   ),
                   SmithyNameResolver.getToDafnyMethodName(
                     serviceShape,
@@ -1386,7 +1443,8 @@ public class DafnyLocalServiceTypeConversionProtocol
                     context.model().expectShape(error),
                     context
                       .symbolProvider()
-                      .toSymbol(context.model().expectShape(error))
+                      .toSymbol(context.model().expectShape(error)),
+                    context.model()
                   )
                 );
               }
@@ -1403,9 +1461,18 @@ public class DafnyLocalServiceTypeConversionProtocol
                 handleDepErrorSerializer(context, w, dependencies);
               }
             }),
-            SmithyNameResolver.smithyTypesNamespace(serviceShape),
-            SmithyNameResolver.smithyTypesNamespace(serviceShape),
-            SmithyNameResolver.smithyTypesNamespace(serviceShape)
+            SmithyNameResolver.smithyTypesNamespace(
+              serviceShape,
+              context.model()
+            ),
+            SmithyNameResolver.smithyTypesNamespace(
+              serviceShape,
+              context.model()
+            ),
+            SmithyNameResolver.smithyTypesNamespace(
+              serviceShape,
+              context.model()
+            )
           );
         }
       );
@@ -1482,7 +1549,7 @@ public class DafnyLocalServiceTypeConversionProtocol
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
             depShape.toShapeId().getNamespace()
           ),
-          SmithyNameResolver.smithyTypesNamespace(depShape)
+          SmithyNameResolver.smithyTypesNamespace(depShape, context.model())
         );
         w.addImportFromModule(
           SmithyNameResolver.getGoModuleNameForSmithyNamespace(
@@ -1495,7 +1562,7 @@ public class DafnyLocalServiceTypeConversionProtocol
           case $L.$LBaseException:
               return $L.Create_$L_($L.Error_ToDafny(err))
           """,
-          SmithyNameResolver.smithyTypesNamespace(depShape),
+          SmithyNameResolver.smithyTypesNamespace(depShape, context.model()),
           dep.getName(),
           DafnyNameResolver.getDafnyErrorCompanion(serviceShape),
           DafnyNameResolver.dafnyDependentErrorName(depShape),
@@ -1550,7 +1617,10 @@ public class DafnyLocalServiceTypeConversionProtocol
             SmithyNameResolver.getGoModuleNameForSmithyNamespace(
               configShape.toShapeId().getNamespace()
             ),
-            SmithyNameResolver.smithyTypesNamespace(configShape)
+            SmithyNameResolver.smithyTypesNamespace(
+              configShape,
+              context.model()
+            )
           );
           writer.write(
             """
@@ -1564,7 +1634,8 @@ public class DafnyLocalServiceTypeConversionProtocol
             ),
             SmithyNameResolver.getSmithyType(
               configShape,
-              context.symbolProvider().toSymbol(configShape)
+              context.symbolProvider().toSymbol(configShape),
+              context.model()
             ),
             writer.consumer(w -> {
               final String output = configShape.accept(
@@ -1633,7 +1704,8 @@ public class DafnyLocalServiceTypeConversionProtocol
                 DafnyNameResolver.getDafnyBaseErrorType(errorShape),
                 SmithyNameResolver.getSmithyType(
                   errorShape,
-                  context.symbolProvider().toSymbol(errorShape)
+                  context.symbolProvider().toSymbol(errorShape),
+                  context.model()
                 ),
                 writer.consumer(w -> {
                   final String output = errorShape.accept(
@@ -1704,12 +1776,24 @@ public class DafnyLocalServiceTypeConversionProtocol
                 }
             }""",
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
-            SmithyNameResolver.smithyTypesNamespace(serviceShape),
-            SmithyNameResolver.smithyTypesNamespace(serviceShape),
+            SmithyNameResolver.smithyTypesNamespace(
+              serviceShape,
+              context.model()
+            ),
+            SmithyNameResolver.smithyTypesNamespace(
+              serviceShape,
+              context.model()
+            ),
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
             DafnyNameResolver.dafnyTypesNamespace(serviceShape),
-            SmithyNameResolver.smithyTypesNamespace(serviceShape),
-            SmithyNameResolver.smithyTypesNamespace(serviceShape)
+            SmithyNameResolver.smithyTypesNamespace(
+              serviceShape,
+              context.model()
+            ),
+            SmithyNameResolver.smithyTypesNamespace(
+              serviceShape,
+              context.model()
+            )
           );
         }
       );
@@ -1853,7 +1937,8 @@ public class DafnyLocalServiceTypeConversionProtocol
           inputType =
             GoCodegenUtils.getType(
               context.symbolProvider().toSymbol(visitingShape),
-              true
+              true,
+              context.model()
             );
           Boolean isPointable = context
             .symbolProvider()
@@ -1885,7 +1970,8 @@ public class DafnyLocalServiceTypeConversionProtocol
                 inputType =
                   GoCodegenUtils.getType(
                     context.symbolProvider().toSymbol(resourceOrService),
-                    true
+                    true,
+                    context.model()
                   );
               } else {
                 outputType =
@@ -1951,7 +2037,8 @@ public class DafnyLocalServiceTypeConversionProtocol
           alreadyVisited.add(visitingMemberShape.toShapeId());
           var outputType = GoCodegenUtils.getType(
             context.symbolProvider().toSymbol(visitingShape),
-            true
+            true,
+            context.model()
           );
           Boolean isPointable = context
             .symbolProvider()
