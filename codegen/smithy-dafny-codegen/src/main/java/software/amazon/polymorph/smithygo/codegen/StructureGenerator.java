@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.DafnyNameResolver;
 import software.amazon.polymorph.smithygo.localservice.nameresolver.SmithyNameResolver;
+import software.amazon.polymorph.smithygo.utils.GoCodegenUtils;
 import software.amazon.polymorph.traits.ReferenceTrait;
 import software.amazon.smithy.aws.traits.ServiceTrait;
 import software.amazon.smithy.codegen.core.Symbol;
@@ -156,23 +157,7 @@ public final class StructureGenerator implements Runnable {
           }
         } else {
           if (SmithyNameResolver.isShapeFromAWSSDK(targetShape)) {
-            final var typesNamespace = SmithyNameResolver.smithyTypesNamespace(targetShape, model);
-            if (typesNamespace.endsWith("types")) {
-              writer.addImportFromModule(
-              SmithyNameResolver.getGoModuleNameForSdkNamespace(
-                targetShape.getId().getNamespace()
-              ),
-              "types",
-              typesNamespace
-            );
-            } else {
-              writer.addImport(
-              SmithyNameResolver.getGoModuleNameForSdkNamespace(
-                targetShape.getId().getNamespace()
-              )
-            );
-            }
-            
+            GoCodegenUtils.importAwsSDKShape(targetShape, model, writer);
           } else if (
             !member
               .toShapeId()
