@@ -153,13 +153,23 @@ public final class StructureGenerator implements Runnable {
           }
         } else {
           if (SmithyNameResolver.isShapeFromAWSSDK(targetShape)) {
-            writer.addImportFromModule(
+            final var typesNamespace = SmithyNameResolver.smithyTypesNamespace(targetShape, model);
+            if (typesNamespace.endsWith("types")) {
+              writer.addImportFromModule(
               SmithyNameResolver.getGoModuleNameForSdkNamespace(
                 targetShape.getId().getNamespace()
               ),
               "types",
               SmithyNameResolver.smithyTypesNamespace(targetShape)
             );
+            } else {
+              writer.addImport(
+              SmithyNameResolver.getGoModuleNameForSdkNamespace(
+                targetShape.getId().getNamespace()
+              )
+            );
+            }
+            
           } else if (
             !member
               .toShapeId()
