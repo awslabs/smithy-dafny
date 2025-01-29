@@ -514,7 +514,8 @@ public class ValidationGenerator {
         );
         final var inputType = GoCodegenUtils.getType(
           symbolProvider.toSymbol(currentShape),
-          isExternalShape
+          isExternalShape,
+          context.model()
         );
         if (isExternalShape) {
           if (SmithyNameResolver.isShapeFromAWSSDK(currentShape)) {
@@ -523,14 +524,14 @@ public class ValidationGenerator {
                 currentShape.getId().getNamespace()
               ),
               "types",
-              SmithyNameResolver.smithyTypesNamespace(currentShape)
+              SmithyNameResolver.smithyTypesNamespace(currentShape, model)
             );
           } else {
             writer.addImportFromModule(
               SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                 currentShape.getId().getNamespace()
               ),
-              SmithyNameResolver.smithyTypesNamespace(currentShape)
+              SmithyNameResolver.smithyTypesNamespace(currentShape, model)
             );
           }
         }
@@ -610,7 +611,8 @@ public class ValidationGenerator {
         );
         final var inputType = GoCodegenUtils.getType(
           symbolProvider.toSymbol(currentShape),
-          isExternalShape
+          isExternalShape,
+          context.model()
         );
         if (isExternalShape) {
           if (SmithyNameResolver.isShapeFromAWSSDK(currentShape)) {
@@ -619,14 +621,14 @@ public class ValidationGenerator {
                 currentShape.getId().getNamespace()
               ),
               "types",
-              SmithyNameResolver.smithyTypesNamespace(currentShape)
+              SmithyNameResolver.smithyTypesNamespace(currentShape, model)
             );
           } else {
             writer.addImportFromModule(
               SmithyNameResolver.getGoModuleNameForSmithyNamespace(
                 currentShape.getId().getNamespace()
               ),
-              SmithyNameResolver.smithyTypesNamespace(currentShape)
+              SmithyNameResolver.smithyTypesNamespace(currentShape, model)
             );
           }
         }
@@ -671,10 +673,12 @@ public class ValidationGenerator {
     var dataSourceForUnion = dataSource;
     final var currServiceShapeNamespace =
       SmithyNameResolver.smithyTypesNamespace(
-        context.settings().getService(model)
+        context.settings().getService(model),
+        model
       );
     final var currShapeNamespace = SmithyNameResolver.smithyTypesNamespace(
-      model.expectShape(memberShape.getTarget())
+      model.expectShape(memberShape.getTarget()),
+      model
     );
     if (!funcInput.isEmpty()) {
       final Boolean isExternalShape =
@@ -682,7 +686,8 @@ public class ValidationGenerator {
         !currShapeNamespace.startsWith("smithy");
       final var inputType = GoCodegenUtils.getType(
         symbolProvider.toSymbol(currentShape),
-        isExternalShape
+        isExternalShape,
+        context.model()
       );
       if (isExternalShape) {
         if (SmithyNameResolver.isShapeFromAWSSDK(currentShape)) {
@@ -691,14 +696,14 @@ public class ValidationGenerator {
               currentShape.getId().getNamespace()
             ),
             "types",
-            SmithyNameResolver.smithyTypesNamespace(currentShape)
+            SmithyNameResolver.smithyTypesNamespace(currentShape, model)
           );
         } else {
           writer.addImportFromModule(
             SmithyNameResolver.getGoModuleNameForSmithyNamespace(
               currentShape.getId().getNamespace()
             ),
-            SmithyNameResolver.smithyTypesNamespace(currentShape)
+            SmithyNameResolver.smithyTypesNamespace(currentShape, model)
           );
         }
       }
@@ -721,7 +726,8 @@ public class ValidationGenerator {
       );
       for (final var memberInUnion : currentShape.getAllMembers().values()) {
         final var currMemberNamespace = SmithyNameResolver.smithyTypesNamespace(
-          currentShape
+          currentShape,
+          model
         );
         final Boolean isExternalShape =
           !currServiceShapeNamespace.equals(currMemberNamespace) &&
