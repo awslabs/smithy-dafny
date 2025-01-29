@@ -226,9 +226,9 @@ public class GoCodegenUtils {
   }
 
   public static void importAwsSDKShape(
-    Shape shape,
-    Model model,
-    GoWriter writer
+    final Shape shape,
+    final Model model,
+    final GoWriter writer
   ) {
     final var typesNamespace = SmithyNameResolver.smithyTypesNamespace(
       shape,
