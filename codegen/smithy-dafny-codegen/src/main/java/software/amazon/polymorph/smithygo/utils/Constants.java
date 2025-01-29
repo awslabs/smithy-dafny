@@ -15,7 +15,7 @@ public class Constants {
 
   // TODO: Is it possible to make this function name shorter and in camelCase?
   /**
-   * Generates a function name for memberShapes.
+   * Generates a function name used for type conversion of memberShapes.
    * Always generates public (exported) function for all shape
    *
    * @param memberShape The visiting MemberShape
