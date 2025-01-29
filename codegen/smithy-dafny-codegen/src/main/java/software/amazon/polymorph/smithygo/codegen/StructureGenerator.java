@@ -163,7 +163,7 @@ public final class StructureGenerator implements Runnable {
                 targetShape.getId().getNamespace()
               ),
               "types",
-              SmithyNameResolver.smithyTypesNamespace(targetShape, model)
+              typesNamespace
             );
             } else {
               writer.addImport(
